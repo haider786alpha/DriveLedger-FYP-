@@ -1,41 +1,51 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
+import axios from "axios";
 
 
 const Drivers = () => {
-  const drivers = [
-    {
-      id: 1,
-      name: "Ali Khan",
-      cnic: "35202-1234567-1",
-      phone: "0300-1234567",
-      assignedCar: "Toyota Corolla",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Usman Tariq",
-      cnic: "37405-7654321-2",
-      phone: "0312-9876543",
-      assignedCar: "Honda City",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Bilal Ahmed",
-      cnic: "61101-4567890-3",
-      phone: "0333-4567890",
-      assignedCar: "Suzuki WagonR",
-      status: "Inactive",
-    },
-  ];
+  const [drivers, setDrivers] = useState([]);
+
+  useEffect(() => {
+    fetchDrivers();
+  }, []);
+
+const fetchDrivers = async () => {
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/api/drivers/");
+
+    console.log("Full response:", response);
+    console.log("Actual data:", response.data);
+
+    setDrivers(response);
+
+  } catch (error) {
+    console.error("Error fetching drivers:", error);
+    setDrivers([]);
+  }
+};
+const deleteDriver = async (id) => {
+  const confirmDelete = window.confirm("Are you sure you want to delete this driver?");
+
+  if (!confirmDelete) return;
+
+  try {
+    await axios.delete(`http://127.0.0.1:8000/api/drivers/${id}/`);
+    alert("Driver deleted successfully");
+    fetchDrivers();
+  } catch (error) {
+    console.error("Error deleting driver:", error);
+    alert("Failed to delete driver");
+  }
+};
+
 
   return (
     <div className="page-content">
       <div className="container-fluid">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4 className="mb-0">Driver Management</h4>
+
           <Link to="/add-driver" className="btn btn-primary">
             Add Driver
           </Link>
@@ -48,9 +58,10 @@ const Drivers = () => {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search driver by name"
+                  placeholder="Search driver"
                 />
               </div>
+
               <div className="col-md-3">
                 <select className="form-select">
                   <option>Filter by Status</option>
@@ -69,54 +80,52 @@ const Drivers = () => {
                 <thead className="table-light">
                   <tr>
                     <th>#</th>
-                    <th>Name</th>
+                    <th>Driver Name</th>
                     <th>CNIC</th>
-                    <th>Phone</th>
-                    <th>Assigned Car</th>
-                    <th>Status</th>
+                    <th>License Number</th>
+                    <th>Address</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {drivers.map((driver) => (
-                    <tr key={driver.id}>
-                      <td>{driver.id}</td>
-                      <td>{driver.name}</td>
-                      <td>{driver.cnic}</td>
-                      <td>{driver.phone}</td>
-                      <td>
-                       <Link to={`/edit-driver/${driver.id}`} className="btn btn-sm btn-warning me-2">
-                         Edit
-                       </Link>
 
-                       <button className="btn btn-sm btn-danger">
-                         Delete
-                       </button>
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            driver.status === "Active"
-                              ? "bg-success"
-                              : "bg-danger"
-                          }`}
-                        >
-                          {driver.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="btn btn-sm btn-info me-2">
-                          View
-                        </button>
-                        <button className="btn btn-sm btn-warning me-2">
-                          Edit
-                        </button>
-                        <button className="btn btn-sm btn-danger">
-                          Delete
-                        </button>
+                <tbody>
+                  {Array.isArray(drivers) && drivers.length > 0 ? (
+                    drivers.map((driver) => (
+                      <tr key={driver.id}>
+                        <td>{driver.id}</td>
+                        <td>{driver.user_name}</td>
+                        <td>{driver.cnic}</td>
+                        <td>{driver.license_number}</td>
+                        <td>{driver.address}</td>
+
+                        <td>
+                          <button className="btn btn-sm btn-info me-2">
+                            View
+                          </button>
+
+                          <Link
+                            to={`/edit-driver/${driver.id}`}
+                            className="btn btn-sm btn-warning me-2"
+                          >
+                            Edit
+                          </Link>
+
+                          <button
+                           className="btn btn-sm btn-danger"
+                           onClick={() => deleteDriver(driver.id)}
+                          >
+                           Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center">
+                        No drivers found
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
