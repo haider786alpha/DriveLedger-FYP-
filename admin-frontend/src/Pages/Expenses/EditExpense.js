@@ -1,64 +1,161 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
 
 const EditExpense = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
-  const expense = {
-    car: "Toyota Corolla",
-    date: "2026-04-20",
-    amount: "2500",
-    category: "Fuel",
-    notes: "Petrol refill",
+  const [cars, setCars] = useState([]);
+  const [formData, setFormData] = useState({
+    car: "",
+    amount: "",
+    expense_date: "",
+    category: "",
+    notes: "",
+  });
+
+  useEffect(() => {
+    fetchCars();
+    fetchExpense();
+  }, []);
+
+  const fetchCars = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/cars/");
+      setCars(response);
+    } catch (error) {
+      setCars([]);
+    }
+  };
+
+  const fetchExpense = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/expenses/${id}/`);
+      const data = response.data || response;
+
+      setFormData({
+        car: data.car,
+        amount: data.amount,
+        expense_date: data.expense_date,
+        category: data.category,
+        notes: data.notes || "",
+      });
+    } catch (error) {
+      alert("Failed to load expense");
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      await axios.put(`http://127.0.0.1:8000/api/expenses/${id}/`, formData);
+      alert("Expense updated successfully");
+      navigate("/expenses");
+    } catch (error) {
+      console.error("Error updating expense:", error.response?.data || error);
+      alert("Failed to update expense");
+    }
   };
 
   return (
     <div className="page-content">
       <div className="container-fluid">
-        <h4 className="mb-4">Edit Expense (ID: {id})</h4>
+        <h4 className="mb-4">Edit Expense</h4>
 
         <div className="card">
           <div className="card-body">
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label>Car</label>
-                <select defaultValue={expense.car} className="form-select">
-                  <option>Toyota Corolla</option>
-                  <option>Honda City</option>
-                  <option>Suzuki WagonR</option>
-                </select>
-              </div>
+            <form onSubmit={handleSubmit}>
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <label>Car</label>
+                  <select
+                    name="car"
+                    value={formData.car}
+                    onChange={handleChange}
+                    className="form-select"
+                    required
+                  >
+                    <option value="">Select Car</option>
+                    {cars.map((car) => (
+                      <option key={car.id} value={car.id}>
+                        {car.make} {car.model} - {car.registration_number}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="col-md-6 mb-3">
-                <label>Expense Date</label>
-                <input type="date" defaultValue={expense.date} className="form-control" />
-              </div>
+                <div className="col-md-6 mb-3">
+                  <label>Amount</label>
+                  <input
+                    type="number"
+                    name="amount"
+                    value={formData.amount}
+                    onChange={handleChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
 
-              <div className="col-md-6 mb-3">
-                <label>Amount</label>
-                <input defaultValue={expense.amount} className="form-control" />
-              </div>
+                <div className="col-md-6 mb-3">
+                  <label>Expense Date</label>
+                  <input
+                    type="date"
+                    name="expense_date"
+                    value={formData.expense_date}
+                    onChange={handleChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
 
-              <div className="col-md-6 mb-3">
-                <label>Category</label>
-                <select defaultValue={expense.category} className="form-select">
-                  <option>Fuel</option>
-                  <option>Maintenance</option>
-                  <option>Toll Tax</option>
-                </select>
-              </div>
+                <div className="col-md-6 mb-3">
+                  <label>Category</label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="form-select"
+                    required
+                  >
+                    <option value="">Select Category</option>
+                    <option value="Fuel">Fuel</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Oil Change">Oil Change</option>
+                    <option value="Repair">Repair</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
 
-              <div className="col-md-12 mb-3">
-                <label>Notes</label>
-                <textarea defaultValue={expense.notes} className="form-control" rows="3"></textarea>
-              </div>
+                <div className="col-md-12 mb-3">
+                  <label>Notes</label>
+                  <textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    className="form-control"
+                    rows="3"
+                  ></textarea>
+                </div>
 
-              <div className="col-md-12">
-                <button className="btn btn-primary">Update Expense</button>
+                <div className="col-md-12">
+                  <button type="submit" className="btn btn-primary">
+                    Update Expense
+                  </button>
+                </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
+
       </div>
     </div>
   );

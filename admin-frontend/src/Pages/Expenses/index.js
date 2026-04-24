@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
@@ -35,7 +36,13 @@ const Expenses = () => {
   return (
     <div className="page-content">
       <div className="container-fluid">
-        <h4 className="mb-4">Expenses</h4>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h4 className="mb-0">Expenses</h4>
+
+          <Link to="/add-expense" className="btn btn-primary">
+            Add Expense
+          </Link>
+        </div>
 
         <div className="card">
           <div className="card-body">
@@ -62,7 +69,15 @@ const Expenses = () => {
                       <td>{exp.expense_date}</td>
                       <td>{exp.category}</td>
                       <td>{exp.notes || "-"}</td>
+
                       <td>
+                        <Link
+                          to={`/edit-expense/${exp.id}`}
+                          className="btn btn-sm btn-warning me-2"
+                        >
+                          Edit
+                        </Link>
+
                         <button
                           className="btn btn-sm btn-danger"
                           onClick={() => deleteExpense(exp.id)}
@@ -83,7 +98,6 @@ const Expenses = () => {
             </table>
           </div>
         </div>
-
       </div>
     </div>
   );
