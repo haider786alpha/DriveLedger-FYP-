@@ -1,42 +1,44 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Cars = () => {
-  const cars = [
-    {
-      id: 1,
-      make: "Toyota",
-      model: "Corolla",
-      year: 2020,
-      registration: "ABC-123",
-      mileage: 45000,
-      status: "Available",
-    },
-    {
-      id: 2,
-      make: "Honda",
-      model: "City",
-      year: 2019,
-      registration: "ICT-456",
-      mileage: 52000,
-      status: "Assigned",
-    },
-    {
-      id: 3,
-      make: "Suzuki",
-      model: "WagonR",
-      year: 2021,
-      registration: "RWP-789",
-      mileage: 28000,
-      status: "Maintenance",
-    },
-  ];
+  const [cars, setCars] = useState([]);
+
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  const fetchCars = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/cars/");
+      setCars(response);
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+      setCars([]);
+    }
+  };
+
+  const deleteCar = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this car?");
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/cars/${id}/`);
+      alert("Car deleted successfully");
+      fetchCars();
+    } catch (error) {
+      console.error("Error deleting car:", error);
+      alert("Failed to delete car");
+    }
+  };
 
   return (
     <div className="page-content">
       <div className="container-fluid">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4 className="mb-0">Car Management</h4>
+
           <Link to="/add-car" className="btn btn-primary">
             Add Car
           </Link>
@@ -46,12 +48,9 @@ const Cars = () => {
           <div className="card-body">
             <div className="row g-3">
               <div className="col-md-4">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search by make or model"
-                />
+                <input className="form-control" placeholder="Search car" />
               </div>
+
               <div className="col-md-3">
                 <select className="form-select">
                   <option>Filter by Status</option>
@@ -76,52 +75,57 @@ const Cars = () => {
                     <th>Year</th>
                     <th>Registration No</th>
                     <th>Mileage</th>
-                    <th>Status</th>
+                    <th>Condition</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {cars.map((car) => (
-                    <tr key={car.id}>
-                      <td>{car.id}</td>
-                      <td>{car.make}</td>
-                      <td>{car.model}</td>
-                      <td>{car.year}</td>
-                      <td>{car.registration}</td>
-                      <td>{car.mileage} km</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            car.status === "Available"
-                              ? "bg-success"
-                              : car.status === "Assigned"
-                              ? "bg-primary"
-                              : "bg-warning text-dark"
-                          }`}
-                        >
-                          {car.status}
-                        </span>
-                      </td>
-                      <td>
-                       <button className="btn btn-sm btn-info me-2">
-                         View
-                       </button>
+                  {Array.isArray(cars) && cars.length > 0 ? (
+                    cars.map((car) => (
+                      <tr key={car.id}>
+                        <td>{car.id}</td>
+                        <td>{car.make}</td>
+                        <td>{car.model}</td>
+                        <td>{car.year}</td>
+                        <td>{car.registration_number}</td>
+                        <td>{car.mileage}</td>
+                        <td>{car.condition}</td>
 
-                       <Link to={`/edit-car/${car.id}`} className="btn btn-sm btn-warning me-2">
-                         Edit
-                       </Link>
+                        <td>
+                          <button className="btn btn-sm btn-info me-2">
+                            View
+                          </button>
 
-                       <button className="btn btn-sm btn-danger">
-                         Delete
-                       </button>
+                          <Link
+                            to={`/edit-car/${car.id}`}
+                            className="btn btn-sm btn-warning me-2"
+                          >
+                            Edit
+                          </Link>
+
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => deleteCar(car.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="text-center">
+                        No cars found
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
