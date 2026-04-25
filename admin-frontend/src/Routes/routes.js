@@ -1,3 +1,4 @@
+import CustomLogin from "../Pages/Auth/Login";
 import React from "react";
 import { Navigate } from "react-router-dom";
 import AddDriver from "../Pages/Drivers/AddDriver";
@@ -161,7 +162,7 @@ const authProtectedRoutes = [
 const publicRoutes = [
   // Authentication Page
   { path: "/logout", component: <Logout /> },
-  { path: "/login", component: <Login /> },
+  { path: "/login", component: <CustomLogin /> },
   { path: "/forgot-password", component: <ForgetPasswordPage /> },
   { path: "/register", component: <Register /> },
 

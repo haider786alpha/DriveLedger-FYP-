@@ -6,7 +6,7 @@ const Dashboard = () => {
   const [car, setCar] = useState(null);
   const [payments, setPayments] = useState([]);
 
-  const driverId = 6;
+  const driverId = 2;
 
   useEffect(() => {
     fetchDashboardData();

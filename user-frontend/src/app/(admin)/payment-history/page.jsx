@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 const PaymentHistory = () => {
   const [payments, setPayments] = useState([]);
 
-  const driverId = 6;
+  const driverId = 2;
 
   useEffect(() => {
     fetchPayments();

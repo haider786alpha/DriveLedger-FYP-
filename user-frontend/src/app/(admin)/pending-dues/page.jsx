@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 const PendingDues = () => {
   const [dues, setDues] = useState([]);
 
-  const driverId = 6;
+  const driverId = 2;
 
   useEffect(() => {
     fetchPendingDues();
