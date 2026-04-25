@@ -1,12 +1,38 @@
+import React, { useEffect, useState } from "react";
+
 const AssignedCar = () => {
-  const car = {
-    name: "Toyota Corolla",
-    model: "2020",
-    number: "ABC-123",
-    color: "White",
-    status: "Active",
-    dailyRent: "Rs. 3,000",
-    assignedDate: "10 April 2026",
+  const [assignment, setAssignment] = useState(null);
+  const [car, setCar] = useState(null);
+
+  // TEMP: change this according to driver table ID
+  const driverId = 6;
+
+  useEffect(() => {
+    fetchAssignedCar();
+  }, []);
+
+  const fetchAssignedCar = async () => {
+    try {
+      const assignmentsRes = await fetch("http://localhost:8000/api/assignments/");
+      const assignments = await assignmentsRes.json();
+
+      const activeAssignment = assignments.find(
+        (item) =>
+          Number(item.driver) === Number(driverId) &&
+          String(item.status).toLowerCase() === "active"
+      );
+
+      setAssignment(activeAssignment || null);
+
+      if (!activeAssignment) return;
+
+      const carRes = await fetch(`http://localhost:8000/api/cars/${activeAssignment.car}/`);
+      const carData = await carRes.json();
+
+      setCar(carData);
+    } catch (error) {
+      console.error("Assigned car error:", error);
+    }
   };
 
   return (
@@ -23,28 +49,19 @@ const AssignedCar = () => {
           maxWidth: "500px",
         }}
       >
-        <h4>{car.name}</h4>
-
-        <p><strong>Model:</strong> {car.model}</p>
-        <p><strong>Car Number:</strong> {car.number}</p>
-        <p><strong>Color:</strong> {car.color}</p>
-        <p><strong>Status:</strong> {car.status}</p>
-        <p><strong>Daily Rent:</strong> {car.dailyRent}</p>
-        <p><strong>Assigned Date:</strong> {car.assignedDate}</p>
-
-        <button
-          style={{
-            marginTop: "10px",
-            padding: "10px 16px",
-            border: "none",
-            borderRadius: "8px",
-            background: "#10b981",
-            color: "#fff",
-            cursor: "pointer",
-          }}
-        >
-          View History
-        </button>
+        {car ? (
+          <>
+            <h4>{car.make} {car.model}</h4>
+            <p><strong>Year:</strong> {car.year}</p>
+            <p><strong>Registration Number:</strong> {car.registration_number}</p>
+            <p><strong>Mileage:</strong> {car.mileage}</p>
+            <p><strong>Condition:</strong> {car.condition}</p>
+            <p><strong>Assignment Status:</strong> {assignment?.status}</p>
+            <p><strong>Assigned Date:</strong> {assignment?.start_date}</p>
+          </>
+        ) : (
+          <p>No active car assigned.</p>
+        )}
       </div>
     </div>
   );
