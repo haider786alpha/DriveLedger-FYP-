@@ -5,7 +5,7 @@ const AssignedCar = () => {
   const [car, setCar] = useState(null);
 
   // TEMP: change this according to driver table ID
-  const driverId = 6;
+  const driverId = 2;
 
   useEffect(() => {
     fetchAssignedCar();
