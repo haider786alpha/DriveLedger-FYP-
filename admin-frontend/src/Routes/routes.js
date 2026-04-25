@@ -11,6 +11,8 @@ import AddPayment from "../Pages/Payments/AddPayment";
 import EditPayment from "../Pages/Payments/EditPayment";
 import AddExpense from "../Pages/Expenses/AddExpense";
 import EditExpense from "../Pages/Expenses/EditExpense";
+import AddRepair from "../Pages/Repairs/AddRepair";
+import EditRepair from "../Pages/Repairs/EditRepair";
 
 import Dashboard from "../Pages/Dashboard";
 import Users from "../Pages/Users";
@@ -130,8 +132,9 @@ const authProtectedRoutes = [
   { path: "/notifications", component: <Notifications /> },
   { path: "/repairs", component: <Repairs /> },
   { path: "/reports", component: <Reports /> },
-  { path: "/add-driver", component: <AddDriver /> },
+
   //editdriverdetails form
+  { path: "/add-driver", component: <AddDriver /> },
   { path: "/edit-driver/:id", component: <EditDriver /> },
   { path: "/add-car", component: <AddCar /> },
   { path: "/edit-car/:id", component: <EditCar /> },
@@ -142,6 +145,8 @@ const authProtectedRoutes = [
   { path: "/edit-payment/:id", component: <EditPayment /> },
   { path: "/add-expense", component: <AddExpense /> },
   { path: "/edit-expense/:id", component: <EditExpense /> },
+  { path: "/add-repair", component: <AddRepair /> },
+  { path: "/edit-repair/:id", component: <EditRepair /> },
 
   // default redirect
   {

@@ -1,72 +1,46 @@
-import React from "react";
+import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Repairs = () => {
-  const repairs = [
-    {
-      id: 1,
-      car: "Toyota Corolla",
-      driver: "Ali Khan",
-      issue: "Brake pads need replacement",
-      priority: "High",
-      status: "Pending",
-      estimatedCost: 5000,
-    },
-    {
-      id: 2,
-      car: "Honda City",
-      driver: "Usman Tariq",
-      issue: "Engine oil leakage",
-      priority: "Medium",
-      status: "In Progress",
-      estimatedCost: 3500,
-    },
-    {
-      id: 3,
-      car: "Suzuki WagonR",
-      driver: "Bilal Ahmed",
-      issue: "Tyre replacement",
-      priority: "Low",
-      status: "Completed",
-      estimatedCost: 8000,
-    },
-  ];
+  const [repairs, setRepairs] = useState([]);
+
+  useEffect(() => {
+    fetchRepairs();
+  }, []);
+
+  const fetchRepairs = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/repairs/");
+      setRepairs(response);
+    } catch (error) {
+      console.error("Error fetching repairs:", error);
+      setRepairs([]);
+    }
+  };
+
+  const deleteRepair = async (id) => {
+    const confirmDelete = window.confirm("Delete this repair record?");
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/repairs/${id}/`);
+      alert("Repair deleted successfully");
+      fetchRepairs();
+    } catch (error) {
+      console.error("Error deleting repair:", error);
+      alert("Failed to delete repair");
+    }
+  };
 
   return (
     <div className="page-content">
       <div className="container-fluid">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4 className="mb-0">Repairs</h4>
-          <button className="btn btn-primary">Create Repair Request</button>
-        </div>
-
-        <div className="card mb-4">
-          <div className="card-body">
-            <div className="row g-3">
-              <div className="col-md-4">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search by car or driver"
-                />
-              </div>
-              <div className="col-md-3">
-                <select className="form-select">
-                  <option>Filter by Status</option>
-                  <option>Pending</option>
-                  <option>In Progress</option>
-                  <option>Completed</option>
-                </select>
-              </div>
-              <div className="col-md-3">
-                <select className="form-select">
-                  <option>Filter by Priority</option>
-                  <option>High</option>
-                  <option>Medium</option>
-                  <option>Low</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          <Link to="/add-repair" className="btn btn-primary">
+            Create Repair Request
+          </Link>
         </div>
 
         <div className="card">
@@ -76,67 +50,54 @@ const Repairs = () => {
                 <thead className="table-light">
                   <tr>
                     <th>#</th>
-                    <th>Car</th>
-                    <th>Driver</th>
+                    <th>Car ID</th>
                     <th>Issue</th>
                     <th>Priority</th>
                     <th>Status</th>
+                    <th>Reported Date</th>
                     <th>Estimated Cost</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {repairs.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.id}</td>
-                      <td>{item.car}</td>
-                      <td>{item.driver}</td>
-                      <td>{item.issue}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            item.priority === "High"
-                              ? "bg-danger"
-                              : item.priority === "Medium"
-                              ? "bg-warning text-dark"
-                              : "bg-info"
-                          }`}
-                        >
-                          {item.priority}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            item.status === "Completed"
-                              ? "bg-success"
-                              : item.status === "In Progress"
-                              ? "bg-primary"
-                              : "bg-secondary"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td>Rs. {item.estimatedCost}</td>
-                      <td>
-                        <button className="btn btn-sm btn-info me-2">
-                          View
-                        </button>
-                        <button className="btn btn-sm btn-warning me-2">
-                          Update
-                        </button>
-                        <button className="btn btn-sm btn-secondary">
-                          Upload Bill
-                        </button>
+                  {Array.isArray(repairs) && repairs.length > 0 ? (
+                    repairs.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.id}</td>
+                        <td>{item.car}</td>
+                        <td>{item.issue}</td>
+                        <td>{item.priority}</td>
+                        <td>{item.status}</td>
+                        <td>{item.reported_date}</td>
+                        <td>Rs. {item.estimated_cost}</td>
+                        <td>
+                          <Link to={`/edit-repair/${item.id}`} className="btn btn-sm btn-warning me-2">
+                            Edit
+                          </Link>
+
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => deleteRepair(item.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="text-center">
+                        No repairs found
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
