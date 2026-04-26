@@ -241,6 +241,7 @@ import {
 } from "recharts";
 
 const Dashboard = () => {
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     drivers: [],
     cars: [],
@@ -268,8 +269,10 @@ const Dashboard = () => {
 
       setData({ drivers, cars, assignments, payments, expenses, repairs });
     } catch (error) {
-      console.error("Dashboard error:", error);
-    }
+  console.error("Dashboard error:", error);
+} finally {
+  setLoading(false);
+}
   };
 
   const totalPayments = data.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
@@ -301,6 +304,16 @@ const Dashboard = () => {
   ];
 
   const COLORS = ["#0d6efd", "#20c997", "#ffc107", "#dc3545"];
+
+  if (loading) {
+  return (
+    <div className="page-content">
+      <div className="container-fluid text-center mt-5">
+        <h5>Loading Dashboard...</h5>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="page-content">
