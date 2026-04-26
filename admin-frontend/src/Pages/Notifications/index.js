@@ -4,6 +4,7 @@ import axios from "axios";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchNotifications();
@@ -20,8 +21,7 @@ const Notifications = () => {
   };
 
   const deleteNotification = async (id) => {
-    const confirmDelete = window.confirm("Delete this notification?");
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete this notification?")) return;
 
     try {
       await axios.delete(`http://127.0.0.1:8000/api/notifications/${id}/`);
@@ -33,61 +33,98 @@ const Notifications = () => {
     }
   };
 
+  const typeBadge = (type) => {
+    if (type === "success") return "bg-success";
+    if (type === "warning") return "bg-warning";
+    return "bg-info";
+  };
+
+  const filteredNotifications = notifications.filter((item) =>
+    `${item.title} ${item.message} ${item.notification_type}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
   return (
     <div className="page-content">
       <div className="container-fluid">
         <div className="d-flex justify-content-between align-items-center mb-4">
-         <h4 className="mb-0">Notifications</h4>
+          <div>
+            <h4 className="mb-1">Notifications</h4>
+            <p className="text-muted mb-0">
+              Create and manage driver alerts, warnings, and updates.
+            </p>
+          </div>
 
-         <Link to="/add-notification" className="btn btn-primary">
-          Create Notification
-         </Link>
+          <Link to="/add-notification" className="btn btn-primary">
+            Create Notification
+          </Link>
+        </div>
+
+        <div className="card mb-4">
+          <div className="card-body">
+            <input
+              className="form-control"
+              placeholder="Search by title, message, or type"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="card">
           <div className="card-body">
-            <table className="table table-bordered table-hover align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Title</th>
-                  <th>Message</th>
-                  <th>Type</th>
-                  <th>Created At</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+            <div className="table-responsive">
+              <table className="table table-bordered table-hover align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th>Type</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {Array.isArray(notifications) && notifications.length > 0 ? (
-                  notifications.map((item, index) => (
-                    <tr key={item.id}>
-                      <td>{index + 1}</td>
-                      <td>{item.title}</td>
-                      <td>{item.message}</td>
-                      <td>{item.notification_type}</td>
-                      <td>{new Date(item.created_at).toLocaleString()}</td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => deleteNotification(item.id)}
-                        >
-                          Delete
-                        </button>
+                <tbody>
+                  {filteredNotifications.length > 0 ? (
+                    filteredNotifications.map((item, index) => (
+                      <tr key={item.id}>
+                        <td>{index + 1}</td>
+                        <td>
+                          <strong>{item.title}</strong>
+                        </td>
+                        <td>{item.message}</td>
+                        <td>
+                          <span className={`badge ${typeBadge(item.notification_type)}`}>
+                            {item.notification_type}
+                          </span>
+                        </td>
+                        <td>{new Date(item.created_at).toLocaleString()}</td>
+                        <td>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => deleteNotification(item.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center">
+                        No notifications found
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="text-center">
-                      No notifications found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
   );

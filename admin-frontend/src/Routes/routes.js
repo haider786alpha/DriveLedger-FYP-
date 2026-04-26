@@ -6,6 +6,7 @@ import EditDriver from "../Pages/Drivers/EditDriver";
 import AddCar from "../Pages/Cars/AddCar";
 import EditCar from "../Pages/Cars/EditCar";
 import AssignDriver from "../Pages/Assignments/AssignDriver";
+import EditAssignment from "../Pages/Assignments/EditAssignment";
 import AddUser from "../Pages/Users/AddUser";
 import EditUser from "../Pages/Users/EditUser";
 import AddPayment from "../Pages/Payments/AddPayment";
@@ -141,6 +142,7 @@ const authProtectedRoutes = [
   { path: "/add-car", component: <AddCar /> },
   { path: "/edit-car/:id", component: <EditCar /> },
   { path: "/assign-driver", component: <AssignDriver /> },
+  { path: "/edit-assignment/:id", component: <EditAssignment /> },
   { path: "/add-user", component: <AddUser /> },
   { path: "/edit-user/:id", component: <EditUser /> },
   { path: "/add-payment", component: <AddPayment /> },
