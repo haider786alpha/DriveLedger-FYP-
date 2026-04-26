@@ -4,6 +4,7 @@ import axios from "axios";
 
 const Cars = () => {
   const [cars, setCars] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchCars();
@@ -20,8 +21,7 @@ const Cars = () => {
   };
 
   const deleteCar = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this car?");
-    if (!confirmDelete) return;
+    if (!window.confirm("Are you sure you want to delete this car?")) return;
 
     try {
       await axios.delete(`http://127.0.0.1:8000/api/cars/${id}/`);
@@ -33,11 +33,20 @@ const Cars = () => {
     }
   };
 
+  const filteredCars = cars.filter((car) =>
+    `${car.make} ${car.model} ${car.registration_number}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
   return (
     <div className="page-content">
       <div className="container-fluid">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h4 className="mb-0">Car Management</h4>
+          <div>
+            <h4 className="mb-1">Car Management</h4>
+            <p className="text-muted mb-0">Manage vehicle records, condition and details.</p>
+          </div>
 
           <Link to="/add-car" className="btn btn-primary">
             Add Car
@@ -46,20 +55,12 @@ const Cars = () => {
 
         <div className="card mb-4">
           <div className="card-body">
-            <div className="row g-3">
-              <div className="col-md-4">
-                <input className="form-control" placeholder="Search car" />
-              </div>
-
-              <div className="col-md-3">
-                <select className="form-select">
-                  <option>Filter by Status</option>
-                  <option>Available</option>
-                  <option>Assigned</option>
-                  <option>Maintenance</option>
-                </select>
-              </div>
-            </div>
+            <input
+              className="form-control"
+              placeholder="Search by make, model, or registration number"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
         </div>
 
@@ -70,10 +71,9 @@ const Cars = () => {
                 <thead className="table-light">
                   <tr>
                     <th>#</th>
-                    <th>Make</th>
-                    <th>Model</th>
+                    <th>Car</th>
+                    <th>Registration</th>
                     <th>Year</th>
-                    <th>Registration No</th>
                     <th>Mileage</th>
                     <th>Condition</th>
                     <th>Actions</th>
@@ -81,22 +81,22 @@ const Cars = () => {
                 </thead>
 
                 <tbody>
-                  {Array.isArray(cars) && cars.length > 0 ? (
-                    cars.map((car) => (
+                  {filteredCars.length > 0 ? (
+                    filteredCars.map((car, index) => (
                       <tr key={car.id}>
-                        <td>{car.id}</td>
-                        <td>{car.make}</td>
-                        <td>{car.model}</td>
-                        <td>{car.year}</td>
-                        <td>{car.registration_number}</td>
-                        <td>{car.mileage}</td>
-                        <td>{car.condition}</td>
-
+                        <td>{index + 1}</td>
                         <td>
-                          <button className="btn btn-sm btn-info me-2">
-                            View
-                          </button>
-
+                          <strong>{car.make} {car.model}</strong>
+                        </td>
+                        <td>{car.registration_number}</td>
+                        <td>{car.year}</td>
+                        <td>{car.mileage} km</td>
+                        <td>
+                          <span className="badge bg-info">
+                            {car.condition}
+                          </span>
+                        </td>
+                        <td>
                           <Link
                             to={`/edit-car/${car.id}`}
                             className="btn btn-sm btn-warning me-2"
@@ -115,7 +115,7 @@ const Cars = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="text-center">
+                      <td colSpan="7" className="text-center">
                         No cars found
                       </td>
                     </tr>

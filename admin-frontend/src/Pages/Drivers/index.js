@@ -2,49 +2,51 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
-
 const Drivers = () => {
   const [drivers, setDrivers] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchDrivers();
   }, []);
 
-const fetchDrivers = async () => {
-  try {
-    const response = await axios.get("http://127.0.0.1:8000/api/drivers/");
+  const fetchDrivers = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/drivers/");
+      setDrivers(response);
+    } catch (error) {
+      console.error("Error fetching drivers:", error);
+      setDrivers([]);
+    }
+  };
 
-    console.log("Full response:", response);
-    console.log("Actual data:", response.data);
+  const deleteDriver = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this driver?")) return;
 
-    setDrivers(response);
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/drivers/${id}/`);
+      alert("Driver deleted successfully");
+      fetchDrivers();
+    } catch (error) {
+      console.error("Error deleting driver:", error);
+      alert("Failed to delete driver");
+    }
+  };
 
-  } catch (error) {
-    console.error("Error fetching drivers:", error);
-    setDrivers([]);
-  }
-};
-const deleteDriver = async (id) => {
-  const confirmDelete = window.confirm("Are you sure you want to delete this driver?");
-
-  if (!confirmDelete) return;
-
-  try {
-    await axios.delete(`http://127.0.0.1:8000/api/drivers/${id}/`);
-    alert("Driver deleted successfully");
-    fetchDrivers();
-  } catch (error) {
-    console.error("Error deleting driver:", error);
-    alert("Failed to delete driver");
-  }
-};
-
+  const filteredDrivers = drivers.filter((driver) =>
+    `${driver.user_name} ${driver.cnic} ${driver.license_number} ${driver.address}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
     <div className="page-content">
       <div className="container-fluid">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h4 className="mb-0">Driver Management</h4>
+          <div>
+            <h4 className="mb-1">Driver Management</h4>
+            <p className="text-muted mb-0">Manage driver records, CNIC, license and address details.</p>
+          </div>
 
           <Link to="/add-driver" className="btn btn-primary">
             Add Driver
@@ -53,23 +55,13 @@ const deleteDriver = async (id) => {
 
         <div className="card mb-4">
           <div className="card-body">
-            <div className="row g-3">
-              <div className="col-md-4">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search driver"
-                />
-              </div>
-
-              <div className="col-md-3">
-                <select className="form-select">
-                  <option>Filter by Status</option>
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </div>
-            </div>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search by driver name, CNIC, license number, or address"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
         </div>
 
@@ -80,7 +72,7 @@ const deleteDriver = async (id) => {
                 <thead className="table-light">
                   <tr>
                     <th>#</th>
-                    <th>Driver Name</th>
+                    <th>Driver</th>
                     <th>CNIC</th>
                     <th>License Number</th>
                     <th>Address</th>
@@ -89,20 +81,17 @@ const deleteDriver = async (id) => {
                 </thead>
 
                 <tbody>
-                  {Array.isArray(drivers) && drivers.length > 0 ? (
-                    drivers.map((driver) => (
+                  {filteredDrivers.length > 0 ? (
+                    filteredDrivers.map((driver, index) => (
                       <tr key={driver.id}>
-                        <td>{driver.id}</td>
-                        <td>{driver.user_name}</td>
+                        <td>{index + 1}</td>
+                        <td>
+                          <strong>{driver.user_name || `Driver ${driver.id}`}</strong>
+                        </td>
                         <td>{driver.cnic}</td>
                         <td>{driver.license_number}</td>
                         <td>{driver.address}</td>
-
                         <td>
-                          <button className="btn btn-sm btn-info me-2">
-                            View
-                          </button>
-
                           <Link
                             to={`/edit-driver/${driver.id}`}
                             className="btn btn-sm btn-warning me-2"
@@ -111,10 +100,10 @@ const deleteDriver = async (id) => {
                           </Link>
 
                           <button
-                           className="btn btn-sm btn-danger"
-                           onClick={() => deleteDriver(driver.id)}
+                            className="btn btn-sm btn-danger"
+                            onClick={() => deleteDriver(driver.id)}
                           >
-                           Delete
+                            Delete
                           </button>
                         </td>
                       </tr>
@@ -131,6 +120,7 @@ const deleteDriver = async (id) => {
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
