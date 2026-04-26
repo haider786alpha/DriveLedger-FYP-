@@ -32,8 +32,8 @@ urlpatterns = [
     path('api/', include('payments.urls')),
     path('api/', include('expenses.urls')),
     path('api/', include('repairs.urls')),
-
     path('api/', include(router.urls)),
+    path('api/', include('notifications_app.urls')),
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
