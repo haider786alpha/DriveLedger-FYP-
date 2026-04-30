@@ -202,3 +202,236 @@ export default connect(mapStatetoProps, {
   toggleLeftmenu,
   changeSidebarType,
 })(withTranslation()(Header));
+
+// import React, { useState } from "react";
+// import { connect } from "react-redux";
+// import { Link } from "react-router-dom";
+// import { withTranslation } from "react-i18next";
+
+// import logoSm from "../../assets/images/logo-sm.png";
+// import { showRightSidebarAction } from "../../store/actions";
+// import ProfileMenu from "../../components/Common/TopbarDropdown/ProfileMenu";
+
+// const Header = (props) => {
+//   const [search, setSearch] = useState(false);
+
+//   function toggleFullscreen() {
+//     if (
+//       !document.fullscreenElement &&
+//       !document.mozFullScreenElement &&
+//       !document.webkitFullscreenElement
+//     ) {
+//       if (document.documentElement.requestFullscreen) {
+//         document.documentElement.requestFullscreen();
+//       } else if (document.documentElement.mozRequestFullScreen) {
+//         document.documentElement.mozRequestFullScreen();
+//       } else if (document.documentElement.webkitRequestFullscreen) {
+//         document.documentElement.webkitRequestFullscreen(
+//           Element.ALLOW_KEYBOARD_INPUT
+//         );
+//       }
+//     } else {
+//       if (document.cancelFullScreen) {
+//         document.cancelFullScreen();
+//       } else if (document.mozCancelFullScreen) {
+//         document.mozCancelFullScreen();
+//       } else if (document.webkitCancelFullScreen) {
+//         document.webkitCancelFullScreen();
+//       }
+//     }
+//   }
+
+//   function tToggle() {
+//     const body = document.body;
+//     if (window.screen.width <= 998) {
+//       body.classList.toggle("sidebar-enable");
+//     } else {
+//       body.classList.toggle("vertical-collpsed");
+//       body.classList.toggle("sidebar-enable");
+//     }
+//   }
+
+//   return (
+//     <React.Fragment>
+//       <header id="page-topbar">
+//         <div className="navbar-header">
+//           <div className="d-flex align-items-center">
+//             <div className="navbar-brand-box text-center">
+//               <Link
+//                 to="/"
+//                 className="logo logo-dark"
+//                 style={{ textDecoration: "none" }}
+//               >
+//                 <span
+//                   className="logo-sm"
+//                   style={{
+//                     display: "inline-flex",
+//                     alignItems: "center",
+//                     justifyContent: "center",
+//                   }}
+//                 >
+//                   <img src={logoSm} alt="logo-sm-dark" height="22" />
+//                 </span>
+//                 <span
+//                   className="logo-lg"
+//                   style={{
+//                     display: "inline-flex",
+//                     alignItems: "center",
+//                     gap: "8px",
+//                     fontSize: "20px",
+//                     fontWeight: "700",
+//                     color: "#1f2937",
+//                     letterSpacing: "0.3px",
+//                   }}
+//                 >
+//                   <img src={logoSm} alt="logo-dark" height="24" />
+//                   <span>DriveLedger</span>
+//                 </span>
+//               </Link>
+
+//               <Link
+//                 to="/"
+//                 className="logo logo-light"
+//                 style={{ textDecoration: "none" }}
+//               >
+//                 <span
+//                   className="logo-sm"
+//                   style={{
+//                     display: "inline-flex",
+//                     alignItems: "center",
+//                     justifyContent: "center",
+//                   }}
+//                 >
+//                   <img src={logoSm} alt="logo-sm-light" height="22" />
+//                 </span>
+//                 <span
+//                   className="logo-lg"
+//                   style={{
+//                     display: "inline-flex",
+//                     alignItems: "center",
+//                     gap: "8px",
+//                     fontSize: "20px",
+//                     fontWeight: "700",
+//                     color: "#ffffff",
+//                     letterSpacing: "0.3px",
+//                   }}
+//                 >
+//                   <img src={logoSm} alt="logo-light" height="24" />
+//                   <span>DriveLedger</span>
+//                 </span>
+//               </Link>
+//             </div>
+
+//             <button
+//               type="button"
+//               className="btn btn-sm px-3 font-size-24 header-item waves-effect"
+//               id="vertical-menu-btn"
+//               onClick={tToggle}
+//             >
+//               <i className="ri-menu-2-line align-middle"></i>
+//             </button>
+
+//             <div className="d-none d-lg-flex flex-column ms-2">
+//               <span
+//                 style={{
+//                   fontSize: "16px",
+//                   fontWeight: "700",
+//                   color: "#1f2937",
+//                   lineHeight: "1.1",
+//                 }}
+//               >
+//                 DriveLedger Admin Panel
+//               </span>
+//               <span
+//                 style={{
+//                   fontSize: "12px",
+//                   color: "#6b7280",
+//                   lineHeight: "1.1",
+//                   marginTop: "2px",
+//                 }}
+//               >
+//                 Fleet Management System
+//               </span>
+//             </div>
+//           </div>
+
+//           <div className="d-flex align-items-center">
+//             <div className="dropdown d-inline-block d-lg-none ms-2">
+//               <button
+//                 onClick={() => setSearch(!search)}
+//                 type="button"
+//                 className="btn header-item noti-icon"
+//                 id="page-header-search-dropdown"
+//               >
+//                 <i className="ri-search-line" />
+//               </button>
+
+//               <div
+//                 className={
+//                   search
+//                     ? "dropdown-menu dropdown-menu-lg dropdown-menu-end p-0 show"
+//                     : "dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
+//                 }
+//                 aria-labelledby="page-header-search-dropdown"
+//               >
+//                 <form className="p-3">
+//                   <div className="form-group m-0">
+//                     <div className="input-group">
+//                       <input
+//                         type="text"
+//                         className="form-control"
+//                         placeholder="Search ..."
+//                         aria-label="search"
+//                       />
+//                       <div className="input-group-append">
+//                         <button className="btn btn-primary" type="submit">
+//                           <i className="ri-search-line" />
+//                         </button>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </form>
+//               </div>
+//             </div>
+
+//             <div className="dropdown d-none d-lg-inline-block ms-1">
+//               <button
+//                 type="button"
+//                 onClick={toggleFullscreen}
+//                 className="btn header-item noti-icon"
+//                 data-toggle="fullscreen"
+//               >
+//                 <i className="ri-fullscreen-line" />
+//               </button>
+//             </div>
+
+//             <ProfileMenu />
+
+//             <div
+//               className="dropdown d-inline-block"
+//               onClick={() =>
+//                 props.showRightSidebarAction(!props.showRightSidebar)
+//               }
+//             >
+//               <button
+//                 type="button"
+//                 className="btn header-item noti-icon right-bar-toggle waves-effect"
+//               >
+//                 <i className="mdi mdi-cog"></i>
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       </header>
+//     </React.Fragment>
+//   );
+// };
+
+// const mapStatetoProps = (state) => {
+//   const { showRightSidebar } = state.Layout;
+//   return { showRightSidebar };
+// };
+
+// export default connect(mapStatetoProps, {
+//   showRightSidebarAction,
+// })(withTranslation()(Header));

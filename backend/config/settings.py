@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'expenses',
     'notifications_app',
     'repairs',
+    'support_messages',
 ]
 
 MIDDLEWARE = [

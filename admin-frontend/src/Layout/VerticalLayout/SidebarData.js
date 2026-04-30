@@ -47,7 +47,7 @@ const sidebarData = [
   },
   {
     id: "notifications",
-    label: "Notifications",
+    label: "Notifications & Support",
     icon: "bx bx-bell",
     url: "/notifications",
   },
