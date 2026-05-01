@@ -1,61 +1,81 @@
 // import React, { useEffect, useState } from "react";
-// import axios from "axios";
+// import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
+// import { API_URL } from "@/helpers/apiConfig";
 
 // const Dashboard = () => {
+//   const [driver, setDriver] = useState(null);
 //   const [assignment, setAssignment] = useState(null);
 //   const [car, setCar] = useState(null);
 //   const [payments, setPayments] = useState([]);
-
-//   const driverId = 2;
+//   const [loading, setLoading] = useState(true);
 
 //   useEffect(() => {
 //     fetchDashboardData();
 //   }, []);
 
-//   const getData = (response) => {
-//     return response?.data ? response.data : response;
+//   const fetchDashboardData = async () => {
+//     try {
+//       setLoading(true);
+
+//       const loggedInDriver = await getLoggedInDriver();
+//       setDriver(loggedInDriver);
+
+//       if (!loggedInDriver) {
+//         setLoading(false);
+//         return;
+//       }
+
+//       const assignmentsRes = await fetch(API_URL("/api/assignments/"));
+//       const assignments = await assignmentsRes.json();
+
+//       const activeAssignment = assignments.find(
+//         (item) =>
+//           Number(item.driver) === Number(loggedInDriver.id) &&
+//           String(item.status).toLowerCase() === "active"
+//       );
+
+//       setAssignment(activeAssignment || null);
+
+//       if (!activeAssignment) {
+//         setLoading(false);
+//         return;
+//       }
+
+//       const carRes = await fetch(
+//         API_URL(`/api/cars/${activeAssignment.car}/`)
+//       );
+//       const carData = await carRes.json();
+//       setCar(carData);
+
+//       const paymentsRes = await fetch(API_URL("/api/payments/"));
+//       const allPayments = await paymentsRes.json();
+
+//       const relatedPayments = allPayments.filter(
+//         (payment) => Number(payment.assignment) === Number(activeAssignment.id)
+//       );
+
+//       setPayments(relatedPayments);
+//     } catch (error) {
+//       console.error("Dashboard error:", error);
+//     } finally {
+//       setLoading(false);
+//     }
 //   };
 
-// const fetchDashboardData = async () => {
-//   try {
-//     const assignmentsRes = await fetch("http://localhost:8000/api/assignments/");
-//     const assignments = await assignmentsRes.json();
-
-//     console.log("Assignments:", assignments);
-
-//     const activeAssignment = assignments.find(
-//       (item) =>
-//         Number(item.driver) === Number(driverId) &&
-//         String(item.status).toLowerCase() === "active"
-//     );
-
-//     console.log("Active Assignment:", activeAssignment);
-
-//     setAssignment(activeAssignment || null);
-
-//     if (!activeAssignment) return;
-
-//     const carRes = await fetch(`http://localhost:8000/api/cars/${activeAssignment.car}/`);
-//     const carData = await carRes.json();
-//     setCar(carData);
-
-//     const paymentsRes = await fetch("http://localhost:8000/api/payments/");
-//     const allPayments = await paymentsRes.json();
-
-//     const relatedPayments = allPayments.filter(
-//       (payment) => Number(payment.assignment) === Number(activeAssignment.id)
-//     );
-
-//     setPayments(relatedPayments);
-//   } catch (error) {
-//     console.error("Dashboard error:", error);
+//   if (loading) {
+//     return <div>Loading dashboard...</div>;
 //   }
-// };
 
 //   return (
 //     <div>
 //       <h2>Driver Dashboard</h2>
 //       <p>Welcome to DriveLedger Driver Panel.</p>
+
+//       {driver && (
+//         <p style={{ marginTop: "10px", fontWeight: "bold" }}>
+//           Logged in as: {driver.user_name}
+//         </p>
+//       )}
 
 //       <div
 //         style={{
@@ -65,23 +85,48 @@
 //           marginTop: "20px",
 //         }}
 //       >
-//         <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "10px" }}>
+//         <div
+//           style={{
+//             padding: "20px",
+//             border: "1px solid #ddd",
+//             borderRadius: "10px",
+//           }}
+//         >
 //           <h4>Assigned Car</h4>
 //           <p>{car ? `${car.make} ${car.model}` : "No car assigned"}</p>
 //         </div>
 
-//         <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "10px" }}>
+//         <div
+//           style={{
+//             padding: "20px",
+//             border: "1px solid #ddd",
+//             borderRadius: "10px",
+//           }}
+//         >
 //           <h4>Assignment Status</h4>
 //           <p>{assignment ? assignment.status : "No active assignment"}</p>
 //         </div>
 
-//         <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "10px" }}>
+//         <div
+//           style={{
+//             padding: "20px",
+//             border: "1px solid #ddd",
+//             borderRadius: "10px",
+//           }}
+//         >
 //           <h4>Total Payments</h4>
 //           <p>{payments.length}</p>
 //         </div>
 //       </div>
 
-//       <div style={{ marginTop: "25px", padding: "20px", border: "1px solid #ddd", borderRadius: "10px" }}>
+//       <div
+//         style={{
+//           marginTop: "25px",
+//           padding: "20px",
+//           border: "1px solid #ddd",
+//           borderRadius: "10px",
+//         }}
+//       >
 //         <h4>Recent Payments</h4>
 
 //         {payments.length > 0 ? (
@@ -116,6 +161,21 @@
 
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
+import { API_URL } from "@/helpers/apiConfig";
+import {
+  pageHeroStyle,
+  pageTitleStyle,
+  pageSubtitleStyle,
+  loggedInPillStyle,
+  statCardStyle,
+  contentCardStyle,
+  innerInfoCardStyle,
+  sectionTitleStyle,
+  sectionSubtitleStyle,
+  statLabelStyle,
+  infoLabelStyle,
+  emptyStateStyle,
+} from "@/helpers/panelStyles";
 
 const Dashboard = () => {
   const [driver, setDriver] = useState(null);
@@ -140,7 +200,7 @@ const Dashboard = () => {
         return;
       }
 
-      const assignmentsRes = await fetch("http://localhost:8000/api/assignments/");
+      const assignmentsRes = await fetch(API_URL("/api/assignments/"));
       const assignments = await assignmentsRes.json();
 
       const activeAssignment = assignments.find(
@@ -156,13 +216,11 @@ const Dashboard = () => {
         return;
       }
 
-      const carRes = await fetch(
-        `http://localhost:8000/api/cars/${activeAssignment.car}/`
-      );
+      const carRes = await fetch(API_URL(`/api/cars/${activeAssignment.car}/`));
       const carData = await carRes.json();
       setCar(carData);
 
-      const paymentsRes = await fetch("http://localhost:8000/api/payments/");
+      const paymentsRes = await fetch(API_URL("/api/payments/"));
       const allPayments = await paymentsRes.json();
 
       const relatedPayments = allPayments.filter(
@@ -177,96 +235,259 @@ const Dashboard = () => {
     }
   };
 
+  const totalAmount = payments.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0
+  );
+
+  const paidCount = payments.filter(
+    (item) => String(item.status).toLowerCase() === "paid"
+  ).length;
+
+  const getStatusBadge = (status) => {
+    const value = String(status || "").toLowerCase();
+
+    if (value === "paid") {
+      return {
+        background: "#dcfce7",
+        color: "#166534",
+      };
+    }
+
+    if (value === "unpaid") {
+      return {
+        background: "#fee2e2",
+        color: "#991b1b",
+      };
+    }
+
+    return {
+      background: "#e0e7ff",
+      color: "#3730a3",
+    };
+  };
+
   if (loading) {
     return <div>Loading dashboard...</div>;
   }
 
   return (
     <div>
-      <h2>Driver Dashboard</h2>
-      <p>Welcome to DriveLedger Driver Panel.</p>
+      <div style={pageHeroStyle}>
+        <h2 style={pageTitleStyle}>Driver Dashboard</h2>
 
-      {driver && (
-        <p style={{ marginTop: "10px", fontWeight: "bold" }}>
-          Logged in as: {driver.user_name}
+        <p style={pageSubtitleStyle}>
+          Welcome to DriveLedger Driver Panel. Track your assigned vehicle,
+          payment activity, and current assignment status in one place.
         </p>
-      )}
+
+        {driver && (
+          <div style={loggedInPillStyle}>
+            <span
+              style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                background: "#22c55e",
+                display: "inline-block",
+              }}
+            />
+            Logged in as: {driver.user_name}
+          </div>
+        )}
+      </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
           gap: "20px",
-          marginTop: "20px",
+          marginBottom: "24px",
         }}
       >
-        <div
-          style={{
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "10px",
-          }}
-        >
-          <h4>Assigned Car</h4>
-          <p>{car ? `${car.make} ${car.model}` : "No car assigned"}</p>
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>Assigned Car</p>
+          <h3
+            style={{
+              margin: "10px 0 0 0",
+              color: "#0f172a",
+              fontSize: "24px",
+              wordBreak: "break-word",
+            }}
+          >
+            {car ? `${car.make} ${car.model}` : "No Car"}
+          </h3>
+          <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>
+            Current assigned vehicle
+          </p>
         </div>
 
-        <div
-          style={{
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "10px",
-          }}
-        >
-          <h4>Assignment Status</h4>
-          <p>{assignment ? assignment.status : "No active assignment"}</p>
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>Assignment Status</p>
+          <h3
+            style={{
+              margin: "10px 0 0 0",
+              color: "#0f172a",
+              fontSize: "24px",
+              textTransform: "capitalize",
+              wordBreak: "break-word",
+            }}
+          >
+            {assignment ? assignment.status : "No Assignment"}
+          </h3>
+          <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>
+            Live assignment condition
+          </p>
         </div>
 
-        <div
-          style={{
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "10px",
-          }}
-        >
-          <h4>Total Payments</h4>
-          <p>{payments.length}</p>
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>Total Payments</p>
+          <h3 style={{ margin: "10px 0 0 0", color: "#0f172a", fontSize: "24px" }}>
+            {payments.length}
+          </h3>
+          <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>
+            All payment records
+          </p>
+        </div>
+
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>Paid Records</p>
+          <h3 style={{ margin: "10px 0 0 0", color: "#0f172a", fontSize: "24px" }}>
+            {paidCount}
+          </h3>
+          <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>
+            Completed payments only
+          </p>
         </div>
       </div>
 
       <div
         style={{
-          marginTop: "25px",
-          padding: "20px",
-          border: "1px solid #ddd",
-          borderRadius: "10px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: "20px",
         }}
       >
-        <h4>Recent Payments</h4>
+        <div style={contentCardStyle}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "18px",
+              gap: "12px",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <h4 style={sectionTitleStyle}>Recent Payments</h4>
+              <p style={sectionSubtitleStyle}>
+                Latest payment activity for your account
+              </p>
+            </div>
 
-        {payments.length > 0 ? (
-          <table style={{ width: "100%", marginTop: "15px" }}>
-            <thead>
-              <tr>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+            <div
+              style={{
+                ...innerInfoCardStyle,
+                textAlign: "right",
+                maxWidth: "100%",
+              }}
+            >
+              <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>Total Amount</p>
+              <strong style={{ color: "#0f172a", fontSize: "16px" }}>Rs. {totalAmount}</strong>
+            </div>
+          </div>
 
-            <tbody>
-              {payments.map((payment) => (
-                <tr key={payment.id}>
-                  <td>Rs. {payment.amount}</td>
-                  <td>{payment.payment_date}</td>
-                  <td>{payment.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No payments found</p>
-        )}
+          {payments.length > 0 ? (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "480px" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
+                      Amount
+                    </th>
+                    <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
+                      Date
+                    </th>
+                    <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {payments.map((payment) => (
+                    <tr key={payment.id} style={{ borderTop: "1px solid #e5e7eb" }}>
+                      <td style={{ padding: "14px", color: "#0f172a", fontWeight: "600" }}>
+                        Rs. {payment.amount}
+                      </td>
+                      <td style={{ padding: "14px", color: "#475569" }}>
+                        {payment.payment_date}
+                      </td>
+                      <td style={{ padding: "14px" }}>
+                        <span
+                          style={{
+                            ...getStatusBadge(payment.status),
+                            padding: "6px 12px",
+                            borderRadius: "999px",
+                            fontSize: "12px",
+                            fontWeight: "700",
+                            textTransform: "capitalize",
+                            display: "inline-block",
+                          }}
+                        >
+                          {payment.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div style={emptyStateStyle}>No payments found</div>
+          )}
+        </div>
+
+        <div style={contentCardStyle}>
+          <h4 style={sectionTitleStyle}>Quick Summary</h4>
+          <p style={sectionSubtitleStyle}>A quick look at your current panel data</p>
+
+          <div
+            style={{
+              display: "grid",
+              gap: "14px",
+            }}
+          >
+            <div style={innerInfoCardStyle}>
+              <p style={infoLabelStyle}>Driver</p>
+              <strong style={{ color: "#0f172a", fontSize: "16px", wordBreak: "break-word" }}>
+                {driver?.user_name || "-"}
+              </strong>
+            </div>
+
+            <div style={innerInfoCardStyle}>
+              <p style={infoLabelStyle}>Vehicle</p>
+              <strong style={{ color: "#0f172a", fontSize: "16px", wordBreak: "break-word" }}>
+                {car ? `${car.make} ${car.model}` : "No car assigned"}
+              </strong>
+            </div>
+
+            <div style={innerInfoCardStyle}>
+              <p style={infoLabelStyle}>Assignment</p>
+              <strong
+                style={{
+                  color: "#0f172a",
+                  fontSize: "16px",
+                  textTransform: "capitalize",
+                  wordBreak: "break-word",
+                }}
+              >
+                {assignment?.status || "No active assignment"}
+              </strong>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
