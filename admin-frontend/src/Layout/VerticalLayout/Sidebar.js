@@ -1,79 +1,97 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import sidebarData from "./SidebarData";
-//Simple bar
 import SimpleBar from "simplebar-react";
-// MetisMenu
 import MetisMenu from "metismenujs";
 import withRouter from "../../components/Common/withRouter";
 import { Link } from "react-router-dom";
-//i18n
 import { withTranslation } from "react-i18next";
+import axios from "axios";
+
 const Sidebar = (props) => {
   const ref = useRef();
-  const activateParentDropdown = useCallback(item => {
+  const [newSupportCount, setNewSupportCount] = useState(0);
+
+  const activateParentDropdown = useCallback((item) => {
     item.classList.add("active");
     const parent = item.parentElement;
     const parent2El = parent.childNodes[1];
+
     if (parent2El && parent2El.id !== "side-menu") {
       parent2El.classList.add("mm-show");
     }
+
     if (parent) {
       parent.classList.add("mm-active");
       const parent2 = parent.parentElement;
+
       if (parent2) {
-        parent2.classList.add("mm-show"); // ul tag
-        const parent3 = parent2.parentElement; // li tag
+        parent2.classList.add("mm-show");
+        const parent3 = parent2.parentElement;
+
         if (parent3) {
-          parent3.classList.add("mm-active"); // li
-          parent3.childNodes[0].classList.add("mm-active"); //a
-          const parent4 = parent3.parentElement; // ul
+          parent3.classList.add("mm-active");
+          parent3.childNodes[0].classList.add("mm-active");
+          const parent4 = parent3.parentElement;
+
           if (parent4) {
-            parent4.classList.add("mm-show"); // ul
+            parent4.classList.add("mm-show");
             const parent5 = parent4.parentElement;
+
             if (parent5) {
-              parent5.classList.add("mm-show"); // li
-              parent5.childNodes[0].classList.add("mm-active"); // a tag
+              parent5.classList.add("mm-show");
+              parent5.childNodes[0].classList.add("mm-active");
             }
           }
         }
       }
+
       scrollElement(item);
       return false;
     }
+
     scrollElement(item);
     return false;
   }, []);
-  const removeActivation = items => {
-    for (var i = 0; i < items.length; ++i) {
-      var item = items[i];
+
+  const removeActivation = (items) => {
+    for (let i = 0; i < items.length; ++i) {
+      const item = items[i];
       const parent = items[i].parentElement;
+
       if (item && item.classList.contains("active")) {
         item.classList.remove("active");
       }
+
       if (parent) {
         const parent2El =
           parent.childNodes && parent.childNodes.length && parent.childNodes[1]
             ? parent.childNodes[1]
             : null;
+
         if (parent2El && parent2El.id !== "side-menu") {
           parent2El.classList.remove("mm-show");
         }
+
         parent.classList.remove("mm-active");
         const parent2 = parent.parentElement;
+
         if (parent2) {
           parent2.classList.remove("mm-show");
           const parent3 = parent2.parentElement;
+
           if (parent3) {
-            parent3.classList.remove("mm-active"); // li
+            parent3.classList.remove("mm-active");
             parent3.childNodes[0].classList.remove("mm-active");
-            const parent4 = parent3.parentElement; // ul
+            const parent4 = parent3.parentElement;
+
             if (parent4) {
-              parent4.classList.remove("mm-show"); // ul
+              parent4.classList.remove("mm-show");
               const parent5 = parent4.parentElement;
+
               if (parent5) {
-                parent5.classList.remove("mm-show"); // li
-                parent5.childNodes[0].classList.remove("mm-active"); // a tag
+                parent5.classList.remove("mm-show");
+                parent5.childNodes[0].classList.remove("mm-active");
               }
             }
           }
@@ -81,45 +99,101 @@ const Sidebar = (props) => {
       }
     }
   };
+
   const activeMenu = useCallback(() => {
     const pathName = props.router.location.pathname;
-    const fullPath = pathName;
-    let matchingMenuItem = null;
     const ul = document.getElementById("side-menu-item");
     const items = ul.getElementsByTagName("a");
+
     removeActivation(items);
+
+    let matchingMenuItem = null;
     for (let i = 0; i < items.length; ++i) {
-      if (fullPath === items[i].pathname) {
+      if (pathName === items[i].pathname) {
         matchingMenuItem = items[i];
         break;
       }
     }
+
     if (matchingMenuItem) {
       activateParentDropdown(matchingMenuItem);
     }
-  }, [
-    props.router.location.pathname,
-    activateParentDropdown,
-  ]);
-  useEffect(() => {
-    ref.current.recalculate();
+  }, [props.router.location.pathname, activateParentDropdown]);
+
+  const fetchSupportAlertCount = useCallback(async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/api/support-messages/");
+
+      const supportMessages = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.results)
+        ? res.results
+        : Array.isArray(res?.data?.results)
+        ? res.data.results
+        : [];
+
+      const lastSeenSupportId = Number(
+        localStorage.getItem("lastSeenSupportId") || 0
+      );
+
+      const count = supportMessages.filter(
+        (item) => Number(item.id) > lastSeenSupportId
+      ).length;
+
+      setNewSupportCount(count);
+    } catch (error) {
+      console.error("Sidebar support alert error:", error);
+      setNewSupportCount(0);
+    }
   }, []);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.recalculate();
+    }
+  }, []);
+
   useEffect(() => {
     new MetisMenu("#side-menu-item");
     activeMenu();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeMenu]);
+
   useEffect(() => {
     activeMenu();
   }, [activeMenu]);
+
+  useEffect(() => {
+    fetchSupportAlertCount();
+
+    const interval = setInterval(() => {
+      fetchSupportAlertCount();
+    }, 5000);
+
+    const handleStorageChange = () => {
+      fetchSupportAlertCount();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", fetchSupportAlertCount);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", fetchSupportAlertCount);
+    };
+  }, [fetchSupportAlertCount]);
+
   function scrollElement(item) {
     if (item) {
       const currentPosition = item.offsetTop;
-      if (currentPosition > window.innerHeight) {
+      if (currentPosition > window.innerHeight && ref.current) {
         ref.current.getScrollElement().scrollTop = currentPosition - 300;
       }
     }
   }
+
   return (
     <React.Fragment>
       <div className="vertical-menu">
@@ -131,49 +205,91 @@ const Sidebar = (props) => {
                   {item.isMainMenu ? (
                     <li className="menu-title">{props.t(item.label)}</li>
                   ) : (
-                    <li key={key}>
+                    <li>
                       <Link
                         to={item.url ? item.url : "/#"}
-                        className={
-                          (item.issubMenubadge || item.isHasArrow)
-                            ? " "
-                            : "has-arrow"
-                        }
+                        className={item.subItem || item.isHasArrow ? "has-arrow" : ""}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "10px",
+                          borderRadius: "8px",
+                          paddingRight: "12px",
+                        }}
                       >
-                        <i
-                          className={item.icon}
-                          style={{ marginRight: "5px" }}
-                        ></i>
-                        {item.issubMenubadge && (
-                          <span
-                            className={
-                              "badge rounded-pill float-end " + item.bgcolor
-                            }
-                          >
-                            {" "}
-                            {item.badgeValue}{" "}
-                          </span>
-                        )}
-                        <span>{props.t(item.label)}</span>
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            minWidth: 0,
+                            gap: "8px",
+                          }}
+                        >
+                          <i
+                            className={item.icon}
+                            style={{ marginRight: "0px" }}
+                          ></i>
+                          <span>{props.t(item.label)}</span>
+                        </span>
+
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginLeft: "auto",
+                          }}
+                        >
+                          {item.issubMenubadge && (
+                            <span
+                              className={
+                                "badge rounded-pill " + item.bgcolor
+                              }
+                            >
+                              {item.badgeValue}
+                            </span>
+                          )}
+
+                          {item.id === "notifications" && newSupportCount > 0 && (
+                            <span
+                              className="badge rounded-pill bg-danger"
+                              style={{
+                                minWidth: "22px",
+                                height: "22px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                boxShadow: "0 4px 10px rgba(220,53,69,0.35)",
+                              }}
+                            >
+                              {newSupportCount}
+                            </span>
+                          )}
+                        </span>
                       </Link>
+
                       {item.subItem && (
                         <ul className="sub-menu">
-                          {item.subItem.map((item, key) => (
-                            <li key={key}>
+                          {item.subItem.map((subItem, subKey) => (
+                            <li key={subKey}>
                               <Link
-                                to={item.link}
+                                to={subItem.link}
                                 className={
-                                  item.subMenu && "has-arrow waves-effect"
+                                  subItem.subMenu ? "has-arrow waves-effect" : ""
                                 }
                               >
-                                {props.t(item.sublabel)}
+                                {props.t(subItem.sublabel)}
                               </Link>
-                              {item.subMenu && (
+
+                              {subItem.subMenu && (
                                 <ul className="sub-menu">
-                                  {item.subMenu.map((item, key) => (
-                                    <li key={key}>
+                                  {subItem.subMenu.map((nestedItem, nestedKey) => (
+                                    <li key={nestedKey}>
                                       <Link to="#">
-                                        {props.t(item.title)}
+                                        {props.t(nestedItem.title)}
                                       </Link>
                                     </li>
                                   ))}
@@ -194,8 +310,10 @@ const Sidebar = (props) => {
     </React.Fragment>
   );
 };
+
 Sidebar.propTypes = {
   location: PropTypes.object,
   t: PropTypes.any,
 };
+
 export default withRouter(withTranslation()(Sidebar));

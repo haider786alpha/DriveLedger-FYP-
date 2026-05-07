@@ -80,3 +80,4 @@ const { layoutType } = useSelector(routepage);
 };
 
 export default Index;
+

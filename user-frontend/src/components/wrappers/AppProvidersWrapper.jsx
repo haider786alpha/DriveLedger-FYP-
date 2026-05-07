@@ -6,8 +6,8 @@ import { LayoutProvider } from '@/context/useLayoutContext';
 import { NotificationProvider } from '@/context/useNotificationContext';
 const handleChangeTitle = () => {
   if (document.visibilityState === 'hidden') {
-    document.title = 'Please come back 🥺';
-  } else {
+  document.title = 'DriveLedger | Driver Panel';
+} else {
     document.title = DEFAULT_PAGE_TITLE;
   }
 };

@@ -24,7 +24,7 @@ const LayoutProvider = ({
       size: queryParams['menu_size'] ? queryParams['menu_size'] : 'sm-hover-active'
     }
   };
-  const [settings, setSettings] = useLocalStorage('__REBACK_NEXT_CONFIG__', INIT_STATE, override);
+  const [settings, setSettings] = useLocalStorage('__DRIVELEDGER_CONFIG__', INIT_STATE, override);
   const [offcanvasStates, setOffcanvasStates] = useState({
     showThemeCustomizer: false,
     showActivityStream: false,
