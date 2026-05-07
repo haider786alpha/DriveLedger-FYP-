@@ -649,9 +649,9 @@ const Support = () => {
         }}
       >
         <div style={contentCardStyle}>
-          <h4 style={sectionTitleStyle}>Send Support Message</h4>
+          <h4 style={sectionTitleStyle}>Send Support / Report Issue</h4>
           <p style={sectionSubtitleStyle}>
-            Describe your issue clearly so admin can help you faster.
+            Describe your issue, repair concern, or question clearly so admin can help you faster.
           </p>
 
           <div style={{ display: "grid", gap: "16px" }}>
@@ -697,7 +697,7 @@ const Support = () => {
               </label>
               <textarea
                 rows="7"
-                placeholder="Write your issue or question here"
+                placeholder="Write your issue, repair concern, or question here"
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 style={{

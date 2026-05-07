@@ -28,9 +28,13 @@ const AddDriver = () => {
       navigate("/drivers");
     } catch (error) {
   console.error("FULL ERROR:", error);
-  console.log("ERROR DATA:", error.response?.data);
   alert("Failed to add driver");
 }
+//     catch (error) {
+//   console.error("FULL ERROR:", error);
+//   console.log("ERROR DATA:", error.response?.data);
+//   alert("Failed to add driver");
+// }
   };
 
   return (

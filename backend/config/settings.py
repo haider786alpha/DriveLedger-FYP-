@@ -206,6 +206,7 @@ INSTALLED_APPS = [
     'notifications_app',
     'repairs',
     'support_messages',
+    'password_reset_requests',
 ]
 
 MIDDLEWARE = [
