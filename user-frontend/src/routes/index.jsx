@@ -10,6 +10,7 @@ const PendingDues = lazy(() => import('@/app/(admin)/pending-dues/page'));
 const Alerts = lazy(() => import('@/app/(admin)/alerts/page'));
 const Support = lazy(() => import('@/app/(admin)/support/page'));
 const RepairStatus = lazy(() => import('@/app/(admin)/repair-status/page'));
+const ShareLocation = lazy(() => import('@/app/(admin)/share-location/page'));
 
 // Auth Pages
 const AuthSignIn = lazy(() => import('@/app/(other)/auth/sign-in/page'));
@@ -79,6 +80,11 @@ const driverRoutes = [
     path: '/repair-status',
     element: <RepairStatus />,
   },
+  {
+  name: 'Share Location',
+  path: '/share-location',
+  element: <ShareLocation />,
+},
 ];
 
 export const authRoutes = [
