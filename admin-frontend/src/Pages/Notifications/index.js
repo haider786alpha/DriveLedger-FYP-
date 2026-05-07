@@ -246,6 +246,16 @@
 //     return status === "resolved" ? "bg-success" : "bg-warning text-dark";
 //   };
 
+//   const readRateBadge = (item) => {
+//     const total = Number(item.targeted_driver_count || 0);
+//     const read = Number(item.read_count || 0);
+
+//     if (total === 0) return "bg-secondary";
+//     if (read === 0) return "bg-danger";
+//     if (read === total) return "bg-success";
+//     return "bg-warning text-dark";
+//   };
+
 //   const filteredNotifications = notifications.filter((item) =>
 //     `${item.title} ${item.message} ${item.notification_type} ${item.recipient_type} ${item.driver_name || ""}`
 //       .toLowerCase()
@@ -447,6 +457,7 @@
 //                         <th>Type</th>
 //                         <th>Recipient</th>
 //                         <th>Driver</th>
+//                         <th>Read Stats</th>
 //                         <th>Created At</th>
 //                         <th>Actions</th>
 //                       </tr>
@@ -474,6 +485,16 @@
 //                               </span>
 //                             </td>
 //                             <td>{item.driver_name || "-"}</td>
+//                             <td>
+//                               <div className="d-flex flex-column gap-1">
+//                                 <span className={`badge ${readRateBadge(item)}`}>
+//                                   Read {item.read_count || 0} / {item.targeted_driver_count || 0}
+//                                 </span>
+//                                 <small className="text-muted">
+//                                   Unread: {item.unread_count || 0}
+//                                 </small>
+//                               </div>
+//                             </td>
 //                             <td>{new Date(item.created_at).toLocaleString()}</td>
 //                             <td>
 //                               <button
@@ -487,7 +508,7 @@
 //                         ))
 //                       ) : (
 //                         <tr>
-//                           <td colSpan="8" className="text-center">
+//                           <td colSpan="9" className="text-center">
 //                             No notifications found
 //                           </td>
 //                         </tr>
@@ -764,9 +785,11 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [supportMessages, setSupportMessages] = useState([]);
+  const [passwordResetRequests, setPasswordResetRequests] = useState([]);
 
   const [searchNotifications, setSearchNotifications] = useState("");
   const [searchSupport, setSearchSupport] = useState("");
+  const [searchResetRequests, setSearchResetRequests] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
@@ -775,6 +798,10 @@ const Notifications = () => {
 
   const [lastSeenSupportId, setLastSeenSupportId] = useState(() => {
     return Number(localStorage.getItem("lastSeenSupportId") || 0);
+  });
+
+  const [lastSeenResetRequestId, setLastSeenResetRequestId] = useState(() => {
+    return Number(localStorage.getItem("lastSeenResetRequestId") || 0);
   });
 
   const [formData, setFormData] = useState({
@@ -789,6 +816,7 @@ const Notifications = () => {
     fetchNotifications();
     fetchDrivers();
     fetchSupportMessages();
+    fetchPasswordResetRequests();
   }, []);
 
   const normalizeResponse = (res) => {
@@ -826,6 +854,16 @@ const Notifications = () => {
     } catch (error) {
       console.error("Support messages error:", error);
       setSupportMessages([]);
+    }
+  };
+
+  const fetchPasswordResetRequests = async () => {
+    try {
+      const res = await axios.get(API_URL("/api/password-reset-requests/"));
+      setPasswordResetRequests(normalizeResponse(res));
+    } catch (error) {
+      console.error("Password reset requests error:", error);
+      setPasswordResetRequests([]);
     }
   };
 
@@ -868,7 +906,10 @@ const Notifications = () => {
         message: formData.message.trim(),
         notification_type: formData.notification_type,
         recipient_type: formData.recipient_type,
-        driver: formData.recipient_type === "driver" ? Number(formData.driver) : null,
+        driver:
+          formData.recipient_type === "driver"
+            ? Number(formData.driver)
+            : null,
       };
 
       await axios.post(API_URL("/api/notifications/"), payload, {
@@ -920,7 +961,9 @@ const Notifications = () => {
       fetchSupportMessages();
 
       if (selectedSupport && selectedSupport.id === message.id) {
-        setSelectedSupport(res?.data || { ...selectedSupport, status: newStatus });
+        setSelectedSupport(
+          res?.data || { ...selectedSupport, status: newStatus }
+        );
       }
     } catch (error) {
       console.error("Support status update error:", error);
@@ -988,6 +1031,39 @@ const Notifications = () => {
     }
   };
 
+  const updateResetRequestStatus = async (request, newStatus) => {
+    try {
+      setUpdatingId(request.id);
+
+      await axios.patch(
+        API_URL(`/api/password-reset-requests/${request.id}/`),
+        { status: newStatus },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      alert("Password reset request updated.");
+      fetchPasswordResetRequests();
+    } catch (error) {
+      console.error("Password reset request update error:", error);
+      alert("Failed to update password reset request.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const deleteResetRequest = async (id) => {
+    if (!window.confirm("Delete this password reset request?")) return;
+
+    try {
+      await axios.delete(API_URL(`/api/password-reset-requests/${id}/`));
+      alert("Password reset request deleted.");
+      fetchPasswordResetRequests();
+    } catch (error) {
+      console.error("Delete password reset request error:", error);
+      alert("Failed to delete password reset request.");
+    }
+  };
+
   const typeBadge = (type) => {
     if (type === "success") return "bg-success";
     if (type === "warning") return "bg-warning text-dark";
@@ -1002,6 +1078,10 @@ const Notifications = () => {
     return status === "resolved" ? "bg-success" : "bg-warning text-dark";
   };
 
+  const resetRequestStatusBadge = (status) => {
+    return status === "resolved" ? "bg-success" : "bg-danger";
+  };
+
   const readRateBadge = (item) => {
     const total = Number(item.targeted_driver_count || 0);
     const read = Number(item.read_count || 0);
@@ -1013,15 +1093,27 @@ const Notifications = () => {
   };
 
   const filteredNotifications = notifications.filter((item) =>
-    `${item.title} ${item.message} ${item.notification_type} ${item.recipient_type} ${item.driver_name || ""}`
+    `${item.title} ${item.message} ${item.notification_type} ${
+      item.recipient_type
+    } ${item.driver_name || ""}`
       .toLowerCase()
       .includes(searchNotifications.toLowerCase())
   );
 
   const filteredSupportMessages = supportMessages.filter((item) =>
-    `${item.subject} ${item.message} ${item.driver_name || ""} ${item.status} ${item.admin_reply || ""}`
+    `${item.subject} ${item.message} ${item.driver_name || ""} ${item.status} ${
+      item.admin_reply || ""
+    }`
       .toLowerCase()
       .includes(searchSupport.toLowerCase())
+  );
+
+  const filteredResetRequests = passwordResetRequests.filter((item) =>
+    `${item.username} ${item.email} ${item.message || ""} ${item.status} ${
+      item.admin_note || ""
+    }`
+      .toLowerCase()
+      .includes(searchResetRequests.toLowerCase())
   );
 
   const latestSupportId =
@@ -1035,10 +1127,27 @@ const Notifications = () => {
 
   const hasNewSupport = newSupportCount > 0;
 
+  const latestResetRequestId =
+    passwordResetRequests.length > 0
+      ? Math.max(...passwordResetRequests.map((item) => Number(item.id)))
+      : 0;
+
+  const newResetRequestCount = passwordResetRequests.filter(
+    (item) => Number(item.id) > Number(lastSeenResetRequestId)
+  ).length;
+
+  const hasNewResetRequests = newResetRequestCount > 0;
+
   const handleSupportTabClick = () => {
     setActiveTab("support");
     setLastSeenSupportId(latestSupportId);
     localStorage.setItem("lastSeenSupportId", String(latestSupportId));
+  };
+
+  const handleResetRequestsTabClick = () => {
+    setActiveTab("reset-requests");
+    setLastSeenResetRequestId(latestResetRequestId);
+    localStorage.setItem("lastSeenResetRequestId", String(latestResetRequestId));
   };
 
   return (
@@ -1047,7 +1156,8 @@ const Notifications = () => {
         <div className="mb-4">
           <h4 className="mb-1">Notifications & Support</h4>
           <p className="text-muted mb-0">
-            Manage driver notifications and support messages in one place.
+            Manage driver notifications, support messages, and password reset
+            requests in one place.
           </p>
         </div>
 
@@ -1085,6 +1195,32 @@ const Notifications = () => {
                 {hasNewSupport && (
                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                     {newSupportCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                className={`btn position-relative ${
+                  hasNewResetRequests
+                    ? "btn-warning"
+                    : activeTab === "reset-requests"
+                    ? "btn-primary"
+                    : "btn-light"
+                }`}
+                onClick={handleResetRequestsTabClick}
+                style={
+                  hasNewResetRequests
+                    ? {
+                        boxShadow: "0 0 0 0.2rem rgba(220, 53, 69, 0.2)",
+                        fontWeight: "600",
+                      }
+                    : {}
+                }
+              >
+                Password Reset Requests
+                {hasNewResetRequests && (
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {newResetRequestCount}
                   </span>
                 )}
               </button>
@@ -1229,12 +1365,20 @@ const Notifications = () => {
                             </td>
                             <td>{item.message}</td>
                             <td>
-                              <span className={`badge ${typeBadge(item.notification_type)}`}>
+                              <span
+                                className={`badge ${typeBadge(
+                                  item.notification_type
+                                )}`}
+                              >
                                 {item.notification_type}
                               </span>
                             </td>
                             <td>
-                              <span className={`badge ${recipientBadge(item.recipient_type)}`}>
+                              <span
+                                className={`badge ${recipientBadge(
+                                  item.recipient_type
+                                )}`}
+                              >
                                 {item.recipient_type === "all"
                                   ? "All Drivers"
                                   : "Single Driver"}
@@ -1244,7 +1388,8 @@ const Notifications = () => {
                             <td>
                               <div className="d-flex flex-column gap-1">
                                 <span className={`badge ${readRateBadge(item)}`}>
-                                  Read {item.read_count || 0} / {item.targeted_driver_count || 0}
+                                  Read {item.read_count || 0} /{" "}
+                                  {item.targeted_driver_count || 0}
                                 </span>
                                 <small className="text-muted">
                                   Unread: {item.unread_count || 0}
@@ -1303,14 +1448,19 @@ const Notifications = () => {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <p>
-                        <strong>Driver:</strong> {selectedSupport.driver_name || "-"}
+                        <strong>Driver:</strong>{" "}
+                        {selectedSupport.driver_name || "-"}
                       </p>
                     </div>
 
                     <div className="col-md-6">
                       <p>
                         <strong>Status:</strong>{" "}
-                        <span className={`badge ${supportStatusBadge(selectedSupport.status)}`}>
+                        <span
+                          className={`badge ${supportStatusBadge(
+                            selectedSupport.status
+                          )}`}
+                        >
                           {selectedSupport.status}
                         </span>
                       </p>
@@ -1407,7 +1557,9 @@ const Notifications = () => {
                         disabled={updatingId === selectedSupport.id}
                         onClick={sendSupportReply}
                       >
-                        {updatingId === selectedSupport.id ? "Sending..." : "Send Reply"}
+                        {updatingId === selectedSupport.id
+                          ? "Sending..."
+                          : "Send Reply"}
                       </button>
                     </div>
                   </div>
@@ -1458,7 +1610,11 @@ const Notifications = () => {
                                 : item.message}
                             </td>
                             <td>
-                              <span className={`badge ${supportStatusBadge(item.status)}`}>
+                              <span
+                                className={`badge ${supportStatusBadge(
+                                  item.status
+                                )}`}
+                              >
                                 {item.status}
                               </span>
                             </td>
@@ -1466,7 +1622,9 @@ const Notifications = () => {
                               {item.admin_reply ? (
                                 <span className="badge bg-success">Replied</span>
                               ) : (
-                                <span className="badge bg-secondary">No Reply</span>
+                                <span className="badge bg-secondary">
+                                  No Reply
+                                </span>
                               )}
                             </td>
                             <td>{new Date(item.created_at).toLocaleString()}</td>
@@ -1486,17 +1644,25 @@ const Notifications = () => {
                                   <button
                                     className="btn btn-sm btn-success"
                                     disabled={updatingId === item.id}
-                                    onClick={() => updateSupportStatus(item, "resolved")}
+                                    onClick={() =>
+                                      updateSupportStatus(item, "resolved")
+                                    }
                                   >
-                                    {updatingId === item.id ? "Updating..." : "Mark Resolved"}
+                                    {updatingId === item.id
+                                      ? "Updating..."
+                                      : "Mark Resolved"}
                                   </button>
                                 ) : (
                                   <button
                                     className="btn btn-sm btn-warning"
                                     disabled={updatingId === item.id}
-                                    onClick={() => updateSupportStatus(item, "open")}
+                                    onClick={() =>
+                                      updateSupportStatus(item, "open")
+                                    }
                                   >
-                                    {updatingId === item.id ? "Updating..." : "Mark Open"}
+                                    {updatingId === item.id
+                                      ? "Updating..."
+                                      : "Mark Open"}
                                   </button>
                                 )}
 
@@ -1514,6 +1680,135 @@ const Notifications = () => {
                         <tr>
                           <td colSpan="8" className="text-center">
                             No support messages found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === "reset-requests" && (
+          <>
+            <div className="card mb-4">
+              <div className="card-body">
+                <input
+                  className="form-control"
+                  placeholder="Search reset requests by username, email, message, or status"
+                  value={searchResetRequests}
+                  onChange={(e) => setSearchResetRequests(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-body">
+                <div className="mb-3">
+                  <h5 className="mb-1">Password Reset Requests</h5>
+                  <p className="text-muted mb-0">
+                   Review requests submitted by drivers who cannot log in.
+Reset the user password from User Management, share the temporary password with the driver through an official channel, then mark the request as resolved.
+                  </p>
+                </div>
+
+                <div className="table-responsive">
+                  <table className="table table-bordered table-hover align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Resolved At</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {filteredResetRequests.length > 0 ? (
+                        filteredResetRequests.map((item, index) => (
+                          <tr key={item.id}>
+                            <td>{index + 1}</td>
+                            <td>
+                              <strong>{item.username}</strong>
+                            </td>
+                            <td>{item.email}</td>
+                            <td style={{ maxWidth: "320px" }}>
+                              {item.message
+                                ? item.message.length > 70
+                                  ? item.message.slice(0, 70) + "..."
+                                  : item.message
+                                : "-"}
+                            </td>
+                            <td>
+                              <span
+                                className={`badge ${resetRequestStatusBadge(
+                                  item.status
+                                )}`}
+                              >
+                                {item.status}
+                              </span>
+                            </td>
+                            <td>{new Date(item.created_at).toLocaleString()}</td>
+                            <td>
+                              {item.resolved_at
+                                ? new Date(item.resolved_at).toLocaleString()
+                                : "-"}
+                            </td>
+                            <td>
+                              <div className="d-flex flex-wrap gap-2">
+                                <a
+                                  href="/users"
+                                  className="btn btn-sm btn-info text-white"
+                                >
+                                  Go to Users
+                                </a>
+
+                                {item.status !== "resolved" ? (
+                                  <button
+                                    className="btn btn-sm btn-success"
+                                    disabled={updatingId === item.id}
+                                    onClick={() =>
+                                      updateResetRequestStatus(item, "resolved")
+                                    }
+                                  >
+                                    {updatingId === item.id
+                                      ? "Updating..."
+                                      : "Mark Resolved"}
+                                  </button>
+                                ) : (
+                                  <button
+                                    className="btn btn-sm btn-warning"
+                                    disabled={updatingId === item.id}
+                                    onClick={() =>
+                                      updateResetRequestStatus(item, "pending")
+                                    }
+                                  >
+                                    {updatingId === item.id
+                                      ? "Updating..."
+                                      : "Mark Pending"}
+                                  </button>
+                                )}
+
+                                <button
+                                  className="btn btn-sm btn-danger"
+                                  onClick={() => deleteResetRequest(item.id)}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="8" className="text-center">
+                            No password reset requests found
                           </td>
                         </tr>
                       )}
