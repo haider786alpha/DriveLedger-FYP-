@@ -27,6 +27,7 @@ import Expenses from "../Pages/Expenses";
 import Notifications from "../Pages/Notifications";
 import Repairs from "../Pages/Repairs";
 import Reports from "../Pages/Reports";
+import DriverLocations from "../Pages/DriverLocations";
 
 
 
@@ -128,6 +129,7 @@ const authProtectedRoutes = [
   { path: "/dashboard", component: <Dashboard /> },
   { path: "/users", component: <Users /> },
   { path: "/drivers", component: <Drivers /> },
+  { path: "/driver-locations", component: <DriverLocations /> },
   { path: "/cars", component: <Cars /> },
   { path: "/assignments", component: <Assignments /> },
   { path: "/payments", component: <Payments /> },

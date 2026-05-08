@@ -8,9 +8,11 @@
 //   const [notifications, setNotifications] = useState([]);
 //   const [drivers, setDrivers] = useState([]);
 //   const [supportMessages, setSupportMessages] = useState([]);
+//   const [passwordResetRequests, setPasswordResetRequests] = useState([]);
 
 //   const [searchNotifications, setSearchNotifications] = useState("");
 //   const [searchSupport, setSearchSupport] = useState("");
+//   const [searchResetRequests, setSearchResetRequests] = useState("");
 
 //   const [loading, setLoading] = useState(false);
 //   const [updatingId, setUpdatingId] = useState(null);
@@ -19,6 +21,10 @@
 
 //   const [lastSeenSupportId, setLastSeenSupportId] = useState(() => {
 //     return Number(localStorage.getItem("lastSeenSupportId") || 0);
+//   });
+
+//   const [lastSeenResetRequestId, setLastSeenResetRequestId] = useState(() => {
+//     return Number(localStorage.getItem("lastSeenResetRequestId") || 0);
 //   });
 
 //   const [formData, setFormData] = useState({
@@ -33,6 +39,7 @@
 //     fetchNotifications();
 //     fetchDrivers();
 //     fetchSupportMessages();
+//     fetchPasswordResetRequests();
 //   }, []);
 
 //   const normalizeResponse = (res) => {
@@ -70,6 +77,16 @@
 //     } catch (error) {
 //       console.error("Support messages error:", error);
 //       setSupportMessages([]);
+//     }
+//   };
+
+//   const fetchPasswordResetRequests = async () => {
+//     try {
+//       const res = await axios.get(API_URL("/api/password-reset-requests/"));
+//       setPasswordResetRequests(normalizeResponse(res));
+//     } catch (error) {
+//       console.error("Password reset requests error:", error);
+//       setPasswordResetRequests([]);
 //     }
 //   };
 
@@ -112,7 +129,10 @@
 //         message: formData.message.trim(),
 //         notification_type: formData.notification_type,
 //         recipient_type: formData.recipient_type,
-//         driver: formData.recipient_type === "driver" ? Number(formData.driver) : null,
+//         driver:
+//           formData.recipient_type === "driver"
+//             ? Number(formData.driver)
+//             : null,
 //       };
 
 //       await axios.post(API_URL("/api/notifications/"), payload, {
@@ -164,7 +184,9 @@
 //       fetchSupportMessages();
 
 //       if (selectedSupport && selectedSupport.id === message.id) {
-//         setSelectedSupport(res?.data || { ...selectedSupport, status: newStatus });
+//         setSelectedSupport(
+//           res?.data || { ...selectedSupport, status: newStatus }
+//         );
 //       }
 //     } catch (error) {
 //       console.error("Support status update error:", error);
@@ -232,6 +254,39 @@
 //     }
 //   };
 
+//   const updateResetRequestStatus = async (request, newStatus) => {
+//     try {
+//       setUpdatingId(request.id);
+
+//       await axios.patch(
+//         API_URL(`/api/password-reset-requests/${request.id}/`),
+//         { status: newStatus },
+//         { headers: { "Content-Type": "application/json" } }
+//       );
+
+//       alert("Password reset request updated.");
+//       fetchPasswordResetRequests();
+//     } catch (error) {
+//       console.error("Password reset request update error:", error);
+//       alert("Failed to update password reset request.");
+//     } finally {
+//       setUpdatingId(null);
+//     }
+//   };
+
+//   const deleteResetRequest = async (id) => {
+//     if (!window.confirm("Delete this password reset request?")) return;
+
+//     try {
+//       await axios.delete(API_URL(`/api/password-reset-requests/${id}/`));
+//       alert("Password reset request deleted.");
+//       fetchPasswordResetRequests();
+//     } catch (error) {
+//       console.error("Delete password reset request error:", error);
+//       alert("Failed to delete password reset request.");
+//     }
+//   };
+
 //   const typeBadge = (type) => {
 //     if (type === "success") return "bg-success";
 //     if (type === "warning") return "bg-warning text-dark";
@@ -246,6 +301,10 @@
 //     return status === "resolved" ? "bg-success" : "bg-warning text-dark";
 //   };
 
+//   const resetRequestStatusBadge = (status) => {
+//     return status === "resolved" ? "bg-success" : "bg-danger";
+//   };
+
 //   const readRateBadge = (item) => {
 //     const total = Number(item.targeted_driver_count || 0);
 //     const read = Number(item.read_count || 0);
@@ -257,15 +316,27 @@
 //   };
 
 //   const filteredNotifications = notifications.filter((item) =>
-//     `${item.title} ${item.message} ${item.notification_type} ${item.recipient_type} ${item.driver_name || ""}`
+//     `${item.title} ${item.message} ${item.notification_type} ${
+//       item.recipient_type
+//     } ${item.driver_name || ""}`
 //       .toLowerCase()
 //       .includes(searchNotifications.toLowerCase())
 //   );
 
 //   const filteredSupportMessages = supportMessages.filter((item) =>
-//     `${item.subject} ${item.message} ${item.driver_name || ""} ${item.status} ${item.admin_reply || ""}`
+//     `${item.subject} ${item.message} ${item.driver_name || ""} ${item.status} ${
+//       item.admin_reply || ""
+//     }`
 //       .toLowerCase()
 //       .includes(searchSupport.toLowerCase())
+//   );
+
+//   const filteredResetRequests = passwordResetRequests.filter((item) =>
+//     `${item.username} ${item.email} ${item.message || ""} ${item.status} ${
+//       item.admin_note || ""
+//     }`
+//       .toLowerCase()
+//       .includes(searchResetRequests.toLowerCase())
 //   );
 
 //   const latestSupportId =
@@ -279,10 +350,27 @@
 
 //   const hasNewSupport = newSupportCount > 0;
 
+//   const latestResetRequestId =
+//     passwordResetRequests.length > 0
+//       ? Math.max(...passwordResetRequests.map((item) => Number(item.id)))
+//       : 0;
+
+//   const newResetRequestCount = passwordResetRequests.filter(
+//     (item) => Number(item.id) > Number(lastSeenResetRequestId)
+//   ).length;
+
+//   const hasNewResetRequests = newResetRequestCount > 0;
+
 //   const handleSupportTabClick = () => {
 //     setActiveTab("support");
 //     setLastSeenSupportId(latestSupportId);
 //     localStorage.setItem("lastSeenSupportId", String(latestSupportId));
+//   };
+
+//   const handleResetRequestsTabClick = () => {
+//     setActiveTab("reset-requests");
+//     setLastSeenResetRequestId(latestResetRequestId);
+//     localStorage.setItem("lastSeenResetRequestId", String(latestResetRequestId));
 //   };
 
 //   return (
@@ -291,7 +379,8 @@
 //         <div className="mb-4">
 //           <h4 className="mb-1">Notifications & Support</h4>
 //           <p className="text-muted mb-0">
-//             Manage driver notifications and support messages in one place.
+//             Manage driver notifications, support messages, and password reset
+//             requests in one place.
 //           </p>
 //         </div>
 
@@ -329,6 +418,32 @@
 //                 {hasNewSupport && (
 //                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
 //                     {newSupportCount}
+//                   </span>
+//                 )}
+//               </button>
+
+//               <button
+//                 className={`btn position-relative ${
+//                   hasNewResetRequests
+//                     ? "btn-warning"
+//                     : activeTab === "reset-requests"
+//                     ? "btn-primary"
+//                     : "btn-light"
+//                 }`}
+//                 onClick={handleResetRequestsTabClick}
+//                 style={
+//                   hasNewResetRequests
+//                     ? {
+//                         boxShadow: "0 0 0 0.2rem rgba(220, 53, 69, 0.2)",
+//                         fontWeight: "600",
+//                       }
+//                     : {}
+//                 }
+//               >
+//                 Password Reset Requests
+//                 {hasNewResetRequests && (
+//                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+//                     {newResetRequestCount}
 //                   </span>
 //                 )}
 //               </button>
@@ -473,12 +588,20 @@
 //                             </td>
 //                             <td>{item.message}</td>
 //                             <td>
-//                               <span className={`badge ${typeBadge(item.notification_type)}`}>
+//                               <span
+//                                 className={`badge ${typeBadge(
+//                                   item.notification_type
+//                                 )}`}
+//                               >
 //                                 {item.notification_type}
 //                               </span>
 //                             </td>
 //                             <td>
-//                               <span className={`badge ${recipientBadge(item.recipient_type)}`}>
+//                               <span
+//                                 className={`badge ${recipientBadge(
+//                                   item.recipient_type
+//                                 )}`}
+//                               >
 //                                 {item.recipient_type === "all"
 //                                   ? "All Drivers"
 //                                   : "Single Driver"}
@@ -488,7 +611,8 @@
 //                             <td>
 //                               <div className="d-flex flex-column gap-1">
 //                                 <span className={`badge ${readRateBadge(item)}`}>
-//                                   Read {item.read_count || 0} / {item.targeted_driver_count || 0}
+//                                   Read {item.read_count || 0} /{" "}
+//                                   {item.targeted_driver_count || 0}
 //                                 </span>
 //                                 <small className="text-muted">
 //                                   Unread: {item.unread_count || 0}
@@ -547,14 +671,19 @@
 //                   <div className="row g-3">
 //                     <div className="col-md-6">
 //                       <p>
-//                         <strong>Driver:</strong> {selectedSupport.driver_name || "-"}
+//                         <strong>Driver:</strong>{" "}
+//                         {selectedSupport.driver_name || "-"}
 //                       </p>
 //                     </div>
 
 //                     <div className="col-md-6">
 //                       <p>
 //                         <strong>Status:</strong>{" "}
-//                         <span className={`badge ${supportStatusBadge(selectedSupport.status)}`}>
+//                         <span
+//                           className={`badge ${supportStatusBadge(
+//                             selectedSupport.status
+//                           )}`}
+//                         >
 //                           {selectedSupport.status}
 //                         </span>
 //                       </p>
@@ -651,7 +780,9 @@
 //                         disabled={updatingId === selectedSupport.id}
 //                         onClick={sendSupportReply}
 //                       >
-//                         {updatingId === selectedSupport.id ? "Sending..." : "Send Reply"}
+//                         {updatingId === selectedSupport.id
+//                           ? "Sending..."
+//                           : "Send Reply"}
 //                       </button>
 //                     </div>
 //                   </div>
@@ -702,7 +833,11 @@
 //                                 : item.message}
 //                             </td>
 //                             <td>
-//                               <span className={`badge ${supportStatusBadge(item.status)}`}>
+//                               <span
+//                                 className={`badge ${supportStatusBadge(
+//                                   item.status
+//                                 )}`}
+//                               >
 //                                 {item.status}
 //                               </span>
 //                             </td>
@@ -710,7 +845,9 @@
 //                               {item.admin_reply ? (
 //                                 <span className="badge bg-success">Replied</span>
 //                               ) : (
-//                                 <span className="badge bg-secondary">No Reply</span>
+//                                 <span className="badge bg-secondary">
+//                                   No Reply
+//                                 </span>
 //                               )}
 //                             </td>
 //                             <td>{new Date(item.created_at).toLocaleString()}</td>
@@ -730,17 +867,25 @@
 //                                   <button
 //                                     className="btn btn-sm btn-success"
 //                                     disabled={updatingId === item.id}
-//                                     onClick={() => updateSupportStatus(item, "resolved")}
+//                                     onClick={() =>
+//                                       updateSupportStatus(item, "resolved")
+//                                     }
 //                                   >
-//                                     {updatingId === item.id ? "Updating..." : "Mark Resolved"}
+//                                     {updatingId === item.id
+//                                       ? "Updating..."
+//                                       : "Mark Resolved"}
 //                                   </button>
 //                                 ) : (
 //                                   <button
 //                                     className="btn btn-sm btn-warning"
 //                                     disabled={updatingId === item.id}
-//                                     onClick={() => updateSupportStatus(item, "open")}
+//                                     onClick={() =>
+//                                       updateSupportStatus(item, "open")
+//                                     }
 //                                   >
-//                                     {updatingId === item.id ? "Updating..." : "Mark Open"}
+//                                     {updatingId === item.id
+//                                       ? "Updating..."
+//                                       : "Mark Open"}
 //                                   </button>
 //                                 )}
 
@@ -768,12 +913,143 @@
 //             </div>
 //           </>
 //         )}
+
+//         {activeTab === "reset-requests" && (
+//           <>
+//             <div className="card mb-4">
+//               <div className="card-body">
+//                 <input
+//                   className="form-control"
+//                   placeholder="Search reset requests by username, email, message, or status"
+//                   value={searchResetRequests}
+//                   onChange={(e) => setSearchResetRequests(e.target.value)}
+//                 />
+//               </div>
+//             </div>
+
+//             <div className="card">
+//               <div className="card-body">
+//                 <div className="mb-3">
+//                   <h5 className="mb-1">Password Reset Requests</h5>
+//                   <p className="text-muted mb-0">
+//                    Review requests submitted by drivers who cannot log in.
+// Reset the user password from User Management, share the temporary password with the driver through an official channel, then mark the request as resolved.
+//                   </p>
+//                 </div>
+
+//                 <div className="table-responsive">
+//                   <table className="table table-bordered table-hover align-middle">
+//                     <thead className="table-light">
+//                       <tr>
+//                         <th>#</th>
+//                         <th>Username</th>
+//                         <th>Email</th>
+//                         <th>Message</th>
+//                         <th>Status</th>
+//                         <th>Created At</th>
+//                         <th>Resolved At</th>
+//                         <th>Actions</th>
+//                       </tr>
+//                     </thead>
+
+//                     <tbody>
+//                       {filteredResetRequests.length > 0 ? (
+//                         filteredResetRequests.map((item, index) => (
+//                           <tr key={item.id}>
+//                             <td>{index + 1}</td>
+//                             <td>
+//                               <strong>{item.username}</strong>
+//                             </td>
+//                             <td>{item.email}</td>
+//                             <td style={{ maxWidth: "320px" }}>
+//                               {item.message
+//                                 ? item.message.length > 70
+//                                   ? item.message.slice(0, 70) + "..."
+//                                   : item.message
+//                                 : "-"}
+//                             </td>
+//                             <td>
+//                               <span
+//                                 className={`badge ${resetRequestStatusBadge(
+//                                   item.status
+//                                 )}`}
+//                               >
+//                                 {item.status}
+//                               </span>
+//                             </td>
+//                             <td>{new Date(item.created_at).toLocaleString()}</td>
+//                             <td>
+//                               {item.resolved_at
+//                                 ? new Date(item.resolved_at).toLocaleString()
+//                                 : "-"}
+//                             </td>
+//                             <td>
+//                               <div className="d-flex flex-wrap gap-2">
+//                                 <a
+//                                   href="/users"
+//                                   className="btn btn-sm btn-info text-white"
+//                                 >
+//                                   Go to Users
+//                                 </a>
+
+//                                 {item.status !== "resolved" ? (
+//                                   <button
+//                                     className="btn btn-sm btn-success"
+//                                     disabled={updatingId === item.id}
+//                                     onClick={() =>
+//                                       updateResetRequestStatus(item, "resolved")
+//                                     }
+//                                   >
+//                                     {updatingId === item.id
+//                                       ? "Updating..."
+//                                       : "Mark Resolved"}
+//                                   </button>
+//                                 ) : (
+//                                   <button
+//                                     className="btn btn-sm btn-warning"
+//                                     disabled={updatingId === item.id}
+//                                     onClick={() =>
+//                                       updateResetRequestStatus(item, "pending")
+//                                     }
+//                                   >
+//                                     {updatingId === item.id
+//                                       ? "Updating..."
+//                                       : "Mark Pending"}
+//                                   </button>
+//                                 )}
+
+//                                 <button
+//                                   className="btn btn-sm btn-danger"
+//                                   onClick={() => deleteResetRequest(item.id)}
+//                                 >
+//                                   Delete
+//                                 </button>
+//                               </div>
+//                             </td>
+//                           </tr>
+//                         ))
+//                       ) : (
+//                         <tr>
+//                           <td colSpan="8" className="text-center">
+//                             No password reset requests found
+//                           </td>
+//                         </tr>
+//                       )}
+//                     </tbody>
+//                   </table>
+//                 </div>
+//               </div>
+//             </div>
+//           </>
+//         )}
 //       </div>
 //     </div>
 //   );
 // };
 
 // export default Notifications;
+
+
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -1103,7 +1379,7 @@ const Notifications = () => {
   const filteredSupportMessages = supportMessages.filter((item) =>
     `${item.subject} ${item.message} ${item.driver_name || ""} ${item.status} ${
       item.admin_reply || ""
-    }`
+    } ${item.issue_attachment_url ? "attachment uploaded" : "no attachment"}`
       .toLowerCase()
       .includes(searchSupport.toLowerCase())
   );
@@ -1498,6 +1774,35 @@ const Notifications = () => {
 
                     <div className="col-12">
                       <p>
+                        <strong>Issue Attachment:</strong>
+                      </p>
+
+                      {selectedSupport.issue_attachment_url ? (
+                        <a
+                          href={selectedSupport.issue_attachment_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn btn-sm btn-outline-primary"
+                        >
+                          View Attachment
+                        </a>
+                      ) : (
+                        <div
+                          style={{
+                            border: "1px dashed #cbd5e1",
+                            borderRadius: "10px",
+                            padding: "14px",
+                            background: "#f8fafc",
+                            color: "#64748b",
+                          }}
+                        >
+                          No attachment uploaded.
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="col-12">
+                      <p>
                         <strong>Admin Reply:</strong>
                       </p>
                       {selectedSupport.admin_reply ? (
@@ -1571,7 +1876,7 @@ const Notifications = () => {
               <div className="card-body">
                 <input
                   className="form-control"
-                  placeholder="Search support messages by subject, message, driver, status, or reply"
+                  placeholder="Search support messages by subject, message, driver, status, reply, or attachment"
                   value={searchSupport}
                   onChange={(e) => setSearchSupport(e.target.value)}
                 />
@@ -1590,6 +1895,7 @@ const Notifications = () => {
                         <th>Message</th>
                         <th>Status</th>
                         <th>Reply</th>
+                        <th>Attachment</th>
                         <th>Created At</th>
                         <th>Actions</th>
                       </tr>
@@ -1625,6 +1931,20 @@ const Notifications = () => {
                                 <span className="badge bg-secondary">
                                   No Reply
                                 </span>
+                              )}
+                            </td>
+                            <td>
+                              {item.issue_attachment_url ? (
+                                <a
+                                  href={item.issue_attachment_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="btn btn-sm btn-outline-primary"
+                                >
+                                  View
+                                </a>
+                              ) : (
+                                <span className="badge bg-secondary">None</span>
                               )}
                             </td>
                             <td>{new Date(item.created_at).toLocaleString()}</td>
@@ -1678,7 +1998,7 @@ const Notifications = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="8" className="text-center">
+                          <td colSpan="9" className="text-center">
                             No support messages found
                           </td>
                         </tr>
@@ -1709,8 +2029,10 @@ const Notifications = () => {
                 <div className="mb-3">
                   <h5 className="mb-1">Password Reset Requests</h5>
                   <p className="text-muted mb-0">
-                   Review requests submitted by drivers who cannot log in.
-Reset the user password from User Management, share the temporary password with the driver through an official channel, then mark the request as resolved.
+                    Review requests submitted by drivers who cannot log in.
+                    Reset the user password from User Management, share the
+                    temporary password with the driver through an official
+                    channel, then mark the request as resolved.
                   </p>
                 </div>
 

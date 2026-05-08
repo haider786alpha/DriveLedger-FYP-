@@ -39,6 +39,7 @@ urlpatterns = [
     path('api/', include('notifications_app.urls')),
     path('api/', include('support_messages.urls')),
     path('api/', include('password_reset_requests.urls')),
+    path('api/', include('driver_locations.urls')),
 
     path('api/change-password/', ChangePasswordView.as_view(), name='change_password'),
 

@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'repairs',
     'support_messages',
     'password_reset_requests',
+    'driver_locations',
 ]
 
 MIDDLEWARE = [
