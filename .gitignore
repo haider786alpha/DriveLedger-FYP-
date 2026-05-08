@@ -8,6 +8,12 @@ __pycache__/
 *.pyc
 db.sqlite3
 
+backend/db.sqlite3
+backend/data_backup.json
+backend/data_backup_utf8.json
+backend/media/
+
+
 .DS_Store
 Thumbs.db
 *.log
