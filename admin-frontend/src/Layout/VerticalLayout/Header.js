@@ -11,8 +11,6 @@
 
 // //import images
 // import logoSm from "../../assets/images/logo-sm.png";
-// import logoDark from "../../assets/images/logo-dark.png";
-// import logoLight from "../../assets/images/logo-light.png";
 
 // // Redux Store
 // import {
@@ -29,10 +27,9 @@
 //   function toggleFullscreen() {
 //     if (
 //       !document.fullscreenElement &&
-//       /* alternative standard method */ !document.mozFullScreenElement &&
+//       !document.mozFullScreenElement &&
 //       !document.webkitFullscreenElement
 //     ) {
-//       // current working methods
 //       if (document.documentElement.requestFullscreen) {
 //         document.documentElement.requestFullscreen();
 //       } else if (document.documentElement.mozRequestFullScreen) {
@@ -69,21 +66,41 @@
 //         <div className="navbar-header">
 //           <div className="d-flex">
 //             <div className="navbar-brand-box text-center">
-//               <Link to="/" className="logo logo-dark">
+//               <Link to="/" className="logo logo-dark" style={{ textDecoration: "none" }}>
 //                 <span className="logo-sm">
 //                   <img src={logoSm} alt="logo-sm-dark" height="22" />
 //                 </span>
-//                 <span className="logo-lg">
-//                   <img src={logoDark} alt="logo-dark" height="24" />
+//                 <span
+//                   className="logo-lg"
+//                   style={{
+//                     display: "inline-block",
+//                     fontSize: "24px",
+//                     fontWeight: "700",
+//                     color: "#1f2937",
+//                     lineHeight: "70px",
+//                     letterSpacing: "0.3px",
+//                   }}
+//                 >
+//                   DriveLedger
 //                 </span>
 //               </Link>
 
-//               <Link to="/" className="logo logo-light">
+//               <Link to="/" className="logo logo-light" style={{ textDecoration: "none" }}>
 //                 <span className="logo-sm">
 //                   <img src={logoSm} alt="logo-sm-light" height="22" />
 //                 </span>
-//                 <span className="logo-lg">
-//                   <img src={logoLight} alt="logo-light" height="24" />
+//                 <span
+//                   className="logo-lg"
+//                   style={{
+//                     display: "inline-block",
+//                     fontSize: "24px",
+//                     fontWeight: "700",
+//                     color: "#ffffff",
+//                     lineHeight: "70px",
+//                     letterSpacing: "0.3px",
+//                   }}
+//                 >
+//                   DriveLedger
 //                 </span>
 //               </Link>
 //             </div>
@@ -203,28 +220,24 @@
 //   changeSidebarType,
 // })(withTranslation()(Header));
 
+
 import React, { useState } from "react";
 
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
 
-import LanguageDropdown from "../../components/Common/TopbarDropdown/LanguageDropdown";
 import NotificationDropdown from "../../components/Common/TopbarDropdown/NotificationDropdown";
 
-//i18n
+// i18n
 import { withTranslation } from "react-i18next";
 
-//import images
+// import images
 import logoSm from "../../assets/images/logo-sm.png";
 
 // Redux Store
-import {
-  showRightSidebarAction,
-  toggleLeftmenu,
-  changeSidebarType,
-} from "../../store/actions";
+import { toggleLeftmenu, changeSidebarType } from "../../store/actions";
+
 import ProfileMenu from "../../components/Common/TopbarDropdown/ProfileMenu";
-import AppsDropdown from "../../components/Common/TopbarDropdown/AppsDropdown";
 
 const Header = (props) => {
   const [search, setsearch] = useState(false);
@@ -256,7 +269,8 @@ const Header = (props) => {
   }
 
   function tToggle() {
-    var body = document.body;
+    const body = document.body;
+
     if (window.screen.width <= 998) {
       body.classList.toggle("sidebar-enable");
     } else {
@@ -273,7 +287,7 @@ const Header = (props) => {
             <div className="navbar-brand-box text-center">
               <Link to="/" className="logo logo-dark" style={{ textDecoration: "none" }}>
                 <span className="logo-sm">
-                  <img src={logoSm} alt="logo-sm-dark" height="22" />
+                  <img src={logoSm} alt="DriveLedger" height="22" />
                 </span>
                 <span
                   className="logo-lg"
@@ -292,7 +306,7 @@ const Header = (props) => {
 
               <Link to="/" className="logo logo-light" style={{ textDecoration: "none" }}>
                 <span className="logo-sm">
-                  <img src={logoSm} alt="logo-sm-light" height="22" />
+                  <img src={logoSm} alt="DriveLedger" height="22" />
                 </span>
                 <span
                   className="logo-lg"
@@ -314,9 +328,7 @@ const Header = (props) => {
               type="button"
               className="btn btn-sm px-3 font-size-24 header-item waves-effect"
               id="vertical-menu-btn"
-              onClick={() => {
-                tToggle();
-              }}
+              onClick={tToggle}
             >
               <i className="ri-menu-2-line align-middle"></i>
             </button>
@@ -326,7 +338,7 @@ const Header = (props) => {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search..."
+                  placeholder="Search admin panel..."
                 />
                 <span className="ri-search-line"></span>
               </div>
@@ -336,15 +348,14 @@ const Header = (props) => {
           <div className="d-flex">
             <div className="dropdown d-inline-block d-lg-none ms-2">
               <button
-                onClick={() => {
-                  setsearch(!search);
-                }}
+                onClick={() => setsearch(!search)}
                 type="button"
-                className="btn header-item noti-icon "
+                className="btn header-item noti-icon"
                 id="page-header-search-dropdown"
               >
                 <i className="ri-search-line" />
               </button>
+
               <div
                 className={
                   search
@@ -359,8 +370,7 @@ const Header = (props) => {
                       <input
                         type="text"
                         className="form-control"
-                        placeholder="Search ..."
-                        aria-label="Recipient's username"
+                        placeholder="Search admin panel..."
                       />
                       <div className="input-group-append">
                         <button className="btn btn-primary" type="submit">
@@ -373,17 +383,13 @@ const Header = (props) => {
               </div>
             </div>
 
-            <LanguageDropdown />
-            <AppsDropdown />
-
             <div className="dropdown d-none d-lg-inline-block ms-1">
               <button
                 type="button"
-                onClick={() => {
-                  toggleFullscreen();
-                }}
+                onClick={toggleFullscreen}
                 className="btn header-item noti-icon"
                 data-toggle="fullscreen"
+                title="Fullscreen"
               >
                 <i className="ri-fullscreen-line" />
               </button>
@@ -392,20 +398,6 @@ const Header = (props) => {
             <NotificationDropdown />
 
             <ProfileMenu />
-
-            <div
-              className="dropdown d-inline-block"
-              onClick={() => {
-                props.showRightSidebarAction(!props.showRightSidebar);
-              }}
-            >
-              <button
-                type="button"
-                className="btn header-item noti-icon right-bar-toggle waves-effect"
-              >
-                <i className="mdi mdi-cog"></i>
-              </button>
-            </div>
           </div>
         </div>
       </header>
@@ -414,13 +406,11 @@ const Header = (props) => {
 };
 
 const mapStatetoProps = (state) => {
-  const { layoutType, showRightSidebar, leftMenu, leftSideBarType } =
-    state.Layout;
-  return { layoutType, showRightSidebar, leftMenu, leftSideBarType };
+  const { layoutType, leftMenu, leftSideBarType } = state.Layout;
+  return { layoutType, leftMenu, leftSideBarType };
 };
 
 export default connect(mapStatetoProps, {
-  showRightSidebarAction,
   toggleLeftmenu,
   changeSidebarType,
 })(withTranslation()(Header));

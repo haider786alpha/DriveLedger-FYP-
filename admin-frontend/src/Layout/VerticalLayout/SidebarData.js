@@ -1,6 +1,6 @@
 const sidebarData = [
   {
-    label: "DriveLedger",
+   label: "ADMIN PANEL",
     isMainMenu: true,
   },
   {
