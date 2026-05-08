@@ -1,34 +1,6 @@
 # from django.contrib.auth.models import User
-# from rest_framework import serializers, viewsets
-
-# class UserSerializer(serializers.ModelSerializer):
-#     password = serializers.CharField(write_only=True)
-
-#     class Meta:
-#         model = User
-#         fields = ['id', 'username', 'email', 'password']
-
-#     def create(self, validated_data):
-#         user = User.objects.create_user(
-#             username=validated_data['username'],
-#             email=validated_data.get('email', ''),
-#             password=validated_data['password']
-#         )
-#         return user
-
-
-# class UserViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-
-
-
-
-
-
-
-# from django.contrib.auth.models import User
 # from rest_framework import serializers, viewsets, status
+# from rest_framework.decorators import action
 # from rest_framework.views import APIView
 # from rest_framework.response import Response
 # from rest_framework.permissions import IsAuthenticated
@@ -39,7 +11,8 @@
 
 #     class Meta:
 #         model = User
-#         fields = ['id', 'username', 'email', 'password']
+#         fields = ['id', 'username', 'email', 'password', 'is_staff']
+#         read_only_fields = ['is_staff']
 
 #     def create(self, validated_data):
 #         user = User.objects.create_user(
@@ -53,6 +26,39 @@
 # class UserViewSet(viewsets.ModelViewSet):
 #     queryset = User.objects.all()
 #     serializer_class = UserSerializer
+
+#     @action(detail=True, methods=['post'], url_path='reset-password')
+#     def reset_password(self, request, pk=None):
+#         user = self.get_object()
+
+#         new_password = request.data.get('new_password')
+#         confirm_password = request.data.get('confirm_password')
+
+#         if not new_password or not confirm_password:
+#             return Response(
+#                 {'error': 'New password and confirm password are required.'},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
+#         if new_password != confirm_password:
+#             return Response(
+#                 {'error': 'Passwords do not match.'},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
+#         if len(new_password) < 6:
+#             return Response(
+#                 {'error': 'Password must be at least 6 characters long.'},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
+#         user.set_password(new_password)
+#         user.save()
+
+#         return Response(
+#             {'message': 'Password reset successfully.'},
+#             status=status.HTTP_200_OK
+#         )
 
 
 # class ChangePasswordView(APIView):
@@ -89,7 +95,6 @@
 #             status=status.HTTP_200_OK
 #         )
 
-
 from django.contrib.auth.models import User
 from rest_framework import serializers, viewsets, status
 from rest_framework.decorators import action
@@ -100,18 +105,46 @@ from rest_framework.permissions import IsAuthenticated
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
+    is_staff = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ['id', 'username', 'email', 'password', 'is_staff']
 
     def create(self, validated_data):
+        is_staff = validated_data.pop('is_staff', False)
+
+        password = validated_data.pop('password', None)
+        if not password:
+            raise serializers.ValidationError({
+                'password': 'Password is required.'
+            })
+
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
-            password=validated_data['password']
+            password=password
         )
+
+        user.is_staff = is_staff
+        user.save(update_fields=['is_staff'])
+
         return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+
+        if 'is_staff' in validated_data:
+            instance.is_staff = validated_data.get('is_staff')
+
+        if password:
+            instance.set_password(password)
+
+        instance.save()
+        return instance
 
 
 class UserViewSet(viewsets.ModelViewSet):

@@ -5,6 +5,7 @@
 // import * as yup from 'yup';
 // import { useAuthContext } from '@/context/useAuthContext';
 // import { useNotificationContext } from '@/context/useNotificationContext';
+// import { API_URL } from '@/helpers/apiConfig';
 // import axios from 'axios';
 
 // const useSignIn = () => {
@@ -41,7 +42,7 @@
 
 //     try {
 //       const res = await axios.post(
-//         'http://localhost:8000/api/token/',
+//         API_URL('/api/token/'),
 //         {
 //           username: values.username.trim(),
 //           password: values.password.trim(),
@@ -53,35 +54,24 @@
 //         }
 //       );
 
-//       console.log('LOGIN SUCCESS RESPONSE:', res.data);
-
 //       const sessionData = {
 //         username: values.username.trim(),
 //         access: res.data.access,
 //         refresh: res.data.refresh,
 //       };
 
-//       console.log('Before saveSession');
 //       saveSession(sessionData);
-//       console.log('After saveSession');
 
-//       console.log('Before localStorage access');
 //       localStorage.setItem('access', res.data.access);
-//       console.log('After localStorage access');
-
 //       localStorage.setItem('refresh', res.data.refresh);
 //       localStorage.setItem('authUser', JSON.stringify(sessionData));
 
-//       console.log('Before notification');
 //       showNotification({
 //         message: 'Successfully logged in. Redirecting...',
 //         variant: 'success',
 //       });
-//       console.log('After notification');
 
-//       console.log('Before redirect');
 //       redirectUser();
-//       console.log('After redirect');
 //     } catch (e) {
 //       console.error('FULL USER LOGIN ERROR:', e);
 //       console.error('ERROR RESPONSE:', e?.response?.data);
@@ -103,6 +93,7 @@
 // };
 
 // export default useSignIn;
+
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useState } from 'react';
@@ -134,8 +125,17 @@ const useSignIn = () => {
     },
   });
 
+  const normalizeResponse = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.results)) return res.results;
+    if (Array.isArray(res?.data?.results)) return res.data.results;
+    return [];
+  };
+
   const redirectUser = () => {
     const redirectLink = searchParams.get('redirectTo');
+
     if (redirectLink) {
       navigate(redirectLink);
     } else {
@@ -147,7 +147,7 @@ const useSignIn = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(
+      const tokenRes = await axios.post(
         API_URL('/api/token/'),
         {
           username: values.username.trim(),
@@ -160,16 +160,65 @@ const useSignIn = () => {
         }
       );
 
+      const accessToken = tokenRes?.data?.access || tokenRes?.access;
+      const refreshToken = tokenRes?.data?.refresh || tokenRes?.refresh;
+
+      if (!accessToken || !refreshToken) {
+        throw new Error('Login failed. Token not received.');
+      }
+
+      const [usersRes, driversRes] = await Promise.all([
+        axios.get(API_URL('/api/users/'), {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }),
+        axios.get(API_URL('/api/drivers/'), {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }),
+      ]);
+
+      const users = normalizeResponse(usersRes);
+      const drivers = normalizeResponse(driversRes);
+
+      const loggedInUser = users.find(
+        (user) =>
+          String(user.username || '').toLowerCase() ===
+          String(values.username).trim().toLowerCase()
+      );
+
+      if (!loggedInUser) {
+        throw new Error('User profile not found.');
+      }
+
+      if (loggedInUser.is_staff) {
+        throw new Error('Admin users cannot access the driver panel.');
+      }
+
+      const matchedDriver = drivers.find(
+        (driver) => Number(driver.user) === Number(loggedInUser.id)
+      );
+
+      if (!matchedDriver) {
+        throw new Error('Driver profile not found. Please contact admin.');
+      }
+
       const sessionData = {
-        username: values.username.trim(),
-        access: res.data.access,
-        refresh: res.data.refresh,
+        user_id: loggedInUser.id,
+        driver_id: matchedDriver.id,
+        username: loggedInUser.username,
+        email: loggedInUser.email,
+        driver_name: matchedDriver.user_name,
+        access: accessToken,
+        refresh: refreshToken,
       };
 
       saveSession(sessionData);
 
-      localStorage.setItem('access', res.data.access);
-      localStorage.setItem('refresh', res.data.refresh);
+      localStorage.setItem('access', accessToken);
+      localStorage.setItem('refresh', refreshToken);
       localStorage.setItem('authUser', JSON.stringify(sessionData));
 
       showNotification({
@@ -183,7 +232,10 @@ const useSignIn = () => {
       console.error('ERROR RESPONSE:', e?.response?.data);
 
       showNotification({
-        message: e?.response?.data?.detail || e.message || 'Login failed',
+        message:
+          e?.response?.data?.detail ||
+          e.message ||
+          'Login failed',
         variant: 'danger',
       });
     } finally {
