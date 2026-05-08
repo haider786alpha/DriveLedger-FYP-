@@ -1,0 +1,1038 @@
+[
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$AiQKjpLmcIKarjgqDGPcG2$Jxczge7EWTJM7UmPvtbpaKcIiOZOEzdGyj85yId86mk=",
+    "last_login": "2026-05-02T12:11:26.165Z",
+    "is_superuser": true,
+    "username": "haiderhussain",
+    "first_name": "",
+    "last_name": "",
+    "email": "malikhaider043@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-24T06:06:22.155Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$CCq0Gc1p3vOK7wcINWgJH6$PH227+w+jEtJWjjxzn7p7ZoMv9rogOQTSx4KTtVTIrI=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "hamzaabbasi123",
+    "first_name": "",
+    "last_name": "",
+    "email": "hamzaabbasi786@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-25T07:05:22Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$QLdvteCOOCeGqURVk35oLR$UePfuT/l5b4IiQbpPpwb79A+bXCPAvkAft65Es0JWQw=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "muneebfaisal",
+    "first_name": "",
+    "last_name": "",
+    "email": "muneebfaisal@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-08T03:54:38.153Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$EHdDVF7fETJnpkn6bYJ79V$j08O6srzFpEvmTdtUSbrICtrruPWlNEdQerX0hVhLLI=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "hashim",
+    "first_name": "",
+    "last_name": "",
+    "email": "hashimhussain@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-05-08T03:55:18.768Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "95xc0xmp9kpsehed2nevucymjbxv6xdm",
+  "fields": {
+    "session_data": ".eJxVjMEOgjAQBf9lz6bZAoXC0bvfQPa1W0FNSSicjP9uSDjodWYybxpl36ZxL7qOc6SBLF1-GSQ8NR8iPiTfFxOWvK0zzJGY0xZzW6K-rmf7N5ikTDSQbzkENL1XByvskkvsuO46VcA7TSlZIHnpvARwaJyvwAyu2x6ohD5f_Tk4sA:1wJ9Bu:dcBjpFSucxHh-h6d8sjZGt5fhJyktkWuc3I1A7gcVXo",
+    "expire_date": "2026-05-16T12:11:26.172Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "jxo477aehm3n2nwyf2lkj2vdjjc2j7u1",
+  "fields": {
+    "session_data": ".eJxVjMEOgjAQBf9lz6bZAoXC0bvfQPa1W0FNSSicjP9uSDjodWYybxpl36ZxL7qOc6SBLF1-GSQ8NR8iPiTfFxOWvK0zzJGY0xZzW6K-rmf7N5ikTDSQbzkENL1XByvskkvsuO46VcA7TSlZIHnpvARwaJyvwAyu2x6ohD5f_Tk4sA:1wIIEg:Qrir7VojrXwCOnEtWitfhtK9UTooHrJcUO8G_IE-Ifo",
+    "expire_date": "2026-05-14T03:38:46.747Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "tb9itm5yclfv3v82r0jerxdtrfmflixe",
+  "fields": {
+    "session_data": ".eJxVjMEOgjAQBf9lz6bZAoXC0bvfQPa1W0FNSSicjP9uSDjodWYybxpl36ZxL7qOc6SBLF1-GSQ8NR8iPiTfFxOWvK0zzJGY0xZzW6K-rmf7N5ikTDSQbzkENL1XByvskkvsuO46VcA7TSlZIHnpvARwaJyvwAyu2x6ohD5f_Tk4sA:1wGnzS:YEX44tAN-dtK6dy714Z6ozeIh0O88jUTgzs6iC77IWU",
+    "expire_date": "2026-05-10T01:08:54.571Z"
+  }
+},
+{
+  "model": "drivers.driver",
+  "pk": 8,
+  "fields": {
+    "user": [
+      "hamzaabbasi123"
+    ],
+    "cnic": "37405550851089",
+    "license_number": "033417",
+    "address": "satra meel islamabadd",
+    "profile_photo": "drivers/profile_photos/Screenshot_2026-03-10_062519_jev4e2x.png",
+    "license_copy": "drivers/license_copies/Screenshot_2026-01-31_214414_-_Copy.png"
+  }
+},
+{
+  "model": "drivers.driver",
+  "pk": 11,
+  "fields": {
+    "user": [
+      "muneebfaisal"
+    ],
+    "cnic": "37405550851089",
+    "license_number": "03125670422",
+    "address": "tahli mohri chowk dheri hassanabad",
+    "profile_photo": "drivers/profile_photos/Screenshot_2026-04-16_101526_NuJsqCH.png",
+    "license_copy": "drivers/license_copies/Screenshot_2026-04-16_101526_lAp41uC.png"
+  }
+},
+{
+  "model": "cars.car",
+  "pk": 1,
+  "fields": {
+    "make": "2018",
+    "model": "mini cooper",
+    "year": 2015,
+    "registration_number": "1223627272728",
+    "mileage": 20000,
+    "condition": "Average",
+    "notes": null,
+    "last_service_date": null,
+    "next_maintenance_date": null,
+    "current_mileage": null,
+    "insurance_expiry": null,
+    "registration_expiry": null
+  }
+},
+{
+  "model": "cars.car",
+  "pk": 2,
+  "fields": {
+    "make": "2019",
+    "model": "audi",
+    "year": 2025,
+    "registration_number": "03341955289",
+    "mileage": 30000,
+    "condition": "Good",
+    "notes": null,
+    "last_service_date": null,
+    "next_maintenance_date": null,
+    "current_mileage": null,
+    "insurance_expiry": null,
+    "registration_expiry": null
+  }
+},
+{
+  "model": "cars.car",
+  "pk": 5,
+  "fields": {
+    "make": "2020",
+    "model": "bmw",
+    "year": 9392,
+    "registration_number": "2423242",
+    "mileage": 442232,
+    "condition": "Good",
+    "notes": null,
+    "last_service_date": null,
+    "next_maintenance_date": null,
+    "current_mileage": null,
+    "insurance_expiry": null,
+    "registration_expiry": "2026-05-16"
+  }
+},
+{
+  "model": "cars.car",
+  "pk": 6,
+  "fields": {
+    "make": "2018",
+    "model": "toyota corolla",
+    "year": 2025,
+    "registration_number": "121212",
+    "mileage": 23000,
+    "condition": "Good",
+    "notes": null,
+    "last_service_date": "2026-05-16",
+    "next_maintenance_date": "2026-05-09",
+    "current_mileage": 23000,
+    "insurance_expiry": "2026-05-28",
+    "registration_expiry": "2026-05-29"
+  }
+},
+{
+  "model": "assignments.assignment",
+  "pk": 13,
+  "fields": {
+    "driver": 8,
+    "car": 5,
+    "start_date": "2026-04-10",
+    "end_date": "2026-05-28",
+    "status": "active"
+  }
+},
+{
+  "model": "payments.payment",
+  "pk": 11,
+  "fields": {
+    "assignment": 13,
+    "amount": "24500.00",
+    "payment_date": "2026-04-18",
+    "status": "paid",
+    "remarks": "paid on time"
+  }
+},
+{
+  "model": "payments.payment",
+  "pk": 12,
+  "fields": {
+    "assignment": 13,
+    "amount": "90000.00",
+    "payment_date": "2026-04-12",
+    "status": "paid",
+    "remarks": "wffe"
+  }
+},
+{
+  "model": "expenses.expense",
+  "pk": 5,
+  "fields": {
+    "car": 5,
+    "amount": "1222.00",
+    "expense_date": "2026-04-17",
+    "category": "Other",
+    "notes": "puncture",
+    "invoice_receipt": ""
+  }
+},
+{
+  "model": "expenses.expense",
+  "pk": 6,
+  "fields": {
+    "car": 2,
+    "amount": "400000.00",
+    "expense_date": "2026-04-25",
+    "category": "Repair",
+    "notes": "Repair ID 3: door damaged",
+    "invoice_receipt": ""
+  }
+},
+{
+  "model": "expenses.expense",
+  "pk": 7,
+  "fields": {
+    "car": 2,
+    "amount": "500000.00",
+    "expense_date": "2026-04-25",
+    "category": "Repair",
+    "notes": "Repair ID 4: paint damage",
+    "invoice_receipt": ""
+  }
+},
+{
+  "model": "expenses.expense",
+  "pk": 8,
+  "fields": {
+    "car": 5,
+    "amount": "1221.00",
+    "expense_date": "2026-04-30",
+    "category": "Repair",
+    "notes": "Repair ID 5: crash",
+    "invoice_receipt": ""
+  }
+},
+{
+  "model": "expenses.expense",
+  "pk": 9,
+  "fields": {
+    "car": 5,
+    "amount": "3000.00",
+    "expense_date": "2026-04-30",
+    "category": "Repair",
+    "notes": "door damaged",
+    "invoice_receipt": ""
+  }
+},
+{
+  "model": "expenses.expense",
+  "pk": 10,
+  "fields": {
+    "car": 5,
+    "amount": "24500.00",
+    "expense_date": "2026-05-08",
+    "category": "Oil Change",
+    "notes": "door damaged",
+    "invoice_receipt": "expenses/invoices_receipts/Screenshot_2026-03-10_062519.png"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 1,
+  "fields": {
+    "title": "test notification",
+    "message": "this is a test notification",
+    "notification_type": "info",
+    "recipient_type": "all",
+    "driver": null,
+    "created_at": "2026-04-26T00:39:15.249Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 9,
+  "fields": {
+    "title": "very serious",
+    "message": "u are fired",
+    "notification_type": "warning",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-04-30T04:57:44.829Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 11,
+  "fields": {
+    "title": "dwudhwhd",
+    "message": "wdnwqhdwskackqnf",
+    "notification_type": "success",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-04-30T06:09:57.197Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 12,
+  "fields": {
+    "title": "checking after error",
+    "message": "dnbwjdwdhnwsa",
+    "notification_type": "warning",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-04-30T10:09:12.969Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 13,
+  "fields": {
+    "title": "axxSXsxcssCSs",
+    "message": "ScsS",
+    "notification_type": "info",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-04-30T12:45:39.701Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 14,
+  "fields": {
+    "title": "hellulu",
+    "message": "wdwdwd",
+    "notification_type": "success",
+    "recipient_type": "all",
+    "driver": null,
+    "created_at": "2026-04-30T12:57:27.436Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 16,
+  "fields": {
+    "title": "hello to all drivers",
+    "message": "hello to all drivers",
+    "notification_type": "info",
+    "recipient_type": "all",
+    "driver": null,
+    "created_at": "2026-05-01T16:17:21.198Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 18,
+  "fields": {
+    "title": "testing all read notifications",
+    "message": "testing all read notifications",
+    "notification_type": "info",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-05-02T08:13:31.618Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 19,
+  "fields": {
+    "title": "testing read unread status",
+    "message": "testing read unread status",
+    "notification_type": "info",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-05-02T08:20:54.624Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 20,
+  "fields": {
+    "title": "hululluluu",
+    "message": "helluluuu",
+    "notification_type": "info",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-05-07T04:37:40.124Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 21,
+  "fields": {
+    "title": "again helluluuu",
+    "message": "again helluluuu",
+    "notification_type": "info",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-05-07T04:38:20.697Z"
+  }
+},
+{
+  "model": "notifications_app.notification",
+  "pk": 22,
+  "fields": {
+    "title": "again and again helluluuu",
+    "message": "again and again helluluuu",
+    "notification_type": "info",
+    "recipient_type": "driver",
+    "driver": 8,
+    "created_at": "2026-05-07T04:47:39.795Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 1,
+  "fields": {
+    "notification": 1,
+    "driver": 8,
+    "read_at": "2026-05-02T07:17:44.160Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 3,
+  "fields": {
+    "notification": 16,
+    "driver": 8,
+    "read_at": "2026-05-02T07:26:27.327Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 4,
+  "fields": {
+    "notification": 14,
+    "driver": 8,
+    "read_at": "2026-05-02T07:26:32.902Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 5,
+  "fields": {
+    "notification": 9,
+    "driver": 8,
+    "read_at": "2026-05-02T07:27:48.117Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 6,
+  "fields": {
+    "notification": 11,
+    "driver": 8,
+    "read_at": "2026-05-02T07:27:49.336Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 7,
+  "fields": {
+    "notification": 12,
+    "driver": 8,
+    "read_at": "2026-05-02T07:27:50.678Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 8,
+  "fields": {
+    "notification": 13,
+    "driver": 8,
+    "read_at": "2026-05-02T07:27:52.035Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 10,
+  "fields": {
+    "notification": 18,
+    "driver": 8,
+    "read_at": "2026-05-02T08:13:44.238Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 11,
+  "fields": {
+    "notification": 19,
+    "driver": 8,
+    "read_at": "2026-05-02T08:21:08.755Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 16,
+  "fields": {
+    "notification": 20,
+    "driver": 8,
+    "read_at": "2026-05-07T04:37:52.668Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 17,
+  "fields": {
+    "notification": 21,
+    "driver": 8,
+    "read_at": "2026-05-07T04:38:27.993Z"
+  }
+},
+{
+  "model": "notifications_app.notificationread",
+  "pk": 18,
+  "fields": {
+    "notification": 22,
+    "driver": 8,
+    "read_at": "2026-05-07T04:47:47.059Z"
+  }
+},
+{
+  "model": "repairs.repair",
+  "pk": 5,
+  "fields": {
+    "car": 5,
+    "issue": "crash",
+    "priority": "high",
+    "status": "completed",
+    "reported_date": "2026-04-24",
+    "estimated_cost": "1221.00",
+    "actual_cost": "0.00",
+    "notes": "fix this",
+    "bill_receipt": ""
+  }
+},
+{
+  "model": "repairs.repair",
+  "pk": 6,
+  "fields": {
+    "car": 5,
+    "issue": "door damaged",
+    "priority": "low",
+    "status": "completed",
+    "reported_date": "2026-04-28",
+    "estimated_cost": "3000.00",
+    "actual_cost": "200000.00",
+    "notes": "door is damaged",
+    "bill_receipt": "repairs/bills_receipts/Screenshot_2026-01-31_214414.png"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 2,
+  "fields": {
+    "driver": 8,
+    "subject": "wsn fdjwqsnfsbchesqbc",
+    "message": "sn chsbc",
+    "issue_attachment": "",
+    "admin_reply": null,
+    "replied_at": null,
+    "status": "resolved",
+    "created_at": "2026-04-30T06:10:28.783Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 8,
+  "fields": {
+    "driver": 8,
+    "subject": "jhwdjadjw",
+    "message": "dqbhadqwhja",
+    "issue_attachment": "",
+    "admin_reply": null,
+    "replied_at": null,
+    "status": "resolved",
+    "created_at": "2026-04-30T06:47:25.288Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 9,
+  "fields": {
+    "driver": 8,
+    "subject": "checking whole",
+    "message": "checking whole",
+    "issue_attachment": "",
+    "admin_reply": null,
+    "replied_at": null,
+    "status": "resolved",
+    "created_at": "2026-04-30T06:57:39.831Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 10,
+  "fields": {
+    "driver": 8,
+    "subject": "sululuuu",
+    "message": "sululuuu",
+    "issue_attachment": "",
+    "admin_reply": null,
+    "replied_at": null,
+    "status": "resolved",
+    "created_at": "2026-04-30T10:09:33.111Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 11,
+  "fields": {
+    "driver": 8,
+    "subject": "hello g",
+    "message": "hello g",
+    "issue_attachment": "",
+    "admin_reply": null,
+    "replied_at": null,
+    "status": "resolved",
+    "created_at": "2026-04-30T12:49:23.103Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 13,
+  "fields": {
+    "driver": 8,
+    "subject": "supportmessage testing",
+    "message": "support message testing",
+    "issue_attachment": "",
+    "admin_reply": "i am testing support message",
+    "replied_at": "2026-05-01T20:29:00Z",
+    "status": "resolved",
+    "created_at": "2026-05-01T15:29:19.576Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 14,
+  "fields": {
+    "driver": 8,
+    "subject": "support reply check",
+    "message": "support reply check",
+    "issue_attachment": "",
+    "admin_reply": "i am looking into this",
+    "replied_at": "2026-05-01T15:39:35.698Z",
+    "status": "resolved",
+    "created_at": "2026-05-01T15:38:48.460Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 16,
+  "fields": {
+    "driver": 8,
+    "subject": "user side helluluuu",
+    "message": "user side helluluuu",
+    "issue_attachment": "",
+    "admin_reply": "admin side helluluu",
+    "replied_at": "2026-05-07T05:08:19.141Z",
+    "status": "resolved",
+    "created_at": "2026-05-07T05:07:53.544Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 17,
+  "fields": {
+    "driver": 8,
+    "subject": "issue in car",
+    "message": "issue in car",
+    "issue_attachment": "",
+    "admin_reply": null,
+    "replied_at": null,
+    "status": "resolved",
+    "created_at": "2026-05-07T06:00:59.501Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 18,
+  "fields": {
+    "driver": 8,
+    "subject": "checking picture",
+    "message": "checking picture",
+    "issue_attachment": "support_messages/issue_attachments/Screenshot_2026-01-31_214414_-_Copy.png",
+    "admin_reply": null,
+    "replied_at": null,
+    "status": "resolved",
+    "created_at": "2026-05-07T15:08:36.637Z"
+  }
+},
+{
+  "model": "support_messages.supportmessage",
+  "pk": 19,
+  "fields": {
+    "driver": 8,
+    "subject": "again testing",
+    "message": "again testing",
+    "issue_attachment": "support_messages/issue_attachments/Screenshot_2026-03-10_062519.png",
+    "admin_reply": null,
+    "replied_at": null,
+    "status": "resolved",
+    "created_at": "2026-05-07T15:14:30.123Z"
+  }
+},
+{
+  "model": "password_reset_requests.passwordresetrequest",
+  "pk": 1,
+  "fields": {
+    "username": "hamzaabbasi123",
+    "email": "hamzaabbasi786@gmail.com",
+    "message": "i forgot my password plz reset it",
+    "status": "resolved",
+    "admin_note": null,
+    "created_at": "2026-05-07T09:23:22.244Z",
+    "resolved_at": "2026-05-08T08:05:03.122Z"
+  }
+},
+{
+  "model": "password_reset_requests.passwordresetrequest",
+  "pk": 2,
+  "fields": {
+    "username": "hamzaabbasi123",
+    "email": "hamzaabbasi786@gmail.com",
+    "message": "i forgot my password plz reset it",
+    "status": "resolved",
+    "admin_note": null,
+    "created_at": "2026-05-07T09:27:28.867Z",
+    "resolved_at": "2026-05-08T08:04:59.542Z"
+  }
+},
+{
+  "model": "password_reset_requests.passwordresetrequest",
+  "pk": 3,
+  "fields": {
+    "username": "hamzaabbasi123",
+    "email": "hamzaabbasi786@gmail.com",
+    "message": "helluliuuuu give me my password",
+    "status": "resolved",
+    "admin_note": null,
+    "created_at": "2026-05-07T09:32:28.534Z",
+    "resolved_at": "2026-05-07T09:33:10.242Z"
+  }
+},
+{
+  "model": "driver_locations.driverlocation",
+  "pk": 1,
+  "fields": {
+    "driver": 8,
+    "latitude": "33.5614004",
+    "longitude": "73.0204232",
+    "address_note": "Shared from driver panel",
+    "updated_at": "2026-05-08T10:05:17.642Z",
+    "created_at": "2026-05-07T15:35:55.913Z"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2026-04-24T12:33:29.559Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "2",
+    "object_repr": "muneeb",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2026-04-24T13:57:32.963Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "assignments",
+      "assignment"
+    ],
+    "object_id": "3",
+    "object_repr": "haiderhussain - 2018 mini cooper",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2026-04-24T13:57:40.204Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "payments",
+      "payment"
+    ],
+    "object_id": "1",
+    "object_repr": "haiderhussain - 2018 mini cooper - 350000",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 4,
+  "fields": {
+    "action_time": "2026-04-24T14:12:14.920Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "payments",
+      "payment"
+    ],
+    "object_id": "1",
+    "object_repr": "haiderhussain - 2018 mini cooper - 100000.00",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Status\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 5,
+  "fields": {
+    "action_time": "2026-04-25T07:10:59.973Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "hamzaabbasi123",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Staff status\", \"Superuser status\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 6,
+  "fields": {
+    "action_time": "2026-04-25T07:11:57.118Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "hamzaabbasi123",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Staff status\", \"Superuser status\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 7,
+  "fields": {
+    "action_time": "2026-04-25T07:12:21.596Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "hamzaabbasi123",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"User permissions\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 8,
+  "fields": {
+    "action_time": "2026-04-25T07:12:34.276Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "hamzaabbasi123",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Staff status\", \"Superuser status\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 9,
+  "fields": {
+    "action_time": "2026-04-25T07:13:28.804Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "hamzaabbasi123",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Staff status\", \"Superuser status\", \"User permissions\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 10,
+  "fields": {
+    "action_time": "2026-04-26T01:07:47.310Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "7",
+    "object_repr": "hashim123",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 11,
+  "fields": {
+    "action_time": "2026-04-26T01:07:57.526Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "accounts",
+      "userprofile"
+    ],
+    "object_id": "1",
+    "object_repr": "hashim123",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 12,
+  "fields": {
+    "action_time": "2026-04-30T03:38:46.732Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "hamzaabbasi123",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 13,
+  "fields": {
+    "action_time": "2026-04-30T03:38:55.342Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "hamzaabbasi123",
+    "action_flag": 2,
+    "change_message": "[]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 14,
+  "fields": {
+    "action_time": "2026-04-30T03:39:01.356Z",
+    "user": [
+      "haiderhussain"
+    ],
+    "content_type": [
+      "drivers",
+      "driver"
+    ],
+    "object_id": "8",
+    "object_repr": "hamzaabbasi123",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+}
+]
