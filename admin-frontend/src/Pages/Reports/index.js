@@ -51,13 +51,52 @@
 //     .filter((item) => item.status !== "completed")
 //     .reduce((sum, item) => sum + Number(item.estimated_cost || 0), 0);
 
+//   const profit = totalPayments - totalExpenses;
+
 //   const paidCount = data.payments.filter((p) => p.status === "paid").length;
 //   const unpaidCount = data.payments.filter((p) => p.status === "unpaid").length;
 //   const activeAssignments = data.assignments.filter((a) => a.status === "active").length;
 //   const completedRepairs = data.repairs.filter((r) => r.status === "completed").length;
 //   const pendingRepairs = data.repairs.filter((r) => r.status !== "completed").length;
 
-//   const profit = totalPayments - totalExpenses;
+//   const getMonthKey = (date) => {
+//     const d = new Date(date);
+//     return d.toLocaleString("default", { month: "short", year: "numeric" });
+//   };
+
+//   const monthlyReport = {};
+
+//   data.payments.forEach((p) => {
+//     const month = getMonthKey(p.payment_date);
+//     if (!monthlyReport[month]) monthlyReport[month] = { income: 0, expense: 0 };
+//     monthlyReport[month].income += Number(p.amount || 0);
+//   });
+
+//   data.expenses.forEach((e) => {
+//     const month = getMonthKey(e.expense_date);
+//     if (!monthlyReport[month]) monthlyReport[month] = { income: 0, expense: 0 };
+//     monthlyReport[month].expense += Number(e.amount || 0);
+//   });
+
+//   const monthlyRows = Object.entries(monthlyReport).map(([month, value]) => ({
+//     month,
+//     income: value.income,
+//     expense: value.expense,
+//     profit: value.income - value.expense,
+//   }));
+
+//   const bestMonth = monthlyRows.reduce(
+//     (best, item) => (!best || item.profit > best.profit ? item : best),
+//     null
+//   );
+
+//   const worstMonth = monthlyRows.reduce(
+//     (worst, item) => (!worst || item.profit < worst.profit ? item : worst),
+//     null
+//   );
+
+//   const maxMonthlyValue =
+//     Math.max(...monthlyRows.map((m) => Math.max(m.income, m.expense)), 1);
 
 //   const financeTotal = totalPayments + totalExpenses;
 //   const paymentWidth = financeTotal ? (totalPayments / financeTotal) * 100 : 0;
@@ -70,7 +109,7 @@
 //           <div>
 //             <h4 className="mb-1">Reports & Analytics</h4>
 //             <p className="text-muted mb-0">
-//               Completed repairs are counted inside expenses automatically.
+//               Monthly profit, financial health, repair risk, and operational summary.
 //             </p>
 //           </div>
 
@@ -78,6 +117,18 @@
 //             Print / Download Report
 //           </button>
 //         </div>
+
+//         {profit < 0 && (
+//           <div className="alert alert-danger">
+//             <strong>Loss Alert:</strong> Your expenses are higher than payments. Current loss is Rs. {Math.abs(profit)}.
+//           </div>
+//         )}
+
+//         {pendingRepairCost > 0 && (
+//           <div className="alert alert-warning">
+//             <strong>Repair Risk:</strong> Pending repair estimate is Rs. {pendingRepairCost}. This may affect future profit.
+//           </div>
+//         )}
 
 //         <div className="row">
 //           <ReportCard title="Total Drivers" value={data.drivers.length} />
@@ -89,7 +140,6 @@
 //         <div className="row mt-3">
 //           <MoneyCard title="Total Payments" value={totalPayments} color="success" />
 //           <MoneyCard title="Total Expenses" value={totalExpenses} color="danger" />
-//           {/* <MoneyCard title="Completed Repair Cost" value={completedRepairCost} color="warning" /> */}
 //           <MoneyCard title="Completed Repair Cost (Included)" value={completedRepairCost} color="warning" />
 //           <MoneyCard title="Net Profit / Loss" value={profit} color={profit >= 0 ? "success" : "danger"} />
 //         </div>
@@ -98,7 +148,7 @@
 //           <div className="card-body">
 //             <h5>Financial Distribution</h5>
 //             <p className="text-muted">
-//               Profit uses payments minus total expenses. Completed repair costs are already included in expenses.
+//               Profit uses payments minus total expenses. Completed repairs are already included in expenses.
 //             </p>
 
 //             <div className="progress" style={{ height: "30px" }}>
@@ -128,13 +178,53 @@
 //           />
 
 //           <SummaryBox
-//             title="Repair Status Summary"
+//             title="Monthly Performance"
 //             lines={[
-//               ["Completed Repairs", completedRepairs, "text-success"],
-//               ["Pending/In Progress Repairs", pendingRepairs, "text-warning"],
+//               ["Best Month", bestMonth ? `${bestMonth.month} — Rs. ${bestMonth.profit}` : "-", "text-success"],
+//               ["Weakest Month", worstMonth ? `${worstMonth.month} — Rs. ${worstMonth.profit}` : "-", "text-danger"],
 //               ["Pending Repair Estimate", `Rs. ${pendingRepairCost}`, "text-warning"],
 //             ]}
 //           />
+//         </div>
+
+//         <div className="card mt-3">
+//           <div className="card-body">
+//             <h5>Monthly Profit Graph</h5>
+//             <p className="text-muted">Green = income, red = expenses, final value = monthly profit/loss.</p>
+
+//             {monthlyRows.length > 0 ? (
+//               monthlyRows.map((month) => (
+//                 <div key={month.month} className="mb-4">
+//                   <div className="d-flex justify-content-between mb-1">
+//                     <strong>{month.month}</strong>
+//                     <strong className={month.profit >= 0 ? "text-success" : "text-danger"}>
+//                       Rs. {month.profit}
+//                     </strong>
+//                   </div>
+
+//                   <div className="progress mb-2" style={{ height: "22px" }}>
+//                     <div
+//                       className="progress-bar bg-success"
+//                       style={{ width: `${(month.income / maxMonthlyValue) * 100}%` }}
+//                     >
+//                       Income Rs. {month.income}
+//                     </div>
+//                   </div>
+
+//                   <div className="progress" style={{ height: "22px" }}>
+//                     <div
+//                       className="progress-bar bg-danger"
+//                       style={{ width: `${(month.expense / maxMonthlyValue) * 100}%` }}
+//                     >
+//                       Expense Rs. {month.expense}
+//                     </div>
+//                   </div>
+//                 </div>
+//               ))
+//             ) : (
+//               <p>No monthly data available.</p>
+//             )}
+//           </div>
 //         </div>
 
 //         <RecentTable
@@ -270,8 +360,10 @@
 
 // export default Reports;
 
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../../helpers/apiConfig";
 
 const Reports = () => {
   const [data, setData] = useState({
@@ -287,21 +379,45 @@ const Reports = () => {
     fetchReportData();
   }, []);
 
+  const normalizeResponse = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.results)) return res.results;
+    if (Array.isArray(res?.data?.results)) return res.data.results;
+    return [];
+  };
+
   const fetchReportData = async () => {
     try {
-      const [drivers, cars, assignments, payments, expenses, repairs] =
+      const [driversRes, carsRes, assignmentsRes, paymentsRes, expensesRes, repairsRes] =
         await Promise.all([
-          axios.get("http://127.0.0.1:8000/api/drivers/"),
-          axios.get("http://127.0.0.1:8000/api/cars/"),
-          axios.get("http://127.0.0.1:8000/api/assignments/"),
-          axios.get("http://127.0.0.1:8000/api/payments/"),
-          axios.get("http://127.0.0.1:8000/api/expenses/"),
-          axios.get("http://127.0.0.1:8000/api/repairs/"),
+          axios.get(API_URL("/api/drivers/")),
+          axios.get(API_URL("/api/cars/")),
+          axios.get(API_URL("/api/assignments/")),
+          axios.get(API_URL("/api/payments/")),
+          axios.get(API_URL("/api/expenses/")),
+          axios.get(API_URL("/api/repairs/")),
         ]);
 
-      setData({ drivers, cars, assignments, payments, expenses, repairs });
+      setData({
+        drivers: normalizeResponse(driversRes),
+        cars: normalizeResponse(carsRes),
+        assignments: normalizeResponse(assignmentsRes),
+        payments: normalizeResponse(paymentsRes),
+        expenses: normalizeResponse(expensesRes),
+        repairs: normalizeResponse(repairsRes),
+      });
     } catch (error) {
       console.error("Reports error:", error);
+
+      setData({
+        drivers: [],
+        cars: [],
+        assignments: [],
+        payments: [],
+        expenses: [],
+        repairs: [],
+      });
     }
   };
 
@@ -328,7 +444,6 @@ const Reports = () => {
   const paidCount = data.payments.filter((p) => p.status === "paid").length;
   const unpaidCount = data.payments.filter((p) => p.status === "unpaid").length;
   const activeAssignments = data.assignments.filter((a) => a.status === "active").length;
-  const completedRepairs = data.repairs.filter((r) => r.status === "completed").length;
   const pendingRepairs = data.repairs.filter((r) => r.status !== "completed").length;
 
   const getMonthKey = (date) => {
@@ -392,13 +507,15 @@ const Reports = () => {
 
         {profit < 0 && (
           <div className="alert alert-danger">
-            <strong>Loss Alert:</strong> Your expenses are higher than payments. Current loss is Rs. {Math.abs(profit)}.
+            <strong>Loss Alert:</strong> Your expenses are higher than payments.
+            Current loss is Rs. {Math.abs(profit)}.
           </div>
         )}
 
         {pendingRepairCost > 0 && (
           <div className="alert alert-warning">
-            <strong>Repair Risk:</strong> Pending repair estimate is Rs. {pendingRepairCost}. This may affect future profit.
+            <strong>Repair Risk:</strong> Pending repair estimate is Rs.{" "}
+            {pendingRepairCost}. This may affect future profit.
           </div>
         )}
 
@@ -412,15 +529,24 @@ const Reports = () => {
         <div className="row mt-3">
           <MoneyCard title="Total Payments" value={totalPayments} color="success" />
           <MoneyCard title="Total Expenses" value={totalExpenses} color="danger" />
-          <MoneyCard title="Completed Repair Cost (Included)" value={completedRepairCost} color="warning" />
-          <MoneyCard title="Net Profit / Loss" value={profit} color={profit >= 0 ? "success" : "danger"} />
+          <MoneyCard
+            title="Completed Repair Cost"
+            value={completedRepairCost}
+            color="warning"
+          />
+          <MoneyCard
+            title="Net Profit / Loss"
+            value={profit}
+            color={profit >= 0 ? "success" : "danger"}
+          />
         </div>
 
         <div className="card mt-3">
           <div className="card-body">
             <h5>Financial Distribution</h5>
             <p className="text-muted">
-              Profit uses payments minus total expenses. Completed repairs are already included in expenses.
+              Profit uses payments minus total expenses. Completed repairs are shown separately
+              for repair cost visibility.
             </p>
 
             <div className="progress" style={{ height: "30px" }}>
@@ -452,8 +578,16 @@ const Reports = () => {
           <SummaryBox
             title="Monthly Performance"
             lines={[
-              ["Best Month", bestMonth ? `${bestMonth.month} — Rs. ${bestMonth.profit}` : "-", "text-success"],
-              ["Weakest Month", worstMonth ? `${worstMonth.month} — Rs. ${worstMonth.profit}` : "-", "text-danger"],
+              [
+                "Best Month",
+                bestMonth ? `${bestMonth.month} — Rs. ${bestMonth.profit}` : "-",
+                "text-success",
+              ],
+              [
+                "Weakest Month",
+                worstMonth ? `${worstMonth.month} — Rs. ${worstMonth.profit}` : "-",
+                "text-danger",
+              ],
               ["Pending Repair Estimate", `Rs. ${pendingRepairCost}`, "text-warning"],
             ]}
           />
@@ -462,7 +596,9 @@ const Reports = () => {
         <div className="card mt-3">
           <div className="card-body">
             <h5>Monthly Profit Graph</h5>
-            <p className="text-muted">Green = income, red = expenses, final value = monthly profit/loss.</p>
+            <p className="text-muted">
+              Green = income, red = expenses, final value = monthly profit/loss.
+            </p>
 
             {monthlyRows.length > 0 ? (
               monthlyRows.map((month) => (
