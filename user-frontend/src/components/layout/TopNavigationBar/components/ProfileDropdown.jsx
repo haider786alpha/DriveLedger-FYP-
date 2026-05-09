@@ -11,7 +11,7 @@
 //       </DropdownToggle>
 //       <DropdownMenu>
 //         <DropdownHeader as="h6">Welcome Gaston!</DropdownHeader>
-//         <DropdownItem as={Link} to="/pages/profile">
+//         <DropdownItem as={Link} to="/profile">
 //           <IconifyIcon icon="bx:user-circle" className="text-muted fs-18 align-middle me-1" />
 //           <span className="align-middle">Profile</span>
 //         </DropdownItem>

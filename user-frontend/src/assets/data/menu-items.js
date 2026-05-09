@@ -153,7 +153,7 @@ export const MENU_ITEMS = [{
   }, {
     key: 'page-profile',
     label: 'Profile',
-    url: '/pages/profile',
+    url: '/profile',
     parentKey: 'pages'
   }, {
     key: 'page-coming-soon',
