@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     'rest_framework_simplejwt',
     'rest_framework',
+    'drf_spectacular',
     'corsheaders',
 
     'accounts',
@@ -154,9 +155,46 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.0.101:5173",
 ]
 
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'DriveLedger API',
+    'DESCRIPTION': (
+        'API documentation for DriveLedger Fleet, Driver, Car Assignment, '
+        'Payment, Expense, Repair, Support, Notification, Password Reset, '
+        'and Driver Location Management System.'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
+        'filter': True,
+    },
+    'TAGS': [
+        {'name': 'users', 'description': 'User and role management APIs'},
+        {'name': 'drivers', 'description': 'Driver profile and document APIs'},
+        {'name': 'cars', 'description': 'Car management APIs'},
+        {'name': 'assignments', 'description': 'Driver-car assignment APIs'},
+        {'name': 'payments', 'description': 'Payment and dues APIs'},
+        {'name': 'expenses', 'description': 'Expense and invoice APIs'},
+        {'name': 'repairs', 'description': 'Repair and receipt APIs'},
+        {'name': 'notifications', 'description': 'Driver notification APIs'},
+        {'name': 'support', 'description': 'Support messages and issue attachments'},
+        {'name': 'password-reset', 'description': 'Password reset request APIs'},
+        {'name': 'driver-locations', 'description': 'Driver location sharing APIs'},
+    ],
+}
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     )
+# }
