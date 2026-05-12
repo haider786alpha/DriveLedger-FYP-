@@ -108,41 +108,7 @@ const Layout = props => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  // useEffect(() => {
-  //   dispatch(changeLayout("vertical"));
-  // }, [dispatch]);
-
-  // useEffect(() => {
-  //   if (layoutModeTypes) {
-  //     dispatch(changeLayoutMode(layoutModeTypes));
-  //   }
-  // }, [layoutModeTypes, dispatch]);
-
-  // useEffect(() => {
-  //   if (leftSideBarTheme) {
-  //     dispatch(changeSidebarTheme(leftSideBarTheme));
-  //   }
-  // }, [leftSideBarTheme, dispatch]);
-
-  // useEffect(() => {
-  //   if (layoutWidth) {
-  //     dispatch(changeLayoutWidth(layoutWidth));
-  //   }
-  // }, [layoutWidth, dispatch]);
-
-  // useEffect(() => {
-  //   if (leftSideBarType) {
-  //     dispatch(changeSidebarType(leftSideBarType));
-  //   }
-  // }, [leftSideBarType, dispatch]);
-
-  // useEffect(() => {
-  //   if (topbarTheme) {
-  //     dispatch(changeTopbarTheme(topbarTheme));
-  //   }
-  // }, [topbarTheme, dispatch]);
-
+  
   return (
     <React.Fragment>
       <div id="layout-wrapper">

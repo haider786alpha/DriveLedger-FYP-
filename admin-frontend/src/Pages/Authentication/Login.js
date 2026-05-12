@@ -70,31 +70,6 @@ const Login = (props) => {
   // Inside your component
   const { error } = useSelector(loginpage);
 
-  // handleValidSubmit
-  // const handleValidSubmit = (event, values) => {
-  //   dispatch(loginUser(values, props.router.navigate));
-  // };
-
-  // const signIn = (res, type) => {
-  //   if (type === "google" && res) {
-  //     const postData = {
-  //       name: res.profileObj.name,
-  //       email: res.profileObj.email,
-  //       token: res.tokenObj.access_token,
-  //       idToken: res.tokenId,
-  //     };
-  //     dispatch(socialLogin(postData, props.router.navigate, type));
-  //   } else if (type === "facebook" && res) {
-  //     const postData = {
-  //       name: res.name,
-  //       email: res.email,
-  //       token: res.accessToken,
-  //       idToken: res.tokenId,
-  //     };
-  //     dispatch(socialLogin(postData, props.router.navigate, type));
-  //   }
-  // };
-
   const signIn = (type) => {
     dispatch(socialLogin(type, props.router.navigate));
   };
