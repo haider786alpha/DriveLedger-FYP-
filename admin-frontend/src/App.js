@@ -4,12 +4,6 @@ import Routes from "./Routes/index";
 // Import Scss
 import './assets/scss/theme.scss';
 
-// Fake Backend 
-import fakeBackend from "./helpers/AuthType/fakeBackend";
-
-// Activating fake backend
-fakeBackend();
-
 function App() {
   return (
     <React.Fragment>

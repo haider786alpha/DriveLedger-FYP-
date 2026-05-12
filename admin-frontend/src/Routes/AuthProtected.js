@@ -31,3 +31,24 @@ const AccessRoute = ({ component: Component, ...rest }) => {
 };
 
 export { AuthProtected, AccessRoute };
+
+
+// import React from "react";
+// import { Navigate } from "react-router-dom";
+
+// const AuthProtected = ({ children }) => {
+//   const access = localStorage.getItem("access");
+//   const authUser = localStorage.getItem("authUser");
+
+//   if (!access || !authUser) {
+//     return <Navigate to="/login" replace />;
+//   }
+
+//   return <>{children}</>;
+// };
+
+// const AccessRoute = ({ children }) => {
+//   return <>{children}</>;
+// };
+
+// export { AuthProtected, AccessRoute };

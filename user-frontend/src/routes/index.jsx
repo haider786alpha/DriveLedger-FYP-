@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 
+
 // Driver Panel Pages
 const Dashboard = lazy(() => import('@/app/(admin)/dashboard/analytics/page'));
 const Profile = lazy(() => import('@/app/(admin)/profile/page'));
@@ -14,6 +15,7 @@ const ShareLocation = lazy(() => import('@/app/(admin)/share-location/page'));
 
 // Auth / Error Pages
 const AuthSignIn = lazy(() => import('@/app/(other)/auth/sign-in/page'));
+const ResetPassword = lazy(() => import('@/app/(other)/auth/reset-pass/page'));
 const NotFound = lazy(() => import('@/app/(other)/(error-pages)/error-404/page'));
 
 const initialRoutes = [
@@ -88,6 +90,11 @@ export const authRoutes = [
     path: '/error-404',
     element: <NotFound />,
   },
+  {
+  name: 'Reset Password',
+  path: '/auth/reset-pass',
+  element: <ResetPassword />,
+},
 ];
 
 export const appRoutes = [...initialRoutes, ...driverRoutes];
