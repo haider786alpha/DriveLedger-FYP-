@@ -16,7 +16,6 @@ import AddExpense from "../Pages/Expenses/AddExpense";
 import EditExpense from "../Pages/Expenses/EditExpense";
 import AddRepair from "../Pages/Repairs/AddRepair";
 import EditRepair from "../Pages/Repairs/EditRepair";
-// import AddNotification from "../Pages/Notifications/AddNotification";
 
 import Dashboard from "../Pages/Dashboard";
 import Users from "../Pages/Users";
@@ -63,7 +62,6 @@ const authProtectedRoutes = [
   { path: "/edit-expense/:id", component: <EditExpense /> },
   { path: "/add-repair", component: <AddRepair /> },
   { path: "/edit-repair/:id", component: <EditRepair /> },
-  // { path: "/add-notification", component: <AddNotification /> },
 
   // Default redirect
   {
