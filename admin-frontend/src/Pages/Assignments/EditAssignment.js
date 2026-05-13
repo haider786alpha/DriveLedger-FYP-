@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../helpers/apiConfig";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -24,9 +25,9 @@ const EditAssignment = () => {
   const fetchData = async () => {
     try {
       const [assignmentRes, driversRes, carsRes] = await Promise.all([
-        axios.get(`http://127.0.0.1:8000/api/assignments/${id}/`),
-        axios.get("http://127.0.0.1:8000/api/drivers/"),
-        axios.get("http://127.0.0.1:8000/api/cars/"),
+        axios.get(API_URL(`/api/assignments/${id}/`)),
+        axios.get(API_URL("/api/drivers/")),
+        axios.get(API_URL("/api/cars/")),
       ]);
 
       setFormData({
@@ -56,7 +57,7 @@ const EditAssignment = () => {
 
     try {
       await axios.put(
-        `http://127.0.0.1:8000/api/assignments/${id}/`,
+        API_URL(`/api/assignments/${id}/`),
         formData
       );
 

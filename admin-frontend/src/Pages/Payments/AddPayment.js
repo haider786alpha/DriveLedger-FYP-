@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../helpers/apiConfig";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -21,7 +22,7 @@ const AddPayment = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/assignments/");
+      const response = await axios.get(API_URL("/api/assignments/"));
       setAssignments(response);
     } catch (error) {
       console.error("Error fetching assignments:", error);
@@ -40,7 +41,7 @@ const AddPayment = () => {
     e.preventDefault();
 
     try {
-      await axios.post("http://127.0.0.1:8000/api/payments/", formData);
+      await axios.post(API_URL("/api/payments/"), formData);
       alert("Payment added successfully");
       navigate("/payments");
     } catch (error) {

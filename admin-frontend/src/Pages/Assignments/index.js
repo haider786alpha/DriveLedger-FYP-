@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../helpers/apiConfig";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
@@ -15,9 +16,9 @@ const Assignments = () => {
   const fetchData = async () => {
     try {
       const [assignmentsRes, driversRes, carsRes] = await Promise.all([
-        axios.get("http://127.0.0.1:8000/api/assignments/"),
-        axios.get("http://127.0.0.1:8000/api/drivers/"),
-        axios.get("http://127.0.0.1:8000/api/cars/"),
+        axios.get(API_URL("/api/assignments/")),
+        axios.get(API_URL("/api/drivers/")),
+        axios.get(API_URL("/api/cars/")),
       ]);
 
       setAssignments(assignmentsRes);
@@ -45,7 +46,7 @@ const Assignments = () => {
     if (!window.confirm("Are you sure you want to remove this assignment?")) return;
 
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/assignments/${id}/`);
+      await axios.delete(API_URL(`/api/assignments/${id}/`));
       alert("Assignment removed successfully");
       fetchData();
     } catch (error) {

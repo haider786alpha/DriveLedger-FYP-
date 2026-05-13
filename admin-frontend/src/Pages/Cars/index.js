@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../helpers/apiConfig";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
@@ -12,7 +13,7 @@ const Cars = () => {
 
   const fetchCars = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/cars/");
+      const response = await axios.get(API_URL("/api/cars/"));
       setCars(response);
     } catch (error) {
       console.error("Error fetching cars:", error);
@@ -24,7 +25,7 @@ const Cars = () => {
     if (!window.confirm("Are you sure you want to delete this car?")) return;
 
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/cars/${id}/`);
+      await axios.delete(API_URL(`/api/cars/${id}/`));
       alert("Car deleted successfully");
       fetchCars();
     } catch (error) {

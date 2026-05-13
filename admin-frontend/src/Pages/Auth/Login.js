@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_URL } from "../../helpers/apiConfig";
 import axios from "axios";
 
 const Login = () => {
@@ -28,7 +29,7 @@ const Login = () => {
 
     try {
       const loginResponse = await axios.post(
-        "http://localhost:8000/api/token/",
+        API_URL("/api/token/"),
         {
           username: formData.username.trim(),
           password: formData.password.trim(),
@@ -43,7 +44,7 @@ const Login = () => {
         throw new Error("Token not received from server.");
       }
 
-      const usersResponse = await axios.get("http://localhost:8000/api/users/", {
+      const usersResponse = await axios.get(API_URL("/api/users/"), {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -81,7 +82,7 @@ const Login = () => {
         })
       );
 
-      window.location.href = "http://localhost:3000/dashboard";
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("LOGIN ERROR:", error);
 

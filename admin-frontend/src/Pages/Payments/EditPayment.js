@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../helpers/apiConfig";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -23,7 +24,7 @@ const EditPayment = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/assignments/");
+      const response = await axios.get(API_URL("/api/assignments/"));
       setAssignments(response);
     } catch (error) {
       console.error("Error fetching assignments:", error);
@@ -33,7 +34,7 @@ const EditPayment = () => {
 
   const fetchPayment = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/payments/${id}/`);
+      const response = await axios.get(API_URL(`/api/payments/${id}/`));
       const data = response.data || response;
 
       setFormData({
@@ -60,7 +61,7 @@ const EditPayment = () => {
     e.preventDefault();
 
     try {
-      await axios.put(`http://127.0.0.1:8000/api/payments/${id}/`, formData);
+      await axios.put(API_URL(`/api/payments/${id}/`), formData);
       alert("Payment updated successfully");
       navigate("/payments");
     } catch (error) {

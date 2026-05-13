@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../helpers/apiConfig";
 import axios from "axios";
 import {
   BarChart,
@@ -32,12 +33,12 @@ const Dashboard = () => {
     try {
       const [drivers, cars, assignments, payments, expenses, repairs] =
         await Promise.all([
-          axios.get("http://127.0.0.1:8000/api/drivers/"),
-          axios.get("http://127.0.0.1:8000/api/cars/"),
-          axios.get("http://127.0.0.1:8000/api/assignments/"),
-          axios.get("http://127.0.0.1:8000/api/payments/"),
-          axios.get("http://127.0.0.1:8000/api/expenses/"),
-          axios.get("http://127.0.0.1:8000/api/repairs/"),
+          axios.get(API_URL("/api/drivers/")),
+          axios.get(API_URL("/api/cars/")),
+          axios.get(API_URL("/api/assignments/")),
+          axios.get(API_URL("/api/payments/")),
+          axios.get(API_URL("/api/expenses/")),
+          axios.get(API_URL("/api/repairs/")),
         ]);
 
       setData({ drivers, cars, assignments, payments, expenses, repairs });

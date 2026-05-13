@@ -7,6 +7,7 @@ import withRouter from "../../components/Common/withRouter";
 import { Link } from "react-router-dom";
 import { withTranslation } from "react-i18next";
 import axios from "axios";
+import { API_URL } from "../../helpers/apiConfig";
 
 const Sidebar = (props) => {
   const ref = useRef();
@@ -122,7 +123,7 @@ const Sidebar = (props) => {
 
   const fetchSupportAlertCount = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/support-messages/");
+      const res = await axios.get(API_URL("/api/support-messages/"));
 
       const supportMessages = Array.isArray(res)
         ? res

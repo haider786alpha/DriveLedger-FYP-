@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../helpers/apiConfig";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +24,7 @@ const AssignDriver = () => {
 
   const fetchDrivers = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/drivers/");
+      const response = await axios.get(API_URL("/api/drivers/"));
       setDrivers(response);
     } catch (error) {
       console.error("Error fetching drivers:", error);
@@ -33,7 +34,7 @@ const AssignDriver = () => {
 
   const fetchCars = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/cars/");
+      const response = await axios.get(API_URL("/api/cars/"));
       setCars(response);
     } catch (error) {
       console.error("Error fetching cars:", error);
@@ -60,7 +61,7 @@ const AssignDriver = () => {
     };
 
     try {
-      await axios.post("http://127.0.0.1:8000/api/assignments/", payload);
+      await axios.post(API_URL("/api/assignments/"), payload);
       alert("Car assigned successfully");
       navigate("/assignments");
     } catch (error) {
