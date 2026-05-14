@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { API_URL } from "../../helpers/apiConfig";
+import "./Expenses.css";
 
 const EditExpense = () => {
   const { id } = useParams();
@@ -9,6 +10,8 @@ const EditExpense = () => {
 
   const [cars, setCars] = useState([]);
   const [existingInvoiceUrl, setExistingInvoiceUrl] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const [formData, setFormData] = useState({
     car: "",
@@ -20,8 +23,8 @@ const EditExpense = () => {
   });
 
   useEffect(() => {
-    fetchCars();
-    fetchExpense();
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const normalizeResponse = (res) => {
@@ -32,20 +35,26 @@ const EditExpense = () => {
     return [];
   };
 
-  const fetchCars = async () => {
-    try {
-      const response = await axios.get(API_URL("/api/cars/"));
-      setCars(normalizeResponse(response));
-    } catch (error) {
-      console.error("Error fetching cars:", error);
-      setCars([]);
+  const showToast = (type, title, message) => {
+    setToast({ type, title, message });
+
+    if (type === "error") {
+      setTimeout(() => {
+        setToast(null);
+      }, 3500);
     }
   };
 
-  const fetchExpense = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get(API_URL(`/api/expenses/${id}/`));
-      const data = response.data || response;
+      const [carsRes, expenseRes] = await Promise.all([
+        axios.get(API_URL("/api/cars/")),
+        axios.get(API_URL(`/api/expenses/${id}/`)),
+      ]);
+
+      const data = expenseRes.data || expenseRes;
+
+      setCars(normalizeResponse(carsRes));
 
       setFormData({
         car: data.car || "",
@@ -59,7 +68,14 @@ const EditExpense = () => {
       setExistingInvoiceUrl(data.invoice_receipt_url || "");
     } catch (error) {
       console.error("Error fetching expense:", error);
-      alert("Failed to load expense");
+
+      setCars([]);
+
+      showToast(
+        "error",
+        "Expense Load Failed",
+        "Could not load expense details. Please go back and try again."
+      );
     }
   };
 
@@ -82,6 +98,8 @@ const EditExpense = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setToast(null);
 
     try {
       const payload = new FormData();
@@ -105,138 +123,213 @@ const EditExpense = () => {
         },
       });
 
-      alert("Expense updated successfully");
-      navigate("/expenses");
+      showToast(
+        "success",
+        "Expense Updated Successfully",
+        "Expense entry has been saved in DriveLedger."
+      );
+
+      setTimeout(() => {
+        navigate("/expenses");
+      }, 1000);
     } catch (error) {
       console.error("Error updating expense:", error.response?.data || error);
-      alert("Failed to update expense");
+
+      showToast(
+        "error",
+        "Update Failed",
+        "Expense could not be updated. Please check the form and try again."
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="page-content">
+    <div className="page-content driveledger-expenses">
+      {toast && (
+        <div className={`expense-toast expense-toast-${toast.type}`}>
+          <div className="expense-toast-icon">
+            {toast.type === "success" ? "✓" : "!"}
+          </div>
+          <div>
+            <strong>{toast.title}</strong>
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       <div className="container-fluid">
-        <h4 className="mb-4">Edit Expense</h4>
+        <div className="expenses-hero expenses-reveal expenses-delay-1">
+          <div>
+            <div className="expenses-hero-pill">
+              <span className="dl-status-dot"></span>
+              Update Expense Entry
+            </div>
 
-        <div className="card">
-          <div className="card-body">
-            <form onSubmit={handleSubmit}>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Car</label>
-                  <select
-                    name="car"
-                    value={formData.car}
-                    onChange={handleChange}
-                    className="form-select"
-                    required
-                  >
-                    <option value="">Select Car</option>
-                    {cars.map((car) => (
-                      <option key={car.id} value={car.id}>
-                        {car.make} {car.model} - {car.registration_number}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <h4>Edit Expense</h4>
+            <p>
+              Update car expense details, amount, category, notes and
+              invoice/receipt proof.
+            </p>
+          </div>
 
-                <div className="col-md-6 mb-3">
-                  <label>Amount</label>
-                  <input
-                    type="number"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
+          <Link to="/expenses" className="expense-form-back-btn">
+            ← Back to Expenses
+          </Link>
+        </div>
 
-                <div className="col-md-6 mb-3">
-                  <label>Expense Date</label>
-                  <input
-                    type="date"
-                    name="expense_date"
-                    value={formData.expense_date}
-                    onChange={handleChange}
-                    className="form-control"
-                  />
-                  <small className="text-muted">
-                    Your backend currently auto-sets the date when an expense is created.
+        <div className="expense-form-card expenses-reveal expenses-delay-2">
+          <div className="expense-form-section-title">
+            <h5>Expense Information</h5>
+            <p>
+              Review and update this expense record before saving changes.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="expense-form-label">Car</label>
+                <select
+                  name="car"
+                  value={formData.car}
+                  onChange={handleChange}
+                  className="expense-form-select"
+                  required
+                >
+                  <option value="">Select Car</option>
+                  {cars.map((car) => (
+                    <option key={car.id} value={car.id}>
+                      {car.make} {car.model} - {car.registration_number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <FormField
+                label="Amount"
+                type="number"
+                name="amount"
+                value={formData.amount}
+                onChange={handleChange}
+                placeholder="Enter expense amount"
+                required
+              />
+
+              <FormField
+                label="Expense Date"
+                type="date"
+                name="expense_date"
+                value={formData.expense_date}
+                onChange={handleChange}
+                help="Your backend can auto-set the date when creating an expense."
+              />
+
+              <div className="col-md-6 mb-3">
+                <label className="expense-form-label">Category</label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="expense-form-select"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="Fuel">Fuel</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Oil Change">Oil Change</option>
+                  <option value="Repair">Repair</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label className="expense-form-label">Invoice / Receipt</label>
+                <input
+                  type="file"
+                  name="invoice_receipt"
+                  onChange={handleChange}
+                  className="expense-form-file"
+                  accept="image/*,.pdf"
+                />
+
+                {existingInvoiceUrl ? (
+                  <div className="expense-existing-preview">
+                    <a
+                      href={existingInvoiceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="expense-invoice-link"
+                    >
+                      View Current Invoice / Receipt
+                    </a>
+                  </div>
+                ) : (
+                  <small className="expense-form-help">
+                    No invoice or receipt uploaded.
                   </small>
-                </div>
+                )}
+              </div>
 
-                <div className="col-md-6 mb-3">
-                  <label>Category</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="form-select"
-                    required
+              <div className="col-md-12 mb-3">
+                <label className="expense-form-label">Notes</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  className="expense-form-textarea"
+                  rows="3"
+                  placeholder="Optional expense notes"
+                />
+              </div>
+
+              <div className="col-md-12">
+                <div className="expense-form-actions">
+                  <Link to="/expenses" className="expense-form-cancel-btn">
+                    Cancel
+                  </Link>
+
+                  <button
+                    type="submit"
+                    className="expense-form-save-btn"
+                    disabled={saving}
                   >
-                    <option value="">Select Category</option>
-                    <option value="Fuel">Fuel</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Oil Change">Oil Change</option>
-                    <option value="Repair">Repair</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Invoice / Receipt</label>
-                  <input
-                    type="file"
-                    name="invoice_receipt"
-                    onChange={handleChange}
-                    className="form-control"
-                    accept="image/*,.pdf"
-                  />
-
-                  {existingInvoiceUrl ? (
-                    <div className="mt-2">
-                      <a
-                        href={existingInvoiceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn btn-sm btn-outline-primary"
-                      >
-                        View Current Invoice / Receipt
-                      </a>
-                    </div>
-                  ) : (
-                    <small className="text-muted d-block mt-1">
-                      No invoice or receipt uploaded.
-                    </small>
-                  )}
-                </div>
-
-                <div className="col-md-12 mb-3">
-                  <label>Notes</label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    className="form-control"
-                    rows="3"
-                    placeholder="Optional expense notes"
-                  ></textarea>
-                </div>
-
-                <div className="col-md-12">
-                  <button type="submit" className="btn btn-primary">
-                    Update Expense
+                    {saving ? "Updating..." : "Update Expense"}
                   </button>
                 </div>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-
       </div>
     </div>
   );
 };
+
+const FormField = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+  placeholder = "",
+  help = "",
+}) => (
+  <div className="col-md-6 mb-3">
+    <label className="expense-form-label">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="expense-form-input"
+      placeholder={placeholder}
+      required={required}
+    />
+    {help && <small className="expense-form-help">{help}</small>}
+  </div>
+);
 
 export default EditExpense;

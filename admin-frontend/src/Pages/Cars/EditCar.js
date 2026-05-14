@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { API_URL } from "../../helpers/apiConfig";
+import "./Cars.css";
 
 const EditCar = () => {
   const { id } = useParams();
@@ -22,9 +23,23 @@ const EditCar = () => {
     registration_expiry: "",
   });
 
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+
   useEffect(() => {
     fetchCar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const showToast = (type, title, message) => {
+    setToast({ type, title, message });
+
+    if (type === "error") {
+      setTimeout(() => {
+        setToast(null);
+      }, 3500);
+    }
+  };
 
   const formatDate = (value) => {
     if (!value) return "";
@@ -52,7 +67,12 @@ const EditCar = () => {
       });
     } catch (error) {
       console.error("Error fetching car:", error);
-      alert("Failed to load car");
+
+      showToast(
+        "error",
+        "Car Load Failed",
+        "Could not load this vehicle record. Please go back and try again."
+      );
     }
   };
 
@@ -77,6 +97,8 @@ const EditCar = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setToast(null);
 
     try {
       await axios.put(API_URL(`/api/cars/${id}/`), cleanPayload(), {
@@ -85,177 +107,225 @@ const EditCar = () => {
         },
       });
 
-      alert("Car updated successfully");
-      navigate("/cars");
+      showToast(
+        "success",
+        "Car Updated Successfully",
+        "Vehicle record has been saved and updated in DriveLedger."
+      );
+
+      setTimeout(() => {
+        navigate("/cars");
+      }, 1000);
     } catch (error) {
       console.error("Error updating car:", error.response?.data || error);
-      alert("Failed to update car");
+
+      showToast(
+        "error",
+        "Update Failed",
+        "Car could not be updated. Please check the form and try again."
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="page-content">
+    <div className="page-content driveledger-cars">
+      {toast && (
+        <div className={`car-toast car-toast-${toast.type}`}>
+          <div className="car-toast-icon">
+            {toast.type === "success" ? "✓" : "!"}
+          </div>
+          <div>
+            <strong>{toast.title}</strong>
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       <div className="container-fluid">
-        <h4 className="mb-4">Edit Car</h4>
+        <div className="cars-hero cars-reveal cars-delay-1">
+          <div>
+            <div className="cars-hero-pill">
+              <span className="dl-status-dot"></span>
+              Update Vehicle Record
+            </div>
 
-        <div className="card">
-          <div className="card-body">
-            <form onSubmit={handleSubmit}>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Make</label>
-                  <input
-                    name="make"
-                    value={formData.make}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
+            <h4>Edit Car</h4>
+            <p>
+              Update vehicle information, mileage, maintenance schedule,
+              insurance expiry and registration details.
+            </p>
+          </div>
 
-                <div className="col-md-6 mb-3">
-                  <label>Model</label>
-                  <input
-                    name="model"
-                    value={formData.model}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
+          <Link to="/cars" className="car-form-back-btn">
+            ← Back to Cars
+          </Link>
+        </div>
 
-                <div className="col-md-6 mb-3">
-                  <label>Year</label>
-                  <input
-                    type="number"
-                    name="year"
-                    value={formData.year}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
+        <div className="car-form-card cars-reveal cars-delay-2">
+          <div className="car-form-section-title">
+            <h5>Vehicle Information</h5>
+            <p>Review and update the car details before saving changes.</p>
+          </div>
 
-                <div className="col-md-6 mb-3">
-                  <label>Registration Number</label>
-                  <input
-                    name="registration_number"
-                    value={formData.registration_number}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
+          <form onSubmit={handleSubmit}>
+            <div className="row">
+              <FormField
+                label="Make"
+                name="make"
+                value={formData.make}
+                onChange={handleChange}
+                required
+              />
 
-                <div className="col-md-6 mb-3">
-                  <label>Mileage</label>
-                  <input
-                    type="number"
-                    name="mileage"
-                    value={formData.mileage}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
+              <FormField
+                label="Model"
+                name="model"
+                value={formData.model}
+                onChange={handleChange}
+                required
+              />
 
-                <div className="col-md-6 mb-3">
-                  <label>Current Mileage</label>
-                  <input
-                    type="number"
-                    name="current_mileage"
-                    value={formData.current_mileage}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="Optional current mileage"
-                  />
-                </div>
+              <FormField
+                label="Year"
+                type="number"
+                name="year"
+                value={formData.year}
+                onChange={handleChange}
+                required
+              />
 
-                <div className="col-md-6 mb-3">
-                  <label>Condition</label>
-                  <select
-                    name="condition"
-                    value={formData.condition}
-                    onChange={handleChange}
-                    className="form-select"
-                    required
+              <FormField
+                label="Registration Number"
+                name="registration_number"
+                value={formData.registration_number}
+                onChange={handleChange}
+                required
+              />
+
+              <FormField
+                label="Mileage"
+                type="number"
+                name="mileage"
+                value={formData.mileage}
+                onChange={handleChange}
+                required
+              />
+
+              <FormField
+                label="Current Mileage"
+                type="number"
+                name="current_mileage"
+                value={formData.current_mileage}
+                onChange={handleChange}
+                placeholder="Optional current mileage"
+              />
+
+              <div className="col-md-6 mb-3">
+                <label className="car-form-label">Condition</label>
+                <select
+                  name="condition"
+                  value={formData.condition}
+                  onChange={handleChange}
+                  className="car-form-select"
+                  required
+                >
+                  <option value="">Select condition</option>
+                  <option value="Good">Good</option>
+                  <option value="Average">Average</option>
+                  <option value="Needs Maintenance">Needs Maintenance</option>
+                </select>
+              </div>
+
+              <FormField
+                label="Last Service Date"
+                type="date"
+                name="last_service_date"
+                value={formData.last_service_date}
+                onChange={handleChange}
+              />
+
+              <FormField
+                label="Next Maintenance Date"
+                type="date"
+                name="next_maintenance_date"
+                value={formData.next_maintenance_date}
+                onChange={handleChange}
+              />
+
+              <FormField
+                label="Insurance Expiry"
+                type="date"
+                name="insurance_expiry"
+                value={formData.insurance_expiry}
+                onChange={handleChange}
+              />
+
+              <FormField
+                label="Registration Expiry"
+                type="date"
+                name="registration_expiry"
+                value={formData.registration_expiry}
+                onChange={handleChange}
+              />
+
+              <div className="col-md-12 mb-3">
+                <label className="car-form-label">Notes</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  className="car-form-textarea"
+                  rows="3"
+                  placeholder="Optional notes about this car"
+                />
+              </div>
+
+              <div className="col-md-12">
+                <div className="car-form-actions">
+                  <Link to="/cars" className="car-form-cancel-btn">
+                    Cancel
+                  </Link>
+
+                  <button
+                    type="submit"
+                    className="car-form-save-btn"
+                    disabled={saving}
                   >
-                    <option value="">Select condition</option>
-                    <option value="Good">Good</option>
-                    <option value="Average">Average</option>
-                    <option value="Needs Maintenance">Needs Maintenance</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Last Service Date</label>
-                  <input
-                    type="date"
-                    name="last_service_date"
-                    value={formData.last_service_date}
-                    onChange={handleChange}
-                    className="form-control"
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Next Maintenance Date</label>
-                  <input
-                    type="date"
-                    name="next_maintenance_date"
-                    value={formData.next_maintenance_date}
-                    onChange={handleChange}
-                    className="form-control"
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Insurance Expiry</label>
-                  <input
-                    type="date"
-                    name="insurance_expiry"
-                    value={formData.insurance_expiry}
-                    onChange={handleChange}
-                    className="form-control"
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Registration Expiry</label>
-                  <input
-                    type="date"
-                    name="registration_expiry"
-                    value={formData.registration_expiry}
-                    onChange={handleChange}
-                    className="form-control"
-                  />
-                </div>
-
-                <div className="col-md-12 mb-3">
-                  <label>Notes</label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    className="form-control"
-                    rows="3"
-                    placeholder="Optional notes"
-                  />
-                </div>
-
-                <div className="col-md-12">
-                  <button type="submit" className="btn btn-primary">
-                    Update Car
+                    {saving ? "Updating..." : "Update Car"}
                   </button>
                 </div>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-
       </div>
     </div>
   );
 };
+
+const FormField = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+  placeholder = "",
+}) => (
+  <div className="col-md-6 mb-3">
+    <label className="car-form-label">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="car-form-input"
+      required={required}
+      placeholder={placeholder}
+    />
+  </div>
+);
 
 export default EditCar;

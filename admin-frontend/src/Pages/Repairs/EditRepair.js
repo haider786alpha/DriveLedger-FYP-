@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { API_URL } from "../../helpers/apiConfig";
+import "./Repairs.css";
 
 const EditRepair = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [cars, setCars] = useState([]);
+  const [existingBillUrl, setExistingBillUrl] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const [formData, setFormData] = useState({
     car: "",
@@ -20,11 +25,9 @@ const EditRepair = () => {
     bill_receipt: null,
   });
 
-  const [existingBillUrl, setExistingBillUrl] = useState("");
-
   useEffect(() => {
-    fetchCars();
-    fetchRepair();
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const normalizeResponse = (res) => {
@@ -35,20 +38,26 @@ const EditRepair = () => {
     return [];
   };
 
-  const fetchCars = async () => {
-    try {
-      const response = await axios.get(API_URL("/api/cars/"));
-      setCars(normalizeResponse(response));
-    } catch (error) {
-      console.error("Error fetching cars:", error);
-      setCars([]);
+  const showToast = (type, title, message) => {
+    setToast({ type, title, message });
+
+    if (type === "error") {
+      setTimeout(() => {
+        setToast(null);
+      }, 3500);
     }
   };
 
-  const fetchRepair = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get(API_URL(`/api/repairs/${id}/`));
-      const data = response.data || response;
+      const [carsRes, repairRes] = await Promise.all([
+        axios.get(API_URL("/api/cars/")),
+        axios.get(API_URL(`/api/repairs/${id}/`)),
+      ]);
+
+      const data = repairRes.data || repairRes;
+
+      setCars(normalizeResponse(carsRes));
 
       setFormData({
         car: data.car || "",
@@ -65,7 +74,14 @@ const EditRepair = () => {
       setExistingBillUrl(data.bill_receipt_url || "");
     } catch (error) {
       console.error("Error fetching repair:", error);
-      alert("Failed to load repair");
+
+      setCars([]);
+
+      showToast(
+        "error",
+        "Repair Load Failed",
+        "Could not load repair details. Please go back and try again."
+      );
     }
   };
 
@@ -88,6 +104,8 @@ const EditRepair = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setToast(null);
 
     try {
       const payload = new FormData();
@@ -111,170 +129,240 @@ const EditRepair = () => {
         },
       });
 
-      alert("Repair updated successfully");
-      navigate("/repairs");
+      showToast(
+        "success",
+        "Repair Updated Successfully",
+        "Repair record has been saved in DriveLedger."
+      );
+
+      setTimeout(() => {
+        navigate("/repairs");
+      }, 1000);
     } catch (error) {
       console.error("Error updating repair:", error.response?.data || error);
-      alert("Failed to update repair");
+
+      showToast(
+        "error",
+        "Update Failed",
+        "Repair record could not be updated. Please check the form and try again."
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="page-content">
+    <div className="page-content driveledger-repairs">
+      {toast && (
+        <div className={`repair-toast repair-toast-${toast.type}`}>
+          <div className="repair-toast-icon">
+            {toast.type === "success" ? "✓" : "!"}
+          </div>
+          <div>
+            <strong>{toast.title}</strong>
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       <div className="container-fluid">
-        <h4 className="mb-4">Edit Repair</h4>
+        <div className="repairs-hero repairs-reveal repairs-delay-1">
+          <div>
+            <div className="repairs-hero-pill">
+              <span className="dl-status-dot"></span>
+              Update Repair Record
+            </div>
 
-        <div className="card">
-          <div className="card-body">
-            <form onSubmit={handleSubmit}>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Car</label>
-                  <select
-                    name="car"
-                    value={formData.car}
-                    onChange={handleChange}
-                    className="form-select"
-                    required
+            <h4>Edit Repair</h4>
+            <p>
+              Update repair issue, priority, status, costs, notes and
+              bill/receipt proof.
+            </p>
+          </div>
+
+          <Link to="/repairs" className="repair-form-back-btn">
+            ← Back to Repairs
+          </Link>
+        </div>
+
+        <div className="repair-form-card repairs-reveal repairs-delay-2">
+          <div className="repair-form-section-title">
+            <h5>Repair Information</h5>
+            <p>Review and update this repair record before saving changes.</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="repair-form-label">Car</label>
+                <select
+                  name="car"
+                  value={formData.car}
+                  onChange={handleChange}
+                  className="repair-form-select"
+                  required
+                >
+                  <option value="">Select Car</option>
+                  {cars.map((car) => (
+                    <option key={car.id} value={car.id}>
+                      {car.make} {car.model} - {car.registration_number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <FormField
+                label="Reported Date"
+                type="date"
+                name="reported_date"
+                value={formData.reported_date}
+                onChange={handleChange}
+                required
+              />
+
+              <div className="col-md-12 mb-3">
+                <label className="repair-form-label">Issue</label>
+                <input
+                  name="issue"
+                  value={formData.issue}
+                  onChange={handleChange}
+                  className="repair-form-input"
+                  placeholder="Describe repair issue"
+                  required
+                />
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label className="repair-form-label">Priority</label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="repair-form-select"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label className="repair-form-label">Status</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="repair-form-select"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <FormField
+                label="Estimated Cost"
+                type="number"
+                name="estimated_cost"
+                value={formData.estimated_cost}
+                onChange={handleChange}
+                placeholder="Estimated repair cost"
+                required
+              />
+
+              <FormField
+                label="Actual Cost"
+                type="number"
+                name="actual_cost"
+                value={formData.actual_cost}
+                onChange={handleChange}
+                placeholder="Actual repair cost"
+              />
+
+              <div className="col-md-6 mb-3">
+                <label className="repair-form-label">Bill / Receipt</label>
+                <input
+                  type="file"
+                  name="bill_receipt"
+                  onChange={handleChange}
+                  className="repair-form-file"
+                  accept="image/*,.pdf"
+                />
+
+                {existingBillUrl ? (
+                  <div className="repair-existing-preview">
+                    <a
+                      href={existingBillUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="repair-bill-link"
+                    >
+                      View Current Bill / Receipt
+                    </a>
+                  </div>
+                ) : (
+                  <small className="repair-form-help">
+                    No bill or receipt uploaded.
+                  </small>
+                )}
+              </div>
+
+              <div className="col-md-12 mb-3">
+                <label className="repair-form-label">Notes</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  className="repair-form-textarea"
+                  rows="3"
+                  placeholder="Optional repair notes"
+                />
+              </div>
+
+              <div className="col-md-12">
+                <div className="repair-form-actions">
+                  <Link to="/repairs" className="repair-form-cancel-btn">
+                    Cancel
+                  </Link>
+
+                  <button
+                    type="submit"
+                    className="repair-form-save-btn"
+                    disabled={saving}
                   >
-                    <option value="">Select Car</option>
-                    {cars.map((car) => (
-                      <option key={car.id} value={car.id}>
-                        {car.make} {car.model} - {car.registration_number}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Reported Date</label>
-                  <input
-                    type="date"
-                    name="reported_date"
-                    value={formData.reported_date}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
-
-                <div className="col-md-12 mb-3">
-                  <label>Issue</label>
-                  <input
-                    name="issue"
-                    value={formData.issue}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="Describe repair issue"
-                    required
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Priority</label>
-                  <select
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Status</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Estimated Cost</label>
-                  <input
-                    type="number"
-                    name="estimated_cost"
-                    value={formData.estimated_cost}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Actual Cost</label>
-                  <input
-                    type="number"
-                    name="actual_cost"
-                    value={formData.actual_cost}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="Actual repair cost"
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Bill / Receipt</label>
-                  <input
-                    type="file"
-                    name="bill_receipt"
-                    onChange={handleChange}
-                    className="form-control"
-                    accept="image/*,.pdf"
-                  />
-
-                  {existingBillUrl ? (
-                    <div className="mt-2">
-                      <a
-                        href={existingBillUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn btn-sm btn-outline-primary"
-                      >
-                        View Current Bill / Receipt
-                      </a>
-                    </div>
-                  ) : (
-                    <small className="text-muted d-block mt-1">
-                      No bill or receipt uploaded.
-                    </small>
-                  )}
-                </div>
-
-                <div className="col-md-12 mb-3">
-                  <label>Notes</label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    className="form-control"
-                    rows="3"
-                    placeholder="Optional repair notes"
-                  ></textarea>
-                </div>
-
-                <div className="col-md-12">
-                  <button type="submit" className="btn btn-primary">
-                    Update Repair
+                    {saving ? "Updating..." : "Update Repair"}
                   </button>
                 </div>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-
       </div>
     </div>
   );
 };
+
+const FormField = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+  placeholder = "",
+}) => (
+  <div className="col-md-6 mb-3">
+    <label className="repair-form-label">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="repair-form-input"
+      placeholder={placeholder}
+      required={required}
+    />
+  </div>
+);
 
 export default EditRepair;

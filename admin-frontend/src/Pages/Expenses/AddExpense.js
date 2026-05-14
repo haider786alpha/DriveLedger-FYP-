@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { API_URL } from "../../helpers/apiConfig";
+import "./Expenses.css";
 
 const AddExpense = () => {
   const navigate = useNavigate();
+
   const [cars, setCars] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const [formData, setFormData] = useState({
     car: "",
@@ -28,6 +32,16 @@ const AddExpense = () => {
     return [];
   };
 
+  const showToast = (type, title, message) => {
+    setToast({ type, title, message });
+
+    if (type === "error") {
+      setTimeout(() => {
+        setToast(null);
+      }, 3500);
+    }
+  };
+
   const fetchCars = async () => {
     try {
       const response = await axios.get(API_URL("/api/cars/"));
@@ -35,6 +49,12 @@ const AddExpense = () => {
     } catch (error) {
       console.error("Error fetching cars:", error);
       setCars([]);
+
+      showToast(
+        "error",
+        "Cars Load Failed",
+        "Could not load car records. Please refresh and try again."
+      );
     }
   };
 
@@ -57,6 +77,8 @@ const AddExpense = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setToast(null);
 
     try {
       const payload = new FormData();
@@ -80,124 +102,200 @@ const AddExpense = () => {
         },
       });
 
-      alert("Expense added successfully");
-      navigate("/expenses");
+      showToast(
+        "success",
+        "Expense Added Successfully",
+        "Expense entry has been saved in DriveLedger."
+      );
+
+      setTimeout(() => {
+        navigate("/expenses");
+      }, 1000);
     } catch (error) {
       console.error("Error adding expense:", error.response?.data || error);
-      alert("Failed to add expense");
+
+      showToast(
+        "error",
+        "Add Expense Failed",
+        "Expense could not be added. Please check the form and try again."
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="page-content">
+    <div className="page-content driveledger-expenses">
+      {toast && (
+        <div className={`expense-toast expense-toast-${toast.type}`}>
+          <div className="expense-toast-icon">
+            {toast.type === "success" ? "✓" : "!"}
+          </div>
+          <div>
+            <strong>{toast.title}</strong>
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       <div className="container-fluid">
-        <h4 className="mb-4">Add Expense</h4>
+        <div className="expenses-hero expenses-reveal expenses-delay-1">
+          <div>
+            <div className="expenses-hero-pill">
+              <span className="dl-status-dot"></span>
+              New Expense Entry
+            </div>
 
-        <div className="card">
-          <div className="card-body">
-            <form onSubmit={handleSubmit}>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label>Car</label>
-                  <select
-                    name="car"
-                    value={formData.car}
-                    onChange={handleChange}
-                    className="form-select"
-                    required
+            <h4>Add Expense</h4>
+            <p>
+              Record car expenses with category, amount, date, notes and
+              optional invoice/receipt proof.
+            </p>
+          </div>
+
+          <Link to="/expenses" className="expense-form-back-btn">
+            ← Back to Expenses
+          </Link>
+        </div>
+
+        <div className="expense-form-card expenses-reveal expenses-delay-2">
+          <div className="expense-form-section-title">
+            <h5>Expense Information</h5>
+            <p>
+              Select the car and enter expense details. Invoice upload is
+              optional but recommended.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="expense-form-label">Car</label>
+                <select
+                  name="car"
+                  value={formData.car}
+                  onChange={handleChange}
+                  className="expense-form-select"
+                  required
+                >
+                  <option value="">Select Car</option>
+                  {cars.map((car) => (
+                    <option key={car.id} value={car.id}>
+                      {car.make} {car.model} - {car.registration_number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <FormField
+                label="Expense Date"
+                type="date"
+                name="expense_date"
+                value={formData.expense_date}
+                onChange={handleChange}
+                help="If left empty, backend will use today's date."
+              />
+
+              <FormField
+                label="Amount"
+                type="number"
+                name="amount"
+                value={formData.amount}
+                onChange={handleChange}
+                placeholder="Enter expense amount"
+                required
+              />
+
+              <div className="col-md-6 mb-3">
+                <label className="expense-form-label">Category</label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="expense-form-select"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="Fuel">Fuel</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Oil Change">Oil Change</option>
+                  <option value="Repair">Repair</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label className="expense-form-label">Invoice / Receipt</label>
+                <input
+                  type="file"
+                  name="invoice_receipt"
+                  onChange={handleChange}
+                  className="expense-form-file"
+                  accept="image/*,.pdf"
+                />
+                <small className="expense-form-help">
+                  Upload expense invoice or receipt image/PDF.
+                </small>
+              </div>
+
+              <div className="col-md-12 mb-3">
+                <label className="expense-form-label">Notes</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  className="expense-form-textarea"
+                  rows="3"
+                  placeholder="Optional expense notes"
+                />
+              </div>
+
+              <div className="col-md-12">
+                <div className="expense-form-actions">
+                  <Link to="/expenses" className="expense-form-cancel-btn">
+                    Cancel
+                  </Link>
+
+                  <button
+                    type="submit"
+                    className="expense-form-save-btn"
+                    disabled={saving}
                   >
-                    <option value="">Select Car</option>
-                    {cars.map((car) => (
-                      <option key={car.id} value={car.id}>
-                        {car.make} {car.model} - {car.registration_number}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Expense Date</label>
-                  <input
-                    type="date"
-                    name="expense_date"
-                    value={formData.expense_date}
-                    onChange={handleChange}
-                    className="form-control"
-                  />
-                  <small className="text-muted">
-                    If left empty, backend will use today&apos;s date.
-                  </small>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Amount</label>
-                  <input
-                    type="number"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Category</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="form-select"
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    <option value="Fuel">Fuel</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Oil Change">Oil Change</option>
-                    <option value="Repair">Repair</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label>Invoice / Receipt</label>
-                  <input
-                    type="file"
-                    name="invoice_receipt"
-                    onChange={handleChange}
-                    className="form-control"
-                    accept="image/*,.pdf"
-                  />
-                  <small className="text-muted">
-                    Upload expense invoice or receipt image/PDF.
-                  </small>
-                </div>
-
-                <div className="col-md-12 mb-3">
-                  <label>Notes</label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    className="form-control"
-                    rows="3"
-                    placeholder="Optional expense notes"
-                  ></textarea>
-                </div>
-
-                <div className="col-md-12">
-                  <button type="submit" className="btn btn-success">
-                    Save Expense
+                    {saving ? "Saving..." : "Save Expense"}
                   </button>
                 </div>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-
       </div>
     </div>
   );
 };
+
+const FormField = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+  placeholder = "",
+  help = "",
+}) => (
+  <div className="col-md-6 mb-3">
+    <label className="expense-form-label">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="expense-form-input"
+      placeholder={placeholder}
+      required={required}
+    />
+    {help && <small className="expense-form-help">{help}</small>}
+  </div>
+);
 
 export default AddExpense;

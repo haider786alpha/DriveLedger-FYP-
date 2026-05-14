@@ -13,6 +13,39 @@ const Sidebar = (props) => {
   const ref = useRef();
   const [newSupportCount, setNewSupportCount] = useState(0);
 
+  const closeSidebarOnMobile = () => {
+    if (window.innerWidth <= 767) {
+      document.body.classList.remove("sidebar-enable");
+    }
+  };
+  useEffect(() => {
+  const handleOutsideClick = (e) => {
+    if (window.innerWidth > 767) return;
+
+    const isSidebarOpen = document.body.classList.contains("sidebar-enable");
+    if (!isSidebarOpen) return;
+
+    const sidebar = document.querySelector(".vertical-menu");
+
+    const clickedInsideSidebar = sidebar && sidebar.contains(e.target);
+
+    const clickedMenuButton =
+      e.target.closest(".vertical-menu-btn") ||
+      e.target.closest(".button-menu-mobile") ||
+      e.target.closest(".navbar-header button");
+
+    if (!clickedInsideSidebar && !clickedMenuButton) {
+      document.body.classList.remove("sidebar-enable");
+    }
+  };
+
+  document.addEventListener("pointerdown", handleOutsideClick);
+
+  return () => {
+    document.removeEventListener("pointerdown", handleOutsideClick);
+  };
+}, []);
+
   const activateParentDropdown = useCallback((item) => {
     item.classList.add("active");
     const parent = item.parentElement;
@@ -104,6 +137,9 @@ const Sidebar = (props) => {
   const activeMenu = useCallback(() => {
     const pathName = props.router.location.pathname;
     const ul = document.getElementById("side-menu-item");
+
+    if (!ul) return;
+
     const items = ul.getElementsByTagName("a");
 
     removeActivation(items);
@@ -209,7 +245,14 @@ const Sidebar = (props) => {
                     <li>
                       <Link
                         to={item.url ? item.url : "/#"}
-                        className={item.subItem || item.isHasArrow ? "has-arrow" : ""}
+                        onClick={() => {
+                          if (!item.subItem && !item.isHasArrow) {
+                            closeSidebarOnMobile();
+                          }
+                        }}
+                        className={
+                          item.subItem || item.isHasArrow ? "has-arrow" : ""
+                        }
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -244,31 +287,31 @@ const Sidebar = (props) => {
                         >
                           {item.issubMenubadge && (
                             <span
-                              className={
-                                "badge rounded-pill " + item.bgcolor
-                              }
+                              className={"badge rounded-pill " + item.bgcolor}
                             >
                               {item.badgeValue}
                             </span>
                           )}
 
-                          {item.id === "notifications" && newSupportCount > 0 && (
-                            <span
-                              className="badge rounded-pill bg-danger"
-                              style={{
-                                minWidth: "22px",
-                                height: "22px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "11px",
-                                fontWeight: "600",
-                                boxShadow: "0 4px 10px rgba(220,53,69,0.35)",
-                              }}
-                            >
-                              {newSupportCount}
-                            </span>
-                          )}
+                          {item.id === "notifications" &&
+                            newSupportCount > 0 && (
+                              <span
+                                className="badge rounded-pill bg-danger"
+                                style={{
+                                  minWidth: "22px",
+                                  height: "22px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: "11px",
+                                  fontWeight: "600",
+                                  boxShadow:
+                                    "0 4px 10px rgba(220,53,69,0.35)",
+                                }}
+                              >
+                                {newSupportCount}
+                              </span>
+                            )}
                         </span>
                       </Link>
 
@@ -278,8 +321,15 @@ const Sidebar = (props) => {
                             <li key={subKey}>
                               <Link
                                 to={subItem.link}
+                                onClick={() => {
+                                  if (!subItem.subMenu) {
+                                    closeSidebarOnMobile();
+                                  }
+                                }}
                                 className={
-                                  subItem.subMenu ? "has-arrow waves-effect" : ""
+                                  subItem.subMenu
+                                    ? "has-arrow waves-effect"
+                                    : ""
                                 }
                               >
                                 {props.t(subItem.sublabel)}
@@ -287,13 +337,18 @@ const Sidebar = (props) => {
 
                               {subItem.subMenu && (
                                 <ul className="sub-menu">
-                                  {subItem.subMenu.map((nestedItem, nestedKey) => (
-                                    <li key={nestedKey}>
-                                      <Link to="#">
-                                        {props.t(nestedItem.title)}
-                                      </Link>
-                                    </li>
-                                  ))}
+                                  {subItem.subMenu.map(
+                                    (nestedItem, nestedKey) => (
+                                      <li key={nestedKey}>
+                                        <Link
+                                          to="#"
+                                          onClick={closeSidebarOnMobile}
+                                        >
+                                          {props.t(nestedItem.title)}
+                                        </Link>
+                                      </li>
+                                    )
+                                  )}
                                 </ul>
                               )}
                             </li>
