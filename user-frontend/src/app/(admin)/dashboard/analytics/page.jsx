@@ -1,20 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
-import {
-  pageHeroStyle,
-  pageTitleStyle,
-  pageSubtitleStyle,
-  loggedInPillStyle,
-  statCardStyle,
-  contentCardStyle,
-  innerInfoCardStyle,
-  sectionTitleStyle,
-  sectionSubtitleStyle,
-  statLabelStyle,
-  infoLabelStyle,
-  emptyStateStyle,
-} from "@/helpers/panelStyles";
+import "./Dashboard.css";
 
 const Dashboard = () => {
   const [driver, setDriver] = useState(null);
@@ -83,253 +70,250 @@ const Dashboard = () => {
     (item) => String(item.status).toLowerCase() === "paid"
   ).length;
 
-  const getStatusBadge = (status) => {
+  const unpaidCount = payments.filter(
+    (item) => String(item.status).toLowerCase() === "unpaid"
+  ).length;
+
+  const getStatusBadgeClass = (status) => {
     const value = String(status || "").toLowerCase();
 
-    if (value === "paid") {
-      return {
-        background: "#dcfce7",
-        color: "#166534",
-      };
-    }
+    if (value === "paid") return "driver-badge driver-badge-success";
+    if (value === "unpaid") return "driver-badge driver-badge-danger";
+    if (value === "active") return "driver-badge driver-badge-info";
 
-    if (value === "unpaid") {
-      return {
-        background: "#fee2e2",
-        color: "#991b1b",
-      };
-    }
-
-    return {
-      background: "#e0e7ff",
-      color: "#3730a3",
-    };
+    return "driver-badge driver-badge-muted";
   };
 
   if (loading) {
-    return <div>Loading dashboard...</div>;
+    return (
+      <div className="driver-dashboard">
+        <div className="driver-loading-card">
+          <div className="driver-loader"></div>
+          <h5>Loading dashboard...</h5>
+          <p>Please wait while we prepare your driver panel.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div style={pageHeroStyle}>
-        <h2 style={pageTitleStyle}>Driver Dashboard</h2>
-
-        <p style={pageSubtitleStyle}>
-          Welcome to DriveLedger Driver Panel. Track your assigned vehicle,
-          payment activity, and current assignment status in one place.
-        </p>
-
-        {driver && (
-          <div style={loggedInPillStyle}>
-            <span
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                background: "#22c55e",
-                display: "inline-block",
-              }}
-            />
-            Logged in as: {driver.user_name}
+    <div className="driver-dashboard">
+      <div className="driver-hero driver-reveal driver-delay-1">
+        <div className="driver-hero-content">
+          <div className="driver-hero-pill">
+            <span className="driver-status-dot"></span>
+            Driver Panel Overview
           </div>
-        )}
-      </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "20px",
-          marginBottom: "24px",
-        }}
-      >
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Assigned Car</p>
-          <h3
-            style={{
-              margin: "10px 0 0 0",
-              color: "#0f172a",
-              fontSize: "24px",
-              wordBreak: "break-word",
-            }}
-          >
-            {car ? `${car.make} ${car.model}` : "No Car"}
-          </h3>
-          <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>
-            Current assigned vehicle
+          <h2>Driver Dashboard</h2>
+
+          <p>
+            Welcome to DriveLedger Driver Panel. Track your assigned vehicle,
+            payment activity, and current assignment status in one clean place.
           </p>
+
+          {driver && (
+            <div className="driver-login-pill">
+              <span className="driver-online-dot"></span>
+              Logged in as: <strong>{driver.user_name}</strong>
+            </div>
+          )}
         </div>
 
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Assignment Status</p>
-          <h3
-            style={{
-              margin: "10px 0 0 0",
-              color: "#0f172a",
-              fontSize: "24px",
-              textTransform: "capitalize",
-              wordBreak: "break-word",
-            }}
-          >
-            {assignment ? assignment.status : "No Assignment"}
-          </h3>
-          <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>
-            Live assignment condition
-          </p>
-        </div>
-
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Total Payments</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#0f172a", fontSize: "24px" }}>
-            {payments.length}
-          </h3>
-          <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>
-            All payment records
-          </p>
-        </div>
-
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Paid Records</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#0f172a", fontSize: "24px" }}>
-            {paidCount}
-          </h3>
-          <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>
-            Completed payments only
-          </p>
+        <div className="driver-hero-glass">
+          <span>Current Status</span>
+          <strong>{assignment ? "On Assignment" : "No Active Assignment"}</strong>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "20px",
-        }}
-      >
-        <div style={contentCardStyle}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "18px",
-              gap: "12px",
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <h4 style={sectionTitleStyle}>Recent Payments</h4>
-              <p style={sectionSubtitleStyle}>
-                Latest payment activity for your account
-              </p>
+      <div className="driver-kpi-grid driver-reveal driver-delay-2">
+        <StatCard
+          title="Assigned Car"
+          value={car ? `${car.make} ${car.model}` : "No Car"}
+          subtitle="Current assigned vehicle"
+          icon="🚗"
+          tone="blue"
+        />
+
+        <StatCard
+          title="Assignment Status"
+          value={assignment ? assignment.status : "No Assignment"}
+          subtitle="Live assignment condition"
+          icon="🔗"
+          tone="teal"
+          capitalize
+        />
+
+        <StatCard
+          title="Total Payments"
+          value={payments.length}
+          subtitle="All payment records"
+          icon="💰"
+          tone="green"
+        />
+
+        <StatCard
+          title="Paid Records"
+          value={paidCount}
+          subtitle={`${unpaidCount} unpaid record(s)`}
+          icon="✅"
+          tone="purple"
+        />
+      </div>
+
+      {!assignment && (
+        <div className="driver-alert-card driver-reveal driver-delay-2">
+          <div className="driver-alert-icon">!</div>
+          <div>
+            <strong>No active assignment found.</strong>
+            <p>
+              Your dashboard will show vehicle and payment information after the
+              admin assigns you to a car.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="driver-main-grid">
+        <div className="driver-card driver-reveal driver-delay-3">
+          <div className="driver-card-head">
+            <div>
+              <h4>Recent Payments</h4>
+              <p>Latest payment activity linked to your active assignment.</p>
             </div>
 
-            <div
-              style={{
-                ...innerInfoCardStyle,
-                textAlign: "right",
-                maxWidth: "100%",
-              }}
-            >
-              <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>Total Amount</p>
-              <strong style={{ color: "#0f172a", fontSize: "16px" }}>Rs. {totalAmount}</strong>
+            <div className="driver-total-chip">
+              <span>Total Amount</span>
+              <strong>Rs. {totalAmount}</strong>
             </div>
           </div>
 
           {payments.length > 0 ? (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "480px" }}>
-                <thead>
-                  <tr style={{ background: "#f8fafc" }}>
-                    <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
-                      Amount
-                    </th>
-                    <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
-                      Date
-                    </th>
-                    <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
-                      Status
-                    </th>
-                  </tr>
-                </thead>
+            <>
+              <div className="driver-payment-table-wrap">
+                <table className="driver-payment-table">
+                  <thead>
+                    <tr>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
 
-                <tbody>
-                  {payments.map((payment) => (
-                    <tr key={payment.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                      <td style={{ padding: "14px", color: "#0f172a", fontWeight: "600" }}>
-                        Rs. {payment.amount}
-                      </td>
-                      <td style={{ padding: "14px", color: "#475569" }}>
-                        {payment.payment_date}
-                      </td>
-                      <td style={{ padding: "14px" }}>
-                        <span
-                          style={{
-                            ...getStatusBadge(payment.status),
-                            padding: "6px 12px",
-                            borderRadius: "999px",
-                            fontSize: "12px",
-                            fontWeight: "700",
-                            textTransform: "capitalize",
-                            display: "inline-block",
-                          }}
-                        >
+                  <tbody>
+                    {payments.slice(-6).reverse().map((payment) => (
+                      <tr key={payment.id}>
+                        <td>
+                          <strong>Rs. {payment.amount}</strong>
+                        </td>
+                        <td>{payment.payment_date || "-"}</td>
+                        <td>
+                          <span className={getStatusBadgeClass(payment.status)}>
+                            {payment.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="driver-mobile-payment-list">
+                {payments.slice(-6).reverse().map((payment) => (
+                  <div className="driver-mobile-payment-card" key={payment.id}>
+                    <div>
+                      <span>Amount</span>
+                      <strong>Rs. {payment.amount}</strong>
+                    </div>
+
+                    <div>
+                      <span>Date</span>
+                      <strong>{payment.payment_date || "-"}</strong>
+                    </div>
+
+                    <div>
+                      <span>Status</span>
+                      <strong>
+                        <span className={getStatusBadgeClass(payment.status)}>
                           {payment.status}
                         </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
-            <div style={emptyStateStyle}>No payments found</div>
+            <div className="driver-empty-state">
+              <div>💳</div>
+              <h5>No payments found</h5>
+              <p>Your payment records will appear here after admin adds them.</p>
+            </div>
           )}
         </div>
 
-        <div style={contentCardStyle}>
-          <h4 style={sectionTitleStyle}>Quick Summary</h4>
-          <p style={sectionSubtitleStyle}>A quick look at your current panel data</p>
-
-          <div
-            style={{
-              display: "grid",
-              gap: "14px",
-            }}
-          >
-            <div style={innerInfoCardStyle}>
-              <p style={infoLabelStyle}>Driver</p>
-              <strong style={{ color: "#0f172a", fontSize: "16px", wordBreak: "break-word" }}>
-                {driver?.user_name || "-"}
-              </strong>
+        <div className="driver-card driver-reveal driver-delay-4">
+          <div className="driver-card-head">
+            <div>
+              <h4>Quick Summary</h4>
+              <p>A quick look at your current driver panel data.</p>
             </div>
+          </div>
 
-            <div style={innerInfoCardStyle}>
-              <p style={infoLabelStyle}>Vehicle</p>
-              <strong style={{ color: "#0f172a", fontSize: "16px", wordBreak: "break-word" }}>
-                {car ? `${car.make} ${car.model}` : "No car assigned"}
-              </strong>
-            </div>
-
-            <div style={innerInfoCardStyle}>
-              <p style={infoLabelStyle}>Assignment</p>
-              <strong
-                style={{
-                  color: "#0f172a",
-                  fontSize: "16px",
-                  textTransform: "capitalize",
-                  wordBreak: "break-word",
-                }}
-              >
-                {assignment?.status || "No active assignment"}
-              </strong>
-            </div>
+          <div className="driver-summary-list">
+            <SummaryRow label="Driver" value={driver?.user_name || "-"} />
+            <SummaryRow
+              label="Vehicle"
+              value={car ? `${car.make} ${car.model}` : "No car assigned"}
+            />
+            <SummaryRow
+              label="Registration"
+              value={car?.registration_number || "-"}
+            />
+            <SummaryRow
+              label="Assignment"
+              value={assignment?.status || "No active assignment"}
+              badge={assignment?.status}
+            />
+            <SummaryRow
+              label="Start Date"
+              value={assignment?.start_date || "-"}
+            />
+            <SummaryRow
+              label="End Date"
+              value={assignment?.end_date || "Not ended"}
+            />
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+const StatCard = ({ title, value, subtitle, icon, tone, capitalize }) => (
+  <div className={`driver-stat-card driver-stat-${tone}`}>
+    <div className="driver-stat-icon">{icon}</div>
+
+    <p>{title}</p>
+
+    <h3 className={capitalize ? "text-capitalize" : ""}>{value}</h3>
+
+    <span>{subtitle}</span>
+  </div>
+);
+
+const SummaryRow = ({ label, value, badge }) => (
+  <div className="driver-summary-row">
+    <span>{label}</span>
+
+    {badge ? (
+      <strong>
+        <span className="driver-badge driver-badge-info">{value}</span>
+      </strong>
+    ) : (
+      <strong>{value}</strong>
+    )}
+  </div>
+);
 
 export default Dashboard;
