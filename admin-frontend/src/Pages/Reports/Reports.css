@@ -78,6 +78,11 @@
   background: #0f766e;
 }
 
+/* DOWNLOAD AREA */
+.reports-download-area {
+  width: 100%;
+}
+
 /* ALERTS */
 .report-alert {
   display: flex;
@@ -121,7 +126,7 @@
   background: #fef3c7;
 }
 
-/* KPI CARDS */
+/* KPI / MONEY CARDS */
 .report-kpi-card,
 .report-money-card,
 .report-card {
@@ -135,24 +140,44 @@
 .report-money-card {
   padding: 18px;
   height: 100%;
+  min-height: 96px;
   position: relative;
   overflow: hidden;
 }
 
 .report-kpi-card::after,
 .report-money-card::after {
-  content: "";
+  display: none !important;
+  content: none !important;
+}
+
+.report-card-icon {
   position: absolute;
-  right: -34px;
-  top: -34px;
-  width: 92px;
-  height: 92px;
-  border-radius: 50%;
-  background: rgba(20, 184, 166, 0.08);
+  top: 18px;
+  right: 20px;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(20, 184, 166, 0.16),
+    rgba(14, 165, 233, 0.1)
+  );
+  border: 1px solid rgba(20, 184, 166, 0.22);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  z-index: 3;
 }
 
 .report-kpi-label,
 .report-money-label {
+  position: relative;
+  z-index: 2;
+  padding-right: 62px;
   color: #64748b;
   font-size: 13px;
   font-weight: 800;
@@ -160,6 +185,9 @@
 }
 
 .report-kpi-value {
+  position: relative;
+  z-index: 2;
+  padding-right: 62px;
   margin: 0;
   color: #0f172a;
   font-size: 30px;
@@ -167,6 +195,9 @@
 }
 
 .report-money-value {
+  position: relative;
+  z-index: 2;
+  padding-right: 62px;
   margin: 0;
   font-size: 22px;
   font-weight: 950;
@@ -479,6 +510,36 @@
     border-radius: 20px;
   }
 
+  .report-kpi-card,
+  .report-money-card {
+    min-height: 92px;
+    padding: 17px;
+  }
+
+  .report-card-icon {
+    top: 16px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    font-size: 18px;
+  }
+
+  .report-kpi-label,
+  .report-kpi-value,
+  .report-money-label,
+  .report-money-value {
+    padding-right: 54px;
+  }
+
+  .report-kpi-value {
+    font-size: 28px;
+  }
+
+  .report-money-value {
+    font-size: 21px;
+  }
+
   .report-distribution-footer {
     font-size: 13px;
   }
@@ -536,4 +597,80 @@
   .reports-hero p {
     color: #000000 !important;
   }
+}
+
+/* PDF DOWNLOAD FIX */
+.report-card,
+.report-kpi-card,
+.report-money-card,
+.report-summary-box,
+.report-alert {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Only active while generating PDF */
+body.reports-pdf-mode .reports-download-area {
+  width: 1180px !important;
+  max-width: 1180px !important;
+  background: #ffffff !important;
+  padding: 0 !important;
+}
+
+body.reports-pdf-mode .reports-download-area .row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  margin-left: -8px !important;
+  margin-right: -8px !important;
+}
+
+body.reports-pdf-mode .reports-download-area .col-xl-3 {
+  width: 25% !important;
+  flex: 0 0 25% !important;
+  max-width: 25% !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+body.reports-pdf-mode .reports-download-area .col-md-6 {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+body.reports-pdf-mode .reports-download-area .row .col-md-6:not(.col-xl-3) {
+  width: 50% !important;
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+}
+
+body.reports-pdf-mode .report-kpi-card,
+body.reports-pdf-mode .report-money-card,
+body.reports-pdf-mode .report-summary-box,
+body.reports-pdf-mode .report-card {
+  box-shadow: none !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+body.reports-pdf-mode .report-card {
+  margin-top: 12px !important;
+}
+
+body.reports-pdf-mode .report-table {
+  min-width: 100% !important;
+  width: 100% !important;
+}
+
+body.reports-pdf-mode .report-table-wrap {
+  overflow: visible !important;
+}
+
+body.reports-pdf-mode .reports-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+body.reports-pdf-mode .pdf-avoid-break {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
