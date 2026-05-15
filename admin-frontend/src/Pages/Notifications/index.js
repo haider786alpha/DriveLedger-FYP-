@@ -887,76 +887,125 @@ const SupportTab = ({
   formatDate,
   trimText,
   openDeleteModal,
-}) => (
-  <>
-    {selectedSupport && (
-      <div className="notify-card notify-reveal notify-delay-2">
-        <div className="notify-card-head">
-          <div>
-            <h5>Support Message Details</h5>
-            <p>Full view of the selected support message.</p>
-          </div>
+}) => {
+  const openCount = filteredSupportMessages.filter(
+    (item) => item.status !== "resolved"
+  ).length;
 
-          <button
-            type="button"
-            className="notify-light-btn"
-            onClick={() => {
-              setSelectedSupport(null);
-              setReplyText("");
-            }}
-          >
-            Close
-          </button>
+  const resolvedCount = filteredSupportMessages.filter(
+    (item) => item.status === "resolved"
+  ).length;
+
+  const repliedCount = filteredSupportMessages.filter(
+    (item) => item.admin_reply
+  ).length;
+
+  const attachmentCount = filteredSupportMessages.filter(
+    (item) => item.issue_attachment_url
+  ).length;
+
+  return (
+    <>
+      <div className="notify-premium-summary-grid notify-reveal notify-delay-2">
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon">💬</div>
+          <span>Total Messages</span>
+          <strong>{filteredSupportMessages.length}</strong>
         </div>
 
-        <div className="row g-3">
-          <div className="col-md-6">
-            <strong>Driver:</strong> {selectedSupport.driver_name || "-"}
-          </div>
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon warning">⏳</div>
+          <span>Open</span>
+          <strong>{openCount}</strong>
+        </div>
 
-          <div className="col-md-6">
-            <strong>Status:</strong>{" "}
-            <span className={getSupportStatusBadgeClass(selectedSupport.status)}>
-              {selectedSupport.status}
-            </span>
-          </div>
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon success">✓</div>
+          <span>Resolved</span>
+          <strong>{resolvedCount}</strong>
+        </div>
 
-          <div className="col-12">
-            <strong>Subject:</strong> {selectedSupport.subject}
-          </div>
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon info">📎</div>
+          <span>Attachments</span>
+          <strong>{attachmentCount}</strong>
+        </div>
+      </div>
 
-          <div className="col-12">
-            <strong>Message:</strong>
-            <div className="support-detail-box mt-2">
-              {selectedSupport.message}
+      <div className="notify-card notify-premium-toolbar">
+        <div>
+          <h5>Support Messages</h5>
+          <p>
+            Review driver issues, open attachments, send replies and mark cases
+            as resolved.
+          </p>
+        </div>
+
+        <input
+          className="notify-search-input notify-premium-search"
+          placeholder="Search by subject, message, driver, status, reply, or attachment"
+          value={searchSupport}
+          onChange={(e) => setSearchSupport(e.target.value)}
+        />
+      </div>
+
+      {selectedSupport && (
+        <div className="notify-card notify-support-detail-premium notify-reveal notify-delay-2">
+          <div className="notify-detail-header">
+            <div>
+              <span className="notify-detail-eyebrow">Selected Support Case</span>
+              <h5>{selectedSupport.subject}</h5>
+              <p>
+                Driver: <strong>{selectedSupport.driver_name || "-"}</strong> ·
+                Created: {formatDate(selectedSupport.created_at)}
+              </p>
+            </div>
+
+            <div className="notify-detail-header-actions">
+              <span className={getSupportStatusBadgeClass(selectedSupport.status)}>
+                {selectedSupport.status}
+              </span>
+
+              <button
+                type="button"
+                className="notify-light-btn"
+                onClick={() => {
+                  setSelectedSupport(null);
+                  setReplyText("");
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
 
-          <div className="col-12">
-            <strong>Created At:</strong> {formatDate(selectedSupport.created_at)}
-          </div>
+          <div className="notify-detail-grid">
+            <div className="notify-detail-panel">
+              <h6>Driver Message</h6>
+              <div className="support-detail-box">
+                {selectedSupport.message || "-"}
+              </div>
 
-          <div className="col-12">
-            <strong>Issue Attachment:</strong>
-            <div className="mt-2">
-              {selectedSupport.issue_attachment_url ? (
-                <a
-                  href={selectedSupport.issue_attachment_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="notify-info-btn"
-                >
-                  View Attachment
-                </a>
-              ) : (
-                <div className="support-empty-box">No attachment uploaded.</div>
-              )}
+              <div className="notify-detail-mini-row">
+                <span>Attachment</span>
+                {selectedSupport.issue_attachment_url ? (
+                  <a
+                    href={selectedSupport.issue_attachment_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="notify-info-btn"
+                  >
+                    View Attachment
+                  </a>
+                ) : (
+                  <strong>No attachment</strong>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="col-12">
-            <strong>Admin Reply:</strong>
-            <div className="mt-2">
+            <div className="notify-detail-panel">
+              <h6>Admin Reply</h6>
+
               {selectedSupport.admin_reply ? (
                 <div className="support-reply-box">
                   {selectedSupport.admin_reply}
@@ -964,148 +1013,45 @@ const SupportTab = ({
               ) : (
                 <div className="support-empty-box">No reply sent yet.</div>
               )}
+
+              {selectedSupport.replied_at && (
+                <div className="notify-detail-mini-row">
+                  <span>Replied At</span>
+                  <strong>{formatDate(selectedSupport.replied_at)}</strong>
+                </div>
+              )}
+
+              <label className="notify-form-label mt-3">Write / Update Reply</label>
+              <textarea
+                className="notify-textarea"
+                rows="4"
+                placeholder="Write reply for the driver..."
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+              />
+
+              <button
+                type="button"
+                className="notify-primary-btn mt-3"
+                disabled={updatingId === selectedSupport.id}
+                onClick={sendSupportReply}
+              >
+                {updatingId === selectedSupport.id ? "Sending..." : "Send Reply"}
+              </button>
             </div>
           </div>
-
-          {selectedSupport.replied_at && (
-            <div className="col-12">
-              <strong>Replied At:</strong> {formatDate(selectedSupport.replied_at)}
-            </div>
-          )}
-
-          <div className="col-12">
-            <label className="notify-form-label">Write Reply</label>
-            <textarea
-              className="notify-textarea"
-              rows="4"
-              placeholder="Write reply for the driver..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-            />
-          </div>
-
-          <div className="col-12">
-            <button
-              type="button"
-              className="notify-primary-btn"
-              disabled={updatingId === selectedSupport.id}
-              onClick={sendSupportReply}
-            >
-              {updatingId === selectedSupport.id ? "Sending..." : "Send Reply"}
-            </button>
-          </div>
         </div>
-      </div>
-    )}
+      )}
 
-    <div className="notify-card">
-      <input
-        className="notify-search-input"
-        placeholder="Search support messages by subject, message, driver, status, reply, or attachment"
-        value={searchSupport}
-        onChange={(e) => setSearchSupport(e.target.value)}
-      />
-    </div>
-
-    <div className="notify-card">
-      <div className="notify-card-head">
-        <div>
-          <h5>Support Messages</h5>
-          <p>{filteredSupportMessages.length} support message(s) found</p>
-        </div>
-      </div>
-
-      <div className="notify-table-wrap">
-        <table className="table table-hover align-middle notify-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Driver</th>
-              <th>Subject</th>
-              <th>Message</th>
-              <th>Status</th>
-              <th>Reply</th>
-              <th>Attachment</th>
-              <th>Created At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredSupportMessages.length > 0 ? (
-              filteredSupportMessages.map((item, index) => (
-                <tr key={item.id}>
-                  <td>{index + 1}</td>
-                  <td>{item.driver_name || "-"}</td>
-                  <td>
-                    <div className="notify-title">{item.subject}</div>
-                  </td>
-                  <td className="notify-message">{trimText(item.message, 70)}</td>
-                  <td>
-                    <span className={getSupportStatusBadgeClass(item.status)}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td>
-                    {item.admin_reply ? (
-                      <span className="notify-badge notify-badge-success">
-                        Replied
-                      </span>
-                    ) : (
-                      <span className="notify-badge notify-badge-muted">
-                        No Reply
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    {item.issue_attachment_url ? (
-                      <a
-                        href={item.issue_attachment_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="notify-info-btn"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      <span className="notify-badge notify-badge-muted">None</span>
-                    )}
-                  </td>
-                  <td>{formatDate(item.created_at)}</td>
-                  <td>
-                    <SupportActions
-                      item={item}
-                      updatingId={updatingId}
-                      setSelectedSupport={setSelectedSupport}
-                      setReplyText={setReplyText}
-                      updateSupportStatus={updateSupportStatus}
-                      openDeleteModal={openDeleteModal}
-                    />
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="notify-empty">
-                  No support messages found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="notify-mobile-list">
+      <div className="notify-support-grid">
         {filteredSupportMessages.length > 0 ? (
           filteredSupportMessages.map((item, index) => (
-            <div className="notify-mobile-card" key={item.id}>
-              <div className="notify-mobile-top">
+            <div className="notify-support-card" key={item.id}>
+              <div className="notify-support-card-top">
                 <div>
-                  <div className="notify-title">
-                    {index + 1}. {item.subject}
-                  </div>
-                  <div className="notify-sub">{item.driver_name || "-"}</div>
-                  <div className="notify-sub">{formatDate(item.created_at)}</div>
+                  <span className="notify-support-number">Case #{index + 1}</span>
+                  <h5>{item.subject || "Support Message"}</h5>
+                  <p>{item.driver_name || "Unknown Driver"}</p>
                 </div>
 
                 <span className={getSupportStatusBadgeClass(item.status)}>
@@ -1113,17 +1059,30 @@ const SupportTab = ({
                 </span>
               </div>
 
-              <div className="notify-mobile-row">
-                <span>Message</span>
-                <strong>{trimText(item.message, 80)}</strong>
+              <div className="notify-support-message">
+                {trimText(item.message, 130)}
               </div>
 
-              <div className="notify-mobile-row">
-                <span>Reply</span>
-                <strong>{item.admin_reply ? "Replied" : "No Reply"}</strong>
+              <div className="notify-support-meta-grid">
+                <div>
+                  <span>Created</span>
+                  <strong>{formatDate(item.created_at)}</strong>
+                </div>
+
+                <div>
+                  <span>Reply</span>
+                  <strong>{item.admin_reply ? "Replied" : "No Reply"}</strong>
+                </div>
+
+                <div>
+                  <span>Attachment</span>
+                  <strong>
+                    {item.issue_attachment_url ? "Uploaded" : "None"}
+                  </strong>
+                </div>
               </div>
 
-              <div className="notify-actions">
+              <div className="notify-actions notify-card-actions">
                 <SupportActions
                   item={item}
                   updatingId={updatingId}
@@ -1132,16 +1091,31 @@ const SupportTab = ({
                   updateSupportStatus={updateSupportStatus}
                   openDeleteModal={openDeleteModal}
                 />
+
+                {item.issue_attachment_url && (
+                  <a
+                    href={item.issue_attachment_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="notify-info-btn"
+                  >
+                    Attachment
+                  </a>
+                )}
               </div>
             </div>
           ))
         ) : (
-          <div className="notify-empty">No support messages found</div>
+          <div className="notify-card notify-premium-empty">
+            <div className="notify-premium-empty-icon">💬</div>
+            <h5>No support messages found</h5>
+            <p>New driver support messages will appear here.</p>
+          </div>
         )}
       </div>
-    </div>
-  </>
-);
+    </>
+  );
+};
 
 const SupportActions = ({
   item,
@@ -1210,92 +1184,87 @@ const ResetRequestsTab = ({
   formatDate,
   trimText,
   openDeleteModal,
-}) => (
-  <>
-    <div className="notify-card">
-      <input
-        className="notify-search-input"
-        placeholder="Search reset requests by username, email, message, or status"
-        value={searchResetRequests}
-        onChange={(e) => setSearchResetRequests(e.target.value)}
-      />
-    </div>
+}) => {
+  const pendingCount = filteredResetRequests.filter(
+    (item) => item.status !== "resolved"
+  ).length;
 
-    <div className="notify-card">
-      <div className="notify-card-head">
-        <div>
-          <h5>Password Reset Requests</h5>
-          <p>
-            Review driver login issues, reset passwords from User Management,
-            then mark the request as resolved.
-          </p>
+  const resolvedCount = filteredResetRequests.filter(
+    (item) => item.status === "resolved"
+  ).length;
+
+  return (
+    <>
+      <div className="notify-premium-summary-grid notify-reveal notify-delay-2">
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon danger">🔐</div>
+          <span>Total Requests</span>
+          <strong>{filteredResetRequests.length}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon warning">⏳</div>
+          <span>Pending</span>
+          <strong>{pendingCount}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon success">✓</div>
+          <span>Resolved</span>
+          <strong>{resolvedCount}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon info">👥</div>
+          <span>User Management</span>
+          <strong>Ready</strong>
         </div>
       </div>
 
-      <div className="notify-table-wrap">
-        <table className="table table-hover align-middle notify-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Message</th>
-              <th>Status</th>
-              <th>Created At</th>
-              <th>Resolved At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+      <div className="notify-card notify-reset-guide-card">
+        <div className="notify-reset-guide-icon">🔑</div>
 
-          <tbody>
-            {filteredResetRequests.length > 0 ? (
-              filteredResetRequests.map((item, index) => (
-                <tr key={item.id}>
-                  <td>{index + 1}</td>
-                  <td>
-                    <div className="notify-title">{item.username}</div>
-                  </td>
-                  <td>{item.email}</td>
-                  <td className="notify-message">{trimText(item.message, 80)}</td>
-                  <td>
-                    <span className={getResetStatusBadgeClass(item.status)}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td>{formatDate(item.created_at)}</td>
-                  <td>{formatDate(item.resolved_at)}</td>
-                  <td>
-                    <ResetActions
-                      item={item}
-                      updatingId={updatingId}
-                      updateResetRequestStatus={updateResetRequestStatus}
-                      openDeleteModal={openDeleteModal}
-                    />
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="notify-empty">
-                  No password reset requests found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div>
+          <h5>Password Reset Workflow</h5>
+          <p>
+            Open User Management, reset the driver password, then return here and
+            mark the request as resolved.
+          </p>
+        </div>
+
+        <Link to="/users" className="notify-primary-btn">
+          Go to Users
+        </Link>
       </div>
 
-      <div className="notify-mobile-list">
+      <div className="notify-card notify-premium-toolbar">
+        <div>
+          <h5>Password Reset Requests</h5>
+          <p>
+            Review login issues and track which password reset requests still
+            need action.
+          </p>
+        </div>
+
+        <input
+          className="notify-search-input notify-premium-search"
+          placeholder="Search by username, email, message, or status"
+          value={searchResetRequests}
+          onChange={(e) => setSearchResetRequests(e.target.value)}
+        />
+      </div>
+
+      <div className="notify-reset-grid">
         {filteredResetRequests.length > 0 ? (
           filteredResetRequests.map((item, index) => (
-            <div className="notify-mobile-card" key={item.id}>
-              <div className="notify-mobile-top">
+            <div className="notify-reset-card" key={item.id}>
+              <div className="notify-reset-card-top">
                 <div>
-                  <div className="notify-title">
-                    {index + 1}. {item.username}
-                  </div>
-                  <div className="notify-sub">{item.email}</div>
-                  <div className="notify-sub">{formatDate(item.created_at)}</div>
+                  <span className="notify-support-number">
+                    Request #{index + 1}
+                  </span>
+                  <h5>{item.username || "Unknown User"}</h5>
+                  <p>{item.email || "-"}</p>
                 </div>
 
                 <span className={getResetStatusBadgeClass(item.status)}>
@@ -1303,17 +1272,23 @@ const ResetRequestsTab = ({
                 </span>
               </div>
 
-              <div className="notify-mobile-row">
-                <span>Message</span>
-                <strong>{trimText(item.message, 80)}</strong>
+              <div className="notify-support-message">
+                {trimText(item.message, 140)}
               </div>
 
-              <div className="notify-mobile-row">
-                <span>Resolved</span>
-                <strong>{formatDate(item.resolved_at)}</strong>
+              <div className="notify-support-meta-grid">
+                <div>
+                  <span>Created</span>
+                  <strong>{formatDate(item.created_at)}</strong>
+                </div>
+
+                <div>
+                  <span>Resolved</span>
+                  <strong>{formatDate(item.resolved_at)}</strong>
+                </div>
               </div>
 
-              <div className="notify-actions">
+              <div className="notify-actions notify-card-actions">
                 <ResetActions
                   item={item}
                   updatingId={updatingId}
@@ -1324,12 +1299,16 @@ const ResetRequestsTab = ({
             </div>
           ))
         ) : (
-          <div className="notify-empty">No password reset requests found</div>
+          <div className="notify-card notify-premium-empty">
+            <div className="notify-premium-empty-icon">🔐</div>
+            <h5>No password reset requests found</h5>
+            <p>New reset requests from drivers will appear here.</p>
+          </div>
         )}
       </div>
-    </div>
-  </>
-);
+    </>
+  );
+};
 
 const ResetActions = ({
   item,
