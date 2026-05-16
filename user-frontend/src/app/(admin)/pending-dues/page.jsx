@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import "./PendingDues.css";
 
 const PendingDues = () => {
   const [driver, setDriver] = useState(null);
@@ -60,262 +62,214 @@ const PendingDues = () => {
     0
   );
 
+  const latestDue = dues.length
+    ? [...dues].sort(
+        (a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0)
+      )[0]
+    : null;
+
+  const highestDue = dues.length
+    ? Math.max(...dues.map((item) => Number(item.amount || 0)))
+    : 0;
+
+  const formatAmount = (value) => {
+    return `Rs. ${Number(value || 0).toLocaleString()}`;
+  };
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "-";
+    return dateValue;
+  };
+
   if (loading) {
-    return <div>Loading pending dues...</div>;
+    return (
+      <div className="pending-dues-loading-card pending-dues-reveal">
+        <h4>Loading pending dues...</h4>
+        <p>Please wait while we fetch your unpaid payment records.</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div
-        style={{
-          background: "linear-gradient(135deg, #fff7ed 0%, #f8fafc 100%)",
-          border: "1px solid #fed7aa",
-          borderRadius: "18px",
-          padding: "24px",
-          marginBottom: "24px",
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.04)",
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: "34px", fontWeight: "700", color: "#0f172a" }}>
-          Pending Dues
-        </h2>
-        <p style={{ margin: "10px 0 0 0", color: "#475569", fontSize: "15px", lineHeight: "1.6" }}>
-          Review unpaid payment records and track the total pending amount.
-        </p>
+    <div className="pending-dues-page">
+      <div className="pending-dues-hero pending-dues-reveal">
+        <div className="pending-dues-hero-inner">
+          <div>
+            <div className="pending-dues-kicker">
+              <span className="pending-dues-status-dot" />
+              Driver Panel Overview
+            </div>
 
-        {driver && (
-          <div
-            style={{
-              marginTop: "18px",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "#ffffff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontWeight: "600",
-              color: "#1e293b",
-              maxWidth: "100%",
-              flexWrap: "wrap",
-            }}
-          >
-            <span
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                background: "#f59e0b",
-                display: "inline-block",
-              }}
-            />
-            Logged in as: {driver.user_name}
+            <h2 className="pending-dues-hero-title">Pending Dues</h2>
+
+            <p className="pending-dues-hero-subtitle">
+              Review unpaid payment records, track your total pending amount,
+              and keep your assignment payments clear and organized.
+            </p>
           </div>
-        )}
+
+          <div className="pending-dues-hero-glass">
+            <span>Logged in as</span>
+            <strong>{driver?.user_name || "Driver"}</strong>
+          </div>
+        </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "20px",
-          marginBottom: "24px",
-        }}
-      >
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "22px",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-            minWidth: 0,
-          }}
-        >
-          <p style={{ margin: 0, color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
-            Total Pending Amount
-          </p>
-          <h3
-            style={{
-              margin: "10px 0 0 0",
-              color: "#dc2626",
-              fontSize: "26px",
-              wordBreak: "break-word",
-            }}
-          >
-            Rs. {totalPending}
-          </h3>
+      <div className="pending-dues-stats-grid pending-dues-reveal pending-dues-delay-1">
+        <div className="pending-dues-stat-card pending-dues-stat-red">
+          <div className="pending-dues-stat-icon-bg" />
+          <div className="pending-dues-stat-icon">
+            <IconifyIcon icon="mdi:alert-circle-outline" />
+          </div>
+
+          <p className="pending-dues-stat-label">Pending Amount</p>
+          <strong className="pending-dues-stat-value pending-dues-stat-danger">
+            {formatAmount(totalPending)}
+          </strong>
+          <span className="pending-dues-stat-note">Total unpaid balance</span>
         </div>
 
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "22px",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-            minWidth: 0,
-          }}
-        >
-          <p style={{ margin: 0, color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
-            Total Pending Records
-          </p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#0f172a", fontSize: "26px" }}>
-            {dues.length}
-          </h3>
+        <div className="pending-dues-stat-card pending-dues-stat-blue">
+          <div className="pending-dues-stat-icon-bg" />
+          <div className="pending-dues-stat-icon">
+            <IconifyIcon icon="mdi:file-document-alert-outline" />
+          </div>
+
+          <p className="pending-dues-stat-label">Pending Records</p>
+          <strong className="pending-dues-stat-value">{dues.length}</strong>
+          <span className="pending-dues-stat-note">Unpaid payment records</span>
         </div>
 
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "22px",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-            minWidth: 0,
-          }}
-        >
-          <p style={{ margin: 0, color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
-            Status
-          </p>
-          <span
-            style={{
-              display: "inline-block",
-              marginTop: "12px",
-              padding: "8px 14px",
-              borderRadius: "999px",
-              background: dues.length > 0 ? "#fef3c7" : "#dcfce7",
-              color: dues.length > 0 ? "#92400e" : "#166534",
-              fontSize: "12px",
-              fontWeight: "700",
-            }}
-          >
-            {dues.length > 0 ? "Attention Needed" : "Clear"}
+        <div className="pending-dues-stat-card pending-dues-stat-orange">
+          <div className="pending-dues-stat-icon-bg" />
+          <div className="pending-dues-stat-icon">
+            <IconifyIcon icon="mdi:cash-clock" />
+          </div>
+
+          <p className="pending-dues-stat-label">Highest Due</p>
+          <strong className="pending-dues-stat-value">
+            {formatAmount(highestDue)}
+          </strong>
+          <span className="pending-dues-stat-note">Largest unpaid amount</span>
+        </div>
+
+        <div className="pending-dues-stat-card pending-dues-stat-purple">
+          <div className="pending-dues-stat-icon-bg" />
+          <div className="pending-dues-stat-icon">
+            <IconifyIcon icon="mdi:clock-alert-outline" />
+          </div>
+
+          <p className="pending-dues-stat-label">Latest Due</p>
+          <strong className="pending-dues-stat-value">
+            {latestDue ? formatDate(latestDue.payment_date) : "Clear"}
+          </strong>
+          <span className="pending-dues-stat-note">
+            {dues.length > 0 ? "Needs attention" : "No pending dues"}
           </span>
         </div>
       </div>
 
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #e5e7eb",
-          borderRadius: "18px",
-          padding: "22px",
-          boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-          minWidth: 0,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "18px",
-            flexWrap: "wrap",
-            gap: "12px",
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <h4 style={{ margin: 0, fontSize: "22px", color: "#0f172a" }}>
-              Unpaid Records
-            </h4>
-            <p style={{ margin: "6px 0 0 0", color: "#64748b", fontSize: "14px" }}>
-              Only unpaid dues are listed here
+      <div className="pending-dues-card pending-dues-reveal pending-dues-delay-2">
+        <div className="pending-dues-card-head">
+          <div>
+            <h4 className="pending-dues-section-title">Unpaid Records</h4>
+            <p className="pending-dues-section-subtitle">
+              Only unpaid dues are listed here for quick review.
             </p>
           </div>
 
-          <div
-            style={{
-              background: "#fff7ed",
-              border: "1px solid #fed7aa",
-              borderRadius: "12px",
-              padding: "10px 14px",
-              maxWidth: "100%",
-            }}
-          >
-            <strong style={{ color: "#9a3412", fontSize: "15px" }}>
-              Pending: {dues.length}
-            </strong>
+          <div className="pending-dues-total-chip">
+            <span>Pending Records</span>
+            <strong>{dues.length}</strong>
           </div>
         </div>
 
         {dues.length > 0 ? (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "620px" }}>
-              <thead>
-                <tr style={{ background: "#f8fafc" }}>
-                  <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
-                    #
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
-                    Amount
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
-                    Date
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
-                    Status
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "left", color: "#475569", fontSize: "14px" }}>
-                    Remarks
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {dues.map((due) => (
-                  <tr key={due.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                    <td style={{ padding: "14px", color: "#0f172a", fontWeight: "600" }}>
-                      {due.id}
-                    </td>
-                    <td style={{ padding: "14px", color: "#dc2626", fontWeight: "700" }}>
-                      Rs. {due.amount}
-                    </td>
-                    <td style={{ padding: "14px", color: "#475569" }}>
-                      {due.payment_date}
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                      <span
-                        style={{
-                          padding: "6px 12px",
-                          borderRadius: "999px",
-                          background: "#fee2e2",
-                          color: "#991b1b",
-                          fontSize: "12px",
-                          fontWeight: "700",
-                          textTransform: "capitalize",
-                          display: "inline-block",
-                        }}
-                      >
-                        {due.status}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "14px",
-                        color: "#475569",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {due.remarks || "-"}
-                    </td>
+          <>
+            <div className="pending-dues-table-wrap">
+              <table className="pending-dues-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {dues.map((due) => (
+                    <tr key={due.id}>
+                      <td>
+                        <strong>#{due.id}</strong>
+                      </td>
+                      <td>
+                        <strong className="pending-dues-amount">
+                          {formatAmount(due.amount)}
+                        </strong>
+                      </td>
+                      <td>{formatDate(due.payment_date)}</td>
+                      <td>
+                        <span className="pending-dues-badge">
+                          {due.status || "unpaid"}
+                        </span>
+                      </td>
+                      <td>{due.remarks || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="pending-dues-mobile-list">
+              {dues.map((due) => (
+                <div className="pending-dues-mobile-card" key={due.id}>
+                  <div className="pending-dues-mobile-row">
+                    <span>Due ID</span>
+                    <strong>#{due.id}</strong>
+                  </div>
+
+                  <div className="pending-dues-mobile-row">
+                    <span>Amount</span>
+                    <strong className="pending-dues-amount">
+                      {formatAmount(due.amount)}
+                    </strong>
+                  </div>
+
+                  <div className="pending-dues-mobile-row">
+                    <span>Date</span>
+                    <strong>{formatDate(due.payment_date)}</strong>
+                  </div>
+
+                  <div className="pending-dues-mobile-row">
+                    <span>Status</span>
+                    <strong>
+                      <span className="pending-dues-badge">
+                        {due.status || "unpaid"}
+                      </span>
+                    </strong>
+                  </div>
+
+                  <div className="pending-dues-mobile-row">
+                    <span>Remarks</span>
+                    <strong>{due.remarks || "-"}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-          <div
-            style={{
-              background: "#f8fafc",
-              border: "1px dashed #cbd5e1",
-              borderRadius: "14px",
-              padding: "24px",
-              textAlign: "center",
-              color: "#64748b",
-            }}
-          >
-            No pending dues found
+          <div className="pending-dues-empty-card">
+            <div className="pending-dues-empty-icon">
+              <IconifyIcon icon="mdi:check-decagram-outline" />
+            </div>
+
+            <h4>No pending dues found</h4>
+            <p>
+              Your account currently has no unpaid payment records linked to
+              your assignments.
+            </p>
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ import IconifyIcon from '@/components/wrappers/IconifyIcon';
 import { findAllParent, findMenuItem, getMenuItemFromURL } from '@/helpers/menu';
 import { getLoggedInDriver } from '@/helpers/getLoggedInDriver';
 import { API_URL } from '@/helpers/apiConfig';
+import { useLayoutContext } from '@/context/useLayoutContext';
 
 const menuTitleStyle = {
   fontSize: '11px',
@@ -25,7 +26,9 @@ const getMenuLinkStyle = (active, isChild = false) => ({
   padding: isChild ? '10px 14px' : '12px 14px',
   borderRadius: '14px',
   marginBottom: '8px',
-  background: active ? 'linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%)' : 'transparent',
+  background: active
+    ? 'linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%)'
+    : 'transparent',
   border: active ? '1px solid #dbeafe' : '1px solid transparent',
   boxShadow: active ? '0 8px 20px rgba(37, 99, 235, 0.10)' : 'none',
   color: active ? '#1d4ed8' : '#475569',
@@ -106,6 +109,7 @@ const MenuItemWithChildren = ({
   subMenuClassName,
   activeMenuItems,
   toggleMenu,
+  onMenuLinkClick,
 }) => {
   const [open, setOpen] = useState(activeMenuItems.includes(item.key));
 
@@ -115,9 +119,14 @@ const MenuItemWithChildren = ({
 
   const toggleMenuItem = (e) => {
     e.preventDefault();
+
     const status = !open;
     setOpen(status);
-    if (toggleMenu) toggleMenu(item, status);
+
+    if (toggleMenu) {
+      toggleMenu(item, status);
+    }
+
     return false;
   };
 
@@ -173,29 +182,29 @@ const MenuItemWithChildren = ({
       <Collapse in={open}>
         <div style={getSubMenuWrapStyle()}>
           <ul className={clsx(subMenuClassName)} style={{ paddingLeft: 0, marginBottom: 0 }}>
-            {(item.children || []).map((child, idx) => {
-              return (
-                <Fragment key={child.key + idx}>
-                  {child.children ? (
-                    <MenuItemWithChildren
-                      item={child}
-                      linkClassName={clsx('nav-link', getActiveClass(child))}
-                      activeMenuItems={activeMenuItems}
-                      className="sub-nav-item"
-                      subMenuClassName="nav sub-navbar-nav"
-                      toggleMenu={toggleMenu}
-                    />
-                  ) : (
-                    <MenuItem
-                      item={child}
-                      className="sub-nav-item"
-                      linkClassName={clsx('sub-nav-link', getActiveClass(child))}
-                      isChild
-                    />
-                  )}
-                </Fragment>
-              );
-            })}
+            {(item.children || []).map((child, idx) => (
+              <Fragment key={child.key + idx}>
+                {child.children ? (
+                  <MenuItemWithChildren
+                    item={child}
+                    linkClassName={clsx('nav-link', getActiveClass(child))}
+                    activeMenuItems={activeMenuItems}
+                    className="sub-nav-item"
+                    subMenuClassName="nav sub-navbar-nav"
+                    toggleMenu={toggleMenu}
+                    onMenuLinkClick={onMenuLinkClick}
+                  />
+                ) : (
+                  <MenuItem
+                    item={child}
+                    className="sub-nav-item"
+                    linkClassName={clsx('sub-nav-link', getActiveClass(child))}
+                    isChild
+                    onMenuLinkClick={onMenuLinkClick}
+                  />
+                )}
+              </Fragment>
+            ))}
           </ul>
         </div>
       </Collapse>
@@ -203,7 +212,14 @@ const MenuItemWithChildren = ({
   );
 };
 
-const MenuItem = ({ item, className, linkClassName, isChild = false, unreadAlerts = 0 }) => {
+const MenuItem = ({
+  item,
+  className,
+  linkClassName,
+  isChild = false,
+  unreadAlerts = 0,
+  onMenuLinkClick,
+}) => {
   return (
     <li className={className} style={{ listStyle: 'none' }}>
       <MenuItemLink
@@ -211,18 +227,26 @@ const MenuItem = ({ item, className, linkClassName, isChild = false, unreadAlert
         className={linkClassName}
         isChild={isChild}
         unreadAlerts={unreadAlerts}
+        onMenuLinkClick={onMenuLinkClick}
       />
     </li>
   );
 };
 
-const MenuItemLink = ({ item, className, isChild = false, unreadAlerts = 0 }) => {
+const MenuItemLink = ({
+  item,
+  className,
+  isChild = false,
+  unreadAlerts = 0,
+  onMenuLinkClick,
+}) => {
   const isActive = className?.includes('active');
 
   return (
     <Link
       to={item.url ?? ''}
       target={item.target}
+      onClick={onMenuLinkClick}
       className={clsx(className, {
         disabled: item.isDisabled,
       })}
@@ -263,12 +287,21 @@ const MenuItemLink = ({ item, className, isChild = false, unreadAlerts = 0 }) =>
 
 const AppMenu = ({ menuItems }) => {
   const { pathname } = useLocation();
+  const { closeBackdrop } = useLayoutContext();
+
   const [activeMenuItems, setActiveMenuItems] = useState([]);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
+
+  const handleMenuLinkClick = () => {
+    if (window.innerWidth <= 991) {
+      closeBackdrop();
+    }
+  };
 
   const fetchUnreadAlerts = useCallback(async () => {
     try {
       const loggedInDriver = await getLoggedInDriver();
+
       if (!loggedInDriver) {
         setUnreadAlerts(0);
         return;
@@ -310,7 +343,9 @@ const AppMenu = ({ menuItems }) => {
   }, [fetchUnreadAlerts]);
 
   const toggleMenu = (menuItem, show) => {
-    if (show) setActiveMenuItems([menuItem.key, ...findAllParent(menuItems, menuItem)]);
+    if (show) {
+      setActiveMenuItems([menuItem.key, ...findAllParent(menuItems, menuItem)]);
+    }
   };
 
   const getActiveClass = useCallback(
@@ -326,8 +361,13 @@ const AppMenu = ({ menuItems }) => {
 
     const easeInOutQuad = (t, b, c, d) => {
       t /= d / 2;
-      if (t < 1) return (c / 2) * t * t + b;
+
+      if (t < 1) {
+        return (c / 2) * t * t + b;
+      }
+
       t--;
+
       return (-c / 2) * (t * (t - 2) - 1) + b;
     };
 
@@ -339,8 +379,10 @@ const AppMenu = ({ menuItems }) => {
 
       const animateScroll = function () {
         currentTime += increment;
+
         const val = easeInOutQuad(currentTime, start, change, duration);
         element.scrollTop = val;
+
         if (currentTime < duration) {
           setTimeout(animateScroll, increment);
         }
@@ -376,7 +418,9 @@ const AppMenu = ({ menuItems }) => {
   }, [pathname, menuItems]);
 
   useEffect(() => {
-    if (menuItems && menuItems.length > 0) activeMenu();
+    if (menuItems && menuItems.length > 0) {
+      activeMenu();
+    }
   }, [activeMenu, menuItems]);
 
   return (
@@ -398,6 +442,7 @@ const AppMenu = ({ menuItems }) => {
                     linkClassName={clsx('nav-link', getActiveClass(item))}
                     subMenuClassName="nav sub-navbar-nav"
                     activeMenuItems={activeMenuItems}
+                    onMenuLinkClick={handleMenuLinkClick}
                   />
                 ) : (
                   <MenuItem
@@ -405,6 +450,7 @@ const AppMenu = ({ menuItems }) => {
                     linkClassName={clsx('nav-link', getActiveClass(item))}
                     className="nav-item"
                     unreadAlerts={item.key === 'alerts' ? unreadAlerts : 0}
+                    onMenuLinkClick={handleMenuLinkClick}
                   />
                 )}
               </>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import "./AssignedCar.css";
 
 const AssignedCar = () => {
   const [driver, setDriver] = useState(null);
@@ -50,20 +52,11 @@ const AssignedCar = () => {
     }
   };
 
-  const infoCardStyle = {
-    background: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    borderRadius: "14px",
-    padding: "16px",
-    minWidth: 0,
-  };
-
-  const getDateStatus = (dateValue, type = "due") => {
+  const getDateStatus = (dateValue, type = "document") => {
     if (!dateValue) {
       return {
         label: "Not Available",
-        background: "#e5e7eb",
-        color: "#374151",
+        className: "assigned-car-badge-muted",
       };
     }
 
@@ -80,443 +73,311 @@ const AssignedCar = () => {
     if (differenceInDays < 0) {
       return {
         label: type === "maintenance" ? "Maintenance Overdue" : "Expired",
-        background: "#fee2e2",
-        color: "#991b1b",
+        className: "assigned-car-badge-danger",
       };
     }
 
     if (differenceInDays <= 30) {
       return {
         label: type === "maintenance" ? "Maintenance Due Soon" : "Expiring Soon",
-        background: "#fef3c7",
-        color: "#92400e",
+        className: "assigned-car-badge-warning",
       };
     }
 
     return {
       label: type === "maintenance" ? "Maintenance OK" : "Valid",
-      background: "#dcfce7",
-      color: "#166534",
+      className: "assigned-car-badge-success",
     };
   };
 
-  const maintenanceStatus = getDateStatus(car?.next_maintenance_date, "maintenance");
+  const maintenanceStatus = getDateStatus(
+    car?.next_maintenance_date,
+    "maintenance"
+  );
+
   const insuranceStatus = getDateStatus(car?.insurance_expiry, "document");
-  const registrationStatus = getDateStatus(car?.registration_expiry, "document");
+
+  const registrationStatus = getDateStatus(
+    car?.registration_expiry,
+    "document"
+  );
+
+  const InfoBox = ({ label, value, full = false, pre = false, children }) => {
+    return (
+      <div
+        className={`assigned-car-info-box ${
+          full ? "assigned-car-info-box-full" : ""
+        }`}
+      >
+        <p className="assigned-car-label">{label}</p>
+
+        {children ? (
+          children
+        ) : (
+          <strong
+            className={`assigned-car-value ${
+              pre ? "assigned-car-value-pre" : ""
+            }`}
+          >
+            {value || "-"}
+          </strong>
+        )}
+      </div>
+    );
+  };
 
   if (loading) {
-    return <div>Loading assigned car...</div>;
+    return (
+      <div className="assigned-car-loading-card assigned-car-reveal">
+        <h4>Loading assigned car...</h4>
+        <p>Please wait while we fetch your vehicle information.</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div
-        style={{
-          background: "linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%)",
-          border: "1px solid #dbeafe",
-          borderRadius: "18px",
-          padding: "24px",
-          marginBottom: "24px",
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.04)",
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: "34px", fontWeight: "700", color: "#0f172a" }}>
-          Assigned Car
-        </h2>
+    <div className="assigned-car-page">
+      <div className="assigned-car-hero assigned-car-reveal">
+        <div className="assigned-car-hero-inner">
+          <div>
+            <div className="assigned-car-kicker">
+              <span className="assigned-car-status-dot" />
+              Driver Panel Overview
+            </div>
 
-        <p style={{ margin: "10px 0 0 0", color: "#475569", fontSize: "15px", lineHeight: "1.6" }}>
-          View complete details of the vehicle currently assigned to your account, including maintenance and document status.
-        </p>
+            <h2 className="assigned-car-hero-title">Assigned Car</h2>
 
-        {driver && (
-          <div
-            style={{
-              marginTop: "18px",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "#ffffff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontWeight: "600",
-              color: "#1e293b",
-              maxWidth: "100%",
-              flexWrap: "wrap",
-            }}
-          >
-            <span
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                background: "#22c55e",
-                display: "inline-block",
-              }}
-            />
-            Logged in as: {driver.user_name}
+            <p className="assigned-car-hero-subtitle">
+              View complete details of the vehicle currently assigned to your
+              account, including maintenance, registration, insurance, and
+              assignment status.
+            </p>
           </div>
-        )}
+
+          <div className="assigned-car-hero-glass">
+            <span>Current Vehicle</span>
+            <strong>
+              {car ? `${car.make || ""} ${car.model || ""}` : "No Car Assigned"}
+            </strong>
+          </div>
+        </div>
       </div>
 
       {car ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: "20px",
-          }}
-        >
-          <div
-            style={{
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "18px",
-              padding: "24px",
-              boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-              minWidth: 0,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                gap: "12px",
-                marginBottom: "22px",
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ minWidth: 0 }}>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: "28px",
-                    color: "#0f172a",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {car.make} {car.model}
-                </h3>
-                <p style={{ margin: "8px 0 0 0", color: "#64748b", fontSize: "14px" }}>
-                  Your current assigned vehicle
-                </p>
+        <>
+          <div className="assigned-car-stats-grid assigned-car-reveal assigned-car-delay-1">
+            <div className="assigned-car-stat-card assigned-car-stat-blue">
+              <div className="assigned-car-stat-icon-bg" />
+              <div className="assigned-car-stat-icon">
+                <IconifyIcon icon="mdi:car-outline" />
               </div>
 
-              <span
-                style={{
-                  padding: "8px 14px",
-                  borderRadius: "999px",
-                  background: "#dcfce7",
-                  color: "#166534",
-                  fontSize: "12px",
-                  fontWeight: "700",
-                  textTransform: "capitalize",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {assignment?.status || "active"}
+              <p className="assigned-car-stat-label">Assigned Vehicle</p>
+              <strong className="assigned-car-stat-value">
+                {car.make} {car.model}
+              </strong>
+              <span className="assigned-car-stat-note">
+                Current assigned car
               </span>
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "14px",
-              }}
-            >
-              <div style={infoCardStyle}>
-                <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Make</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                  {car.make || "-"}
-                </strong>
+            <div className="assigned-car-stat-card assigned-car-stat-purple">
+              <div className="assigned-car-stat-icon-bg" />
+              <div className="assigned-car-stat-icon">
+                <IconifyIcon icon="mdi:link-variant" />
               </div>
 
-              <div style={infoCardStyle}>
-                <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Model</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                  {car.model || "-"}
-                </strong>
+              <p className="assigned-car-stat-label">Assignment Status</p>
+              <strong className="assigned-car-stat-value">
+                {assignment?.status || "Active"}
+              </strong>
+              <span className="assigned-car-stat-note">
+                Live assignment condition
+              </span>
+            </div>
+
+            <div className="assigned-car-stat-card assigned-car-stat-orange">
+              <div className="assigned-car-stat-icon-bg" />
+              <div className="assigned-car-stat-icon">
+                <IconifyIcon icon="mdi:tools" />
               </div>
 
-              <div style={infoCardStyle}>
-                <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Year</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a" }}>
-                  {car.year || "-"}
-                </strong>
+              <p className="assigned-car-stat-label">Maintenance</p>
+              <strong className="assigned-car-stat-value">
+                {maintenanceStatus.label}
+              </strong>
+              <span className="assigned-car-stat-note">
+                Next service status
+              </span>
+            </div>
+
+            <div className="assigned-car-stat-card assigned-car-stat-red">
+              <div className="assigned-car-stat-icon-bg" />
+              <div className="assigned-car-stat-icon">
+                <IconifyIcon icon="mdi:file-document-check-outline" />
               </div>
 
-              <div style={infoCardStyle}>
-                <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Mileage</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                  {car.mileage || "-"}
-                </strong>
-              </div>
-
-              <div style={infoCardStyle}>
-                <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Current Mileage</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                  {car.current_mileage || "-"}
-                </strong>
-              </div>
-
-              <div style={infoCardStyle}>
-                <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Registration Number</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                  {car.registration_number || "-"}
-                </strong>
-              </div>
-
-              <div style={infoCardStyle}>
-                <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Condition</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                  {car.condition || "-"}
-                </strong>
-              </div>
-
-              <div style={{ ...infoCardStyle, gridColumn: "1 / -1" }}>
-                <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Notes</p>
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: "6px",
-                    color: "#0f172a",
-                    wordBreak: "break-word",
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {car.notes || "-"}
-                </strong>
-              </div>
+              <p className="assigned-car-stat-label">Documents</p>
+              <strong className="assigned-car-stat-value">
+                {insuranceStatus.label === "Valid" &&
+                registrationStatus.label === "Valid"
+                  ? "Valid"
+                  : "Check Status"}
+              </strong>
+              <span className="assigned-car-stat-note">
+                Insurance + registration
+              </span>
             </div>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "20px",
-              minWidth: 0,
-            }}
-          >
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "18px",
-                padding: "24px",
-                boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-                minWidth: 0,
-              }}
-            >
-              <h4 style={{ margin: "0 0 18px 0", color: "#0f172a" }}>
-                Maintenance Status
-              </h4>
-
-              <div style={{ display: "grid", gap: "14px" }}>
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Last Service Date</p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    {car.last_service_date || "-"}
-                  </strong>
-                </div>
-
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Next Maintenance Date</p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    {car.next_maintenance_date || "-"}
-                  </strong>
-
-                  <span
-                    style={{
-                      display: "inline-block",
-                      marginTop: "10px",
-                      padding: "7px 12px",
-                      borderRadius: "999px",
-                      background: maintenanceStatus.background,
-                      color: maintenanceStatus.color,
-                      fontSize: "12px",
-                      fontWeight: "700",
-                    }}
-                  >
-                    {maintenanceStatus.label}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "18px",
-                padding: "24px",
-                boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-                minWidth: 0,
-              }}
-            >
-              <h4 style={{ margin: "0 0 18px 0", color: "#0f172a" }}>
-                Document Status
-              </h4>
-
-              <div style={{ display: "grid", gap: "14px" }}>
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Insurance Expiry</p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    {car.insurance_expiry || "-"}
-                  </strong>
-
-                  <span
-                    style={{
-                      display: "inline-block",
-                      marginTop: "10px",
-                      padding: "7px 12px",
-                      borderRadius: "999px",
-                      background: insuranceStatus.background,
-                      color: insuranceStatus.color,
-                      fontSize: "12px",
-                      fontWeight: "700",
-                    }}
-                  >
-                    {insuranceStatus.label}
-                  </span>
-                </div>
-
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Registration Expiry</p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    {car.registration_expiry || "-"}
-                  </strong>
-
-                  <span
-                    style={{
-                      display: "inline-block",
-                      marginTop: "10px",
-                      padding: "7px 12px",
-                      borderRadius: "999px",
-                      background: registrationStatus.background,
-                      color: registrationStatus.color,
-                      fontSize: "12px",
-                      fontWeight: "700",
-                    }}
-                  >
-                    {registrationStatus.label}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "18px",
-                padding: "24px",
-                boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-                minWidth: 0,
-              }}
-            >
-              <h4 style={{ margin: "0 0 18px 0", color: "#0f172a" }}>Assignment Details</h4>
-
-              <div style={{ display: "grid", gap: "14px" }}>
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Assignment Status</p>
-                  <strong
-                    style={{
-                      display: "block",
-                      marginTop: "6px",
-                      color: "#0f172a",
-                      textTransform: "capitalize",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {assignment?.status || "-"}
-                  </strong>
-                </div>
-
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Assigned Date</p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    {assignment?.start_date || "-"}
-                  </strong>
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "18px",
-                padding: "24px",
-                boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-                minWidth: 0,
-              }}
-            >
-              <h4 style={{ margin: "0 0 18px 0", color: "#0f172a" }}>Quick Overview</h4>
-
-              <div style={{ display: "grid", gap: "12px" }}>
-                <div
-                  style={{
-                    background: "#eff6ff",
-                    border: "1px solid #dbeafe",
-                    borderRadius: "14px",
-                    padding: "16px",
-                    minWidth: 0,
-                  }}
-                >
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Driver</p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    {driver?.user_name || "-"}
-                  </strong>
-                </div>
-
-                <div
-                  style={{
-                    background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "14px",
-                    padding: "16px",
-                    minWidth: 0,
-                  }}
-                >
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Vehicle Type</p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
+          <div className="assigned-car-shell assigned-car-reveal assigned-car-delay-2">
+            <div className="assigned-car-card">
+              <div className="assigned-car-card-head">
+                <div>
+                  <h3 className="assigned-car-main-title">
                     {car.make} {car.model}
-                  </strong>
+                  </h3>
+
+                  <p className="assigned-car-section-subtitle">
+                    Your current assigned vehicle profile and basic information.
+                  </p>
                 </div>
 
-                <div
-                  style={{
-                    background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "14px",
-                    padding: "16px",
-                    minWidth: 0,
-                  }}
-                >
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>Registration</p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    {car.registration_number || "-"}
-                  </strong>
+                <div className="assigned-car-vehicle-icon">
+                  <IconifyIcon icon="mdi:car-sports" />
+                </div>
+              </div>
+
+              <div className="assigned-car-info-grid">
+                <InfoBox label="Make" value={car.make} />
+                <InfoBox label="Model" value={car.model} />
+                <InfoBox label="Year" value={car.year} />
+                <InfoBox label="Mileage" value={car.mileage} />
+                <InfoBox label="Current Mileage" value={car.current_mileage} />
+                <InfoBox
+                  label="Registration Number"
+                  value={car.registration_number}
+                />
+                <InfoBox label="Condition" value={car.condition} />
+                <InfoBox label="Notes" value={car.notes} full pre />
+              </div>
+            </div>
+
+            <div className="assigned-car-side-stack">
+              <div className="assigned-car-card">
+                <div className="assigned-car-card-head">
+                  <div>
+                    <h4 className="assigned-car-section-title">
+                      Maintenance Status
+                    </h4>
+                    <p className="assigned-car-section-subtitle">
+                      Service timeline and upcoming maintenance checks.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="assigned-car-info-grid">
+                  <InfoBox
+                    label="Last Service Date"
+                    value={car.last_service_date}
+                    full
+                  />
+
+                  <InfoBox label="Next Maintenance Date" full>
+                    <strong className="assigned-car-value">
+                      {car.next_maintenance_date || "-"}
+                    </strong>
+
+                    <span
+                      className={`assigned-car-badge ${maintenanceStatus.className}`}
+                    >
+                      {maintenanceStatus.label}
+                    </span>
+                  </InfoBox>
+                </div>
+              </div>
+
+              <div className="assigned-car-card">
+                <div className="assigned-car-card-head">
+                  <div>
+                    <h4 className="assigned-car-section-title">
+                      Document Status
+                    </h4>
+                    <p className="assigned-car-section-subtitle">
+                      Track expiry state for vehicle documents.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="assigned-car-info-grid">
+                  <InfoBox label="Insurance Expiry" full>
+                    <strong className="assigned-car-value">
+                      {car.insurance_expiry || "-"}
+                    </strong>
+
+                    <span
+                      className={`assigned-car-badge ${insuranceStatus.className}`}
+                    >
+                      {insuranceStatus.label}
+                    </span>
+                  </InfoBox>
+
+                  <InfoBox label="Registration Expiry" full>
+                    <strong className="assigned-car-value">
+                      {car.registration_expiry || "-"}
+                    </strong>
+
+                    <span
+                      className={`assigned-car-badge ${registrationStatus.className}`}
+                    >
+                      {registrationStatus.label}
+                    </span>
+                  </InfoBox>
+                </div>
+              </div>
+
+              <div className="assigned-car-card">
+                <div className="assigned-car-card-head">
+                  <div>
+                    <h4 className="assigned-car-section-title">
+                      Assignment Details
+                    </h4>
+                    <p className="assigned-car-section-subtitle">
+                      Driver-to-vehicle active assignment information.
+                    </p>
+                  </div>
+
+                  <span className="assigned-car-badge assigned-car-badge-success assigned-car-status-pill">
+                    {assignment?.status || "Active"}
+                  </span>
+                </div>
+
+                <div className="assigned-car-info-grid">
+                  <InfoBox
+                    label="Driver"
+                    value={driver?.user_name || "-"}
+                    full
+                  />
+                  <InfoBox
+                    label="Assigned Date"
+                    value={assignment?.start_date}
+                    full
+                  />
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       ) : (
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px dashed #cbd5e1",
-            borderRadius: "18px",
-            padding: "28px",
-            textAlign: "center",
-            color: "#64748b",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.03)",
-          }}
-        >
-          No active car assigned.
+        <div className="assigned-car-empty-card assigned-car-reveal assigned-car-delay-1">
+          <div className="assigned-car-empty-icon">
+            <IconifyIcon icon="mdi:car-off" />
+          </div>
+          <h4>No active car assigned</h4>
+          <p>
+            Once admin assigns a vehicle to your account, it will appear here
+            with full details.
+          </p>
         </div>
       )}
     </div>

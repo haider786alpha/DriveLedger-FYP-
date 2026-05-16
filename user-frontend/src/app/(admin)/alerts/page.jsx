@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
-import {
-  pageHeroStyle,
-  pageTitleStyle,
-  pageSubtitleStyle,
-  loggedInPillStyle,
-  statCardStyle,
-  emptyStateStyle,
-  statLabelStyle,
-} from "@/helpers/panelStyles";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import DriverToast from "@/components/DriverToast";
+import "./Alerts.css";
 
 const Alerts = () => {
   const [driver, setDriver] = useState(null);
@@ -17,6 +11,19 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [markingId, setMarkingId] = useState(null);
   const [markingAll, setMarkingAll] = useState(false);
+
+  const [toast, setToast] = useState({
+    message: "",
+    type: "success",
+  });
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+
+    setTimeout(() => {
+      setToast({ message: "", type: "success" });
+    }, 3500);
+  };
 
   useEffect(() => {
     fetchAlerts();
@@ -38,6 +45,7 @@ const Alerts = () => {
       const res = await fetch(
         API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`)
       );
+
       const data = await res.json();
 
       const filteredAlerts = (Array.isArray(data) ? data : []).filter(
@@ -50,6 +58,7 @@ const Alerts = () => {
       setAlerts(filteredAlerts);
     } catch (error) {
       console.error("Alerts error:", error);
+      showToast("Failed to load alerts.", "error");
     } finally {
       setLoading(false);
     }
@@ -84,8 +93,10 @@ const Alerts = () => {
       );
 
       window.dispatchEvent(new Event("notifications-updated"));
+      showToast("Alert marked as read.", "success");
     } catch (error) {
       console.error("Mark read error:", error);
+      showToast("Failed to mark alert as read.", "error");
     } finally {
       setMarkingId(null);
     }
@@ -95,13 +106,17 @@ const Alerts = () => {
     if (!driver) return;
 
     const unreadAlerts = alerts.filter((item) => !item.is_read);
-    if (unreadAlerts.length === 0) return;
+
+    if (unreadAlerts.length === 0) {
+      showToast("There are no unread alerts to mark.", "info");
+      return;
+    }
 
     try {
       setMarkingAll(true);
 
-      for (const alert of unreadAlerts) {
-        await fetch(API_URL(`/api/notifications/${alert.id}/mark-read/`), {
+      for (const alertItem of unreadAlerts) {
+        await fetch(API_URL(`/api/notifications/${alertItem.id}/mark-read/`), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -123,57 +138,50 @@ const Alerts = () => {
       );
 
       window.dispatchEvent(new Event("notifications-updated"));
+      showToast("All alerts marked as read.", "success");
     } catch (error) {
       console.error("Mark all read error:", error);
-      alert("Failed to mark all alerts as read.");
+      showToast("Failed to mark all alerts as read.", "error");
     } finally {
       setMarkingAll(false);
     }
   };
 
-  const getAlertStyles = (type, isRead) => {
+  const getAlertMeta = (type) => {
     const value = String(type || "").toLowerCase();
-    const opacity = isRead ? 0.72 : 1;
 
     if (value === "warning") {
       return {
-        border: "#f59e0b",
-        bg: "#fff7ed",
-        title: "#92400e",
-        text: "#7c2d12",
-        iconBg: "#fef3c7",
-        icon: "⚠️",
-        labelBg: "#fef3c7",
-        labelColor: "#92400e",
-        opacity,
+        cardClass: "alerts-card-warning",
+        iconClass: "alerts-card-icon-warning",
+        badgeClass: "alerts-badge-warning",
+        icon: "mdi:alert-outline",
+        label: "Warning",
       };
     }
 
     if (value === "success") {
       return {
-        border: "#22c55e",
-        bg: "#f0fdf4",
-        title: "#166534",
-        text: "#166534",
-        iconBg: "#dcfce7",
-        icon: "✅",
-        labelBg: "#dcfce7",
-        labelColor: "#166534",
-        opacity,
+        cardClass: "alerts-card-success",
+        iconClass: "alerts-card-icon-success",
+        badgeClass: "alerts-badge-success",
+        icon: "mdi:check-decagram-outline",
+        label: "Success",
       };
     }
 
     return {
-      border: "#3b82f6",
-      bg: "#eff6ff",
-      title: "#1d4ed8",
-      text: "#1e3a8a",
-      iconBg: "#dbeafe",
-      icon: "🔔",
-      labelBg: "#dbeafe",
-      labelColor: "#1d4ed8",
-      opacity,
+      cardClass: "alerts-card-info",
+      iconClass: "alerts-card-icon-info",
+      badgeClass: "alerts-badge-info",
+      icon: "mdi:information-outline",
+      label: "Info",
     };
+  };
+
+  const formatDateTime = (dateValue) => {
+    if (!dateValue) return "-";
+    return new Date(dateValue).toLocaleString();
   };
 
   const infoCount = alerts.filter(
@@ -191,279 +199,160 @@ const Alerts = () => {
   const unreadCount = alerts.filter((item) => !item.is_read).length;
 
   if (loading) {
-    return <div>Loading alerts...</div>;
+    return (
+      <div className="alerts-loading-card alerts-reveal">
+        <DriverToast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "success" })}
+        />
+        <h4>Loading alerts...</h4>
+        <p>Please wait while we fetch your notifications.</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div style={pageHeroStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <h2 style={pageTitleStyle}>Alerts</h2>
-            <p style={pageSubtitleStyle}>
-              Stay updated with important notifications, reminders, and
-              account-related updates.
-            </p>
+    <div className="alerts-page">
+      <DriverToast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "success" })}
+      />
 
-            {driver && (
-              <div style={loggedInPillStyle}>
-                <span
-                  style={{
-                    width: "10px",
-                    height: "10px",
-                    borderRadius: "50%",
-                    background: "#3b82f6",
-                    display: "inline-block",
-                  }}
-                />
-                Logged in as: {driver.user_name}
-              </div>
-            )}
+      <div className="alerts-hero alerts-reveal">
+        <div className="alerts-hero-inner">
+          <div>
+            <div className="alerts-kicker">
+              <span className="alerts-status-dot" />
+              Driver Panel Overview
+            </div>
+
+            <h2 className="alerts-hero-title">Alerts</h2>
+
+            <p className="alerts-hero-subtitle">
+              Stay updated with important notifications, reminders, account
+              updates, and messages shared by admin.
+            </p>
           </div>
 
-          <button
-            onClick={markAllAsRead}
-            disabled={markingAll || unreadCount === 0}
-            style={{
-              padding: "12px 16px",
-              borderRadius: "12px",
-              border: "1px solid #cbd5e1",
-              background: unreadCount === 0 ? "#f8fafc" : "#ffffff",
-              color: unreadCount === 0 ? "#94a3b8" : "#334155",
-              fontSize: "13px",
-              fontWeight: "700",
-              cursor: unreadCount === 0 ? "not-allowed" : "pointer",
-              boxShadow:
-                unreadCount === 0
-                  ? "none"
-                  : "0 8px 20px rgba(15, 23, 42, 0.05)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {markingAll ? "Marking All..." : "Mark All Read"}
-          </button>
+          <div className="alerts-hero-actions">
+            <div className="alerts-hero-glass">
+              <span>Logged in as</span>
+              <strong>{driver?.user_name || "Driver"}</strong>
+            </div>
+
+            <button
+              onClick={markAllAsRead}
+              disabled={markingAll || unreadCount === 0}
+              className="alerts-primary-btn"
+            >
+              {markingAll ? "Marking All..." : "Mark All Read"}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "20px",
-          marginBottom: "24px",
-        }}
-      >
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Unread Alerts</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#dc2626", fontSize: "26px" }}>
-            {unreadCount}
-          </h3>
+      <div className="alerts-stats-grid alerts-reveal alerts-delay-1">
+        <div className="alerts-stat-card alerts-stat-red">
+          <div className="alerts-stat-icon-bg" />
+          <div className="alerts-stat-icon">
+            <IconifyIcon icon="mdi:bell-badge-outline" />
+          </div>
+
+          <p className="alerts-stat-label">Unread Alerts</p>
+          <strong className="alerts-stat-value">{unreadCount}</strong>
+          <span className="alerts-stat-note">Needs attention</span>
         </div>
 
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Info Alerts</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#2563eb", fontSize: "26px" }}>
-            {infoCount}
-          </h3>
+        <div className="alerts-stat-card alerts-stat-blue">
+          <div className="alerts-stat-icon-bg" />
+          <div className="alerts-stat-icon">
+            <IconifyIcon icon="mdi:information-outline" />
+          </div>
+
+          <p className="alerts-stat-label">Info Alerts</p>
+          <strong className="alerts-stat-value">{infoCount}</strong>
+          <span className="alerts-stat-note">General updates</span>
         </div>
 
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Warning Alerts</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#d97706", fontSize: "26px" }}>
-            {warningCount}
-          </h3>
+        <div className="alerts-stat-card alerts-stat-orange">
+          <div className="alerts-stat-icon-bg" />
+          <div className="alerts-stat-icon">
+            <IconifyIcon icon="mdi:alert-outline" />
+          </div>
+
+          <p className="alerts-stat-label">Warning Alerts</p>
+          <strong className="alerts-stat-value">{warningCount}</strong>
+          <span className="alerts-stat-note">Important reminders</span>
         </div>
 
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Success Alerts</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#16a34a", fontSize: "26px" }}>
-            {successCount}
-          </h3>
+        <div className="alerts-stat-card alerts-stat-purple">
+          <div className="alerts-stat-icon-bg" />
+          <div className="alerts-stat-icon">
+            <IconifyIcon icon="mdi:check-decagram-outline" />
+          </div>
+
+          <p className="alerts-stat-label">Success Alerts</p>
+          <strong className="alerts-stat-value">{successCount}</strong>
+          <span className="alerts-stat-note">Completed notices</span>
         </div>
       </div>
 
-      <div style={{ display: "grid", gap: "16px" }}>
+      <div className="alerts-list alerts-reveal alerts-delay-2">
         {alerts.length > 0 ? (
-          alerts.map((alert) => {
-            const styles = getAlertStyles(alert.notification_type, alert.is_read);
+          alerts.map((alertItem) => {
+            const meta = getAlertMeta(alertItem.notification_type);
 
             return (
               <div
-                key={alert.id}
-                style={{
-                  background: "#ffffff",
-                  border: alert.is_read
-                    ? "1px solid #e5e7eb"
-                    : `1px solid ${styles.border}`,
-                  borderLeft: `6px solid ${styles.border}`,
-                  borderRadius: "18px",
-                  padding: "20px",
-                  boxShadow: alert.is_read
-                    ? "0 8px 20px rgba(15, 23, 42, 0.03)"
-                    : "0 10px 24px rgba(15, 23, 42, 0.06)",
-                  minWidth: 0,
-                  opacity: styles.opacity,
-                  transition: "all 0.2s ease",
-                }}
+                key={alertItem.id}
+                className={`alerts-card ${
+                  alertItem.is_read ? "alerts-card-read" : "alerts-card-unread"
+                } ${meta.cardClass}`}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "16px",
-                    alignItems: "flex-start",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      minWidth: "48px",
-                      borderRadius: "14px",
-                      background: styles.iconBg,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "22px",
-                    }}
-                  >
-                    {styles.icon}
+                <div className="alerts-card-row">
+                  <div className={`alerts-card-icon ${meta.iconClass}`}>
+                    <IconifyIcon icon={meta.icon} />
                   </div>
 
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        gap: "12px",
-                        flexWrap: "wrap",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <h4
-                          style={{
-                            margin: 0,
-                            fontSize: "20px",
-                            color: styles.title,
-                            wordBreak: "break-word",
-                          }}
-                        >
-                          {alert.title}
-                        </h4>
+                  <div className="alerts-card-content">
+                    <div className="alerts-card-top">
+                      <div>
+                        <h4 className="alerts-card-title">{alertItem.title}</h4>
 
-                        {!alert.is_read && (
-                          <span
-                            style={{
-                              display: "inline-block",
-                              marginTop: "6px",
-                              padding: "4px 10px",
-                              borderRadius: "999px",
-                              background: "#fee2e2",
-                              color: "#991b1b",
-                              fontSize: "11px",
-                              fontWeight: "700",
-                            }}
-                          >
+                        {!alertItem.is_read && (
+                          <span className="alerts-badge alerts-badge-unread">
                             Unread
                           </span>
                         )}
                       </div>
 
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <span
-                          style={{
-                            background: styles.labelBg,
-                            color: styles.labelColor,
-                            padding: "6px 12px",
-                            borderRadius: "999px",
-                            fontSize: "12px",
-                            fontWeight: "700",
-                            textTransform: "capitalize",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {alert.notification_type}
+                      <div className="alerts-card-actions">
+                        <span className={`alerts-badge ${meta.badgeClass}`}>
+                          {meta.label}
                         </span>
 
-                        {!alert.is_read && (
+                        {!alertItem.is_read && (
                           <button
-                            onClick={() => markAsRead(alert.id)}
-                            disabled={markingId === alert.id}
-                            style={{
-                              padding: "7px 12px",
-                              borderRadius: "10px",
-                              border: "1px solid #cbd5e1",
-                              background: "#ffffff",
-                              color: "#334155",
-                              fontSize: "12px",
-                              fontWeight: "700",
-                              cursor: "pointer",
-                            }}
+                            onClick={() => markAsRead(alertItem.id)}
+                            disabled={markingId === alertItem.id}
+                            className="alerts-secondary-btn"
                           >
-                            {markingId === alert.id ? "Marking..." : "Mark Read"}
+                            {markingId === alertItem.id ? "Marking..." : "Mark Read"}
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <p
-                      style={{
-                        margin: "0 0 12px 0",
-                        color: styles.text,
-                        fontSize: "15px",
-                        lineHeight: "1.6",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {alert.message}
-                    </p>
+                    <p className="alerts-card-message">{alertItem.message}</p>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "12px",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <small
-                        style={{
-                          color: "#64748b",
-                          fontSize: "13px",
-                          wordBreak: "break-word",
-                          display: "block",
-                        }}
-                      >
-                        Created: {new Date(alert.created_at).toLocaleString()}
-                      </small>
+                    <div className="alerts-meta">
+                      <small>Created: {formatDateTime(alertItem.created_at)}</small>
 
-                      {alert.read_at && (
-                        <small
-                          style={{
-                            color: "#2563eb",
-                            fontSize: "13px",
-                            wordBreak: "break-word",
-                            display: "block",
-                          }}
-                        >
-                          Read: {new Date(alert.read_at).toLocaleString()}
+                      {alertItem.read_at && (
+                        <small className="alerts-read-time">
+                          Read: {formatDateTime(alertItem.read_at)}
                         </small>
                       )}
                     </div>
@@ -473,7 +362,13 @@ const Alerts = () => {
             );
           })
         ) : (
-          <div style={emptyStateStyle}>No alerts found.</div>
+          <div className="alerts-empty-card">
+            <div className="alerts-empty-icon">
+              <IconifyIcon icon="mdi:bell-off-outline" />
+            </div>
+            <h4>No alerts found</h4>
+            <p>You currently have no notifications or account alerts.</p>
+          </div>
         )}
       </div>
     </div>

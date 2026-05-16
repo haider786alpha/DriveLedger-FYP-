@@ -1,25 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
-import {
-  pageHeroStyle,
-  pageTitleStyle,
-  pageSubtitleStyle,
-  loggedInPillStyle,
-  contentCardStyle,
-  innerInfoCardStyle,
-  sectionTitleStyle,
-  sectionSubtitleStyle,
-  emptyStateStyle,
-  primaryButtonStyle,
-  infoLabelStyle,
-} from "@/helpers/panelStyles";
+import DriverToast from "@/components/DriverToast";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import "./ShareLocation.css";
 
 const ShareLocation = () => {
   const [driver, setDriver] = useState(null);
   const [locationRecord, setLocationRecord] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
+
+  const [toast, setToast] = useState({
+    message: "",
+    type: "success",
+  });
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+
+    setTimeout(() => {
+      setToast({ message: "", type: "success" });
+    }, 3500);
+  };
 
   useEffect(() => {
     fetchLocationData();
@@ -48,6 +51,7 @@ const ShareLocation = () => {
     } catch (error) {
       console.error("Location fetch error:", error);
       setLocationRecord(null);
+      showToast("Failed to load location data.", "error");
     } finally {
       setLoading(false);
     }
@@ -55,7 +59,7 @@ const ShareLocation = () => {
 
   const saveLocation = async (latitude, longitude) => {
     if (!driver) {
-      alert("Driver profile not found.");
+      showToast("Driver profile not found.", "error");
       return;
     }
 
@@ -91,7 +95,7 @@ const ShareLocation = () => {
 
   const handleShareLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
+      showToast("Geolocation is not supported by this browser.", "error");
       return;
     }
 
@@ -104,11 +108,11 @@ const ShareLocation = () => {
 
           await saveLocation(latitude, longitude);
 
-          alert("Current location shared successfully.");
+          showToast("Current location shared successfully.", "success");
           await fetchLocationData();
         } catch (error) {
           console.error("Save location error:", error);
-          alert(error.message || "Failed to share location.");
+          showToast(error.message || "Failed to share location.", "error");
         } finally {
           setSharing(false);
         }
@@ -117,13 +121,13 @@ const ShareLocation = () => {
         console.error("Geolocation error:", error);
 
         if (error.code === 1) {
-          alert("Location permission denied. Please allow location access.");
+          showToast("Location permission denied. Please allow location access.", "warning");
         } else if (error.code === 2) {
-          alert("Location unavailable. Please check your device/location settings.");
+          showToast("Location unavailable. Please check your device/location settings.", "warning");
         } else if (error.code === 3) {
-          alert("Location request timed out. Please try again.");
+          showToast("Location request timed out. Please try again.", "warning");
         } else {
-          alert("Failed to get current location.");
+          showToast("Failed to get current location.", "error");
         }
 
         setSharing(false);
@@ -145,125 +149,237 @@ const ShareLocation = () => {
     );
   };
 
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "-";
+    return new Date(dateValue).toLocaleString();
+  };
+
+  const InfoBox = ({ label, value, full = false, children }) => {
+    return (
+      <div
+        className={`share-location-info-box ${
+          full ? "share-location-info-box-full" : ""
+        }`}
+      >
+        <p className="share-location-label">{label}</p>
+
+        {children ? (
+          children
+        ) : (
+          <strong className="share-location-value">{value || "-"}</strong>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
-    return <div>Loading location...</div>;
+    return (
+      <div className="share-location-loading-card share-location-reveal">
+        <DriverToast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "success" })}
+        />
+        <h4>Loading location...</h4>
+        <p>Please wait while we fetch your latest shared location.</p>
+      </div>
+    );
   }
 
   if (!driver) {
-    return <div style={emptyStateStyle}>No driver profile found.</div>;
+    return (
+      <div className="share-location-empty-card share-location-reveal">
+        <DriverToast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "success" })}
+        />
+
+        <div className="share-location-empty-icon">
+          <IconifyIcon icon="mdi:map-marker-off-outline" />
+        </div>
+
+        <h4>No driver profile found</h4>
+        <p>Please log in again to share your current location.</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div style={pageHeroStyle}>
-        <h2 style={pageTitleStyle}>Share Location</h2>
-        <p style={pageSubtitleStyle}>
-          Share your current location with admin when needed. Your location is only updated when you click the share button and allow browser permission.
-        </p>
+    <div className="share-location-page">
+      <DriverToast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "success" })}
+      />
 
-        <div style={loggedInPillStyle}>
-          <span
-            style={{
-              width: "10px",
-              height: "10px",
-              borderRadius: "50%",
-              background: "#22c55e",
-              display: "inline-block",
-            }}
-          />
-          Logged in as: {driver.user_name}
+      <div className="share-location-hero share-location-reveal">
+        <div className="share-location-hero-inner">
+          <div>
+            <div className="share-location-kicker">
+              <span className="share-location-status-dot" />
+              Driver Panel Overview
+            </div>
+
+            <h2 className="share-location-hero-title">Share Location</h2>
+
+            <p className="share-location-hero-subtitle">
+              Share your current location with admin only when needed. Your
+              location is updated manually after you click the share button and
+              allow browser permission.
+            </p>
+          </div>
+
+          <div className="share-location-hero-glass">
+            <span>Logged in as</span>
+            <strong>{driver.user_name || "Driver"}</strong>
+          </div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "20px",
-        }}
-      >
-        <div style={contentCardStyle}>
-          <h4 style={sectionTitleStyle}>Share Current Location</h4>
-          <p style={sectionSubtitleStyle}>
-            Click the button below and allow location access. Admin will see your latest shared location.
-          </p>
+      <div className="share-location-stats-grid share-location-reveal share-location-delay-1">
+        <div className="share-location-stat-card share-location-stat-blue">
+          <div className="share-location-stat-icon-bg" />
+          <div className="share-location-stat-icon">
+            <IconifyIcon icon="mdi:map-marker-radius-outline" />
+          </div>
 
-          <button
-            onClick={handleShareLocation}
-            disabled={sharing}
-            style={{
-              ...primaryButtonStyle,
-              width: "100%",
-              marginTop: "18px",
-              opacity: sharing ? 0.7 : 1,
-            }}
-          >
-            {sharing ? "Sharing Location..." : "Share Current Location"}
-          </button>
+          <p className="share-location-stat-label">Location Status</p>
+          <strong className="share-location-stat-value">
+            {locationRecord ? "Shared" : "Not Shared"}
+          </strong>
+          <span className="share-location-stat-note">Latest saved location</span>
+        </div>
 
-          <div
-            style={{
-              marginTop: "18px",
-              padding: "14px",
-              borderRadius: "14px",
-              background: "#eff6ff",
-              border: "1px solid #dbeafe",
-              color: "#1e3a8a",
-              fontSize: "14px",
-              lineHeight: "1.6",
-            }}
-          >
-            The system does not track you automatically. Location is shared manually with your permission.
+        <div className="share-location-stat-card share-location-stat-purple">
+          <div className="share-location-stat-icon-bg" />
+          <div className="share-location-stat-icon">
+            <IconifyIcon icon="mdi:compass-outline" />
+          </div>
+
+          <p className="share-location-stat-label">Latitude</p>
+          <strong className="share-location-stat-value">
+            {locationRecord?.latitude || "-"}
+          </strong>
+          <span className="share-location-stat-note">Current coordinate</span>
+        </div>
+
+        <div className="share-location-stat-card share-location-stat-orange">
+          <div className="share-location-stat-icon-bg" />
+          <div className="share-location-stat-icon">
+            <IconifyIcon icon="mdi:earth" />
+          </div>
+
+          <p className="share-location-stat-label">Longitude</p>
+          <strong className="share-location-stat-value">
+            {locationRecord?.longitude || "-"}
+          </strong>
+          <span className="share-location-stat-note">Current coordinate</span>
+        </div>
+
+        <div className="share-location-stat-card share-location-stat-slate">
+          <div className="share-location-stat-icon-bg" />
+          <div className="share-location-stat-icon">
+            <IconifyIcon icon="mdi:clock-time-four-outline" />
+          </div>
+
+          <p className="share-location-stat-label">Last Updated</p>
+          <strong className="share-location-stat-value">
+            {locationRecord?.updated_at ? "Available" : "Pending"}
+          </strong>
+          <span className="share-location-stat-note">
+            {locationRecord?.updated_at
+              ? formatDate(locationRecord.updated_at)
+              : "No update yet"}
+          </span>
+        </div>
+      </div>
+
+      <div className="share-location-shell share-location-reveal share-location-delay-2">
+        <div className="share-location-card share-location-action-panel">
+          <div>
+            <div className="share-location-action-icon">
+              <IconifyIcon icon="mdi:access-point" />
+            </div>
+
+            <h4 className="share-location-section-title">
+              Share Current Location
+            </h4>
+
+            <p className="share-location-section-subtitle">
+              Click below and allow location access. Admin will receive your
+              latest coordinates only after your permission.
+            </p>
+
+            <button
+              onClick={handleShareLocation}
+              disabled={sharing}
+              className="share-location-primary-btn"
+            >
+              {sharing ? "Sharing Location..." : "Share Current Location"}
+            </button>
+          </div>
+
+          <div className="share-location-note">
+            The system does not track you automatically. Location is shared
+            manually with your permission.
           </div>
         </div>
 
-        <div style={contentCardStyle}>
-          <h4 style={sectionTitleStyle}>Last Shared Location</h4>
-          <p style={sectionSubtitleStyle}>
-            View the latest location saved for your driver profile.
-          </p>
-
-          {locationRecord ? (
-            <div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Latitude</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a" }}>
-                  {locationRecord.latitude}
-                </strong>
+        <div className="share-location-side-stack">
+          <div className="share-location-card">
+            <div className="share-location-card-head">
+              <div>
+                <h4 className="share-location-section-title">
+                  Last Shared Location
+                </h4>
+                <p className="share-location-section-subtitle">
+                  View the latest location saved for your driver profile.
+                </p>
               </div>
-
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Longitude</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a" }}>
-                  {locationRecord.longitude}
-                </strong>
-              </div>
-
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Last Updated</p>
-                <strong style={{ display: "block", marginTop: "6px", color: "#0f172a" }}>
-                  {locationRecord.updated_at
-                    ? new Date(locationRecord.updated_at).toLocaleString()
-                    : "-"}
-                </strong>
-              </div>
-
-              <button
-                onClick={openMap}
-                style={{
-                  ...primaryButtonStyle,
-                  width: "100%",
-                  background: "#16a34a",
-                }}
-              >
-                Open in Google Maps
-              </button>
             </div>
-          ) : (
-            <div style={{ ...emptyStateStyle, marginTop: "18px" }}>
-              No location shared yet.
-            </div>
-          )}
+
+            {locationRecord ? (
+              <>
+                <div className="share-location-map-preview">
+                  <div className="share-location-map-pulse" />
+                  <div className="share-location-map-pin">
+                    <IconifyIcon icon="mdi:map-marker" />
+                  </div>
+                </div>
+
+                <div className="share-location-info-grid">
+                  <InfoBox label="Latitude" value={locationRecord.latitude} />
+                  <InfoBox label="Longitude" value={locationRecord.longitude} />
+                  <InfoBox
+                    label="Last Updated"
+                    value={formatDate(locationRecord.updated_at)}
+                    full
+                  />
+                </div>
+
+                <button
+                  onClick={openMap}
+                  className="share-location-secondary-btn"
+                  style={{ marginTop: "16px" }}
+                >
+                  Open in Google Maps
+                </button>
+              </>
+            ) : (
+              <div className="share-location-empty-card">
+                <div className="share-location-empty-icon">
+                  <IconifyIcon icon="mdi:map-marker-off-outline" />
+                </div>
+
+                <h4>No location shared yet</h4>
+                <p>
+                  Share your current location once, and the latest coordinates
+                  will appear here.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

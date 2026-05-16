@@ -1,29 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
-import {
-  pageHeroStyle,
-  pageTitleStyle,
-  pageSubtitleStyle,
-  loggedInPillStyle,
-  contentCardStyle,
-  innerInfoCardStyle,
-  sectionTitleStyle,
-  emptyStateStyle,
-  infoLabelStyle,
-  primaryButtonStyle,
-} from "@/helpers/panelStyles";
+import DriverToast from "@/components/DriverToast";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import "./Profile.css";
 
 const Profile = () => {
   const [driver, setDriver] = useState(null);
   const [user, setUser] = useState(null);
   const [assignedCar, setAssignedCar] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const [showEditForm, setShowEditForm] = useState(false);
   const [saving, setSaving] = useState(false);
-
   const [changingPassword, setChangingPassword] = useState(false);
+
+  const [toast, setToast] = useState({
+    message: "",
+    type: "success",
+  });
+
   const [passwordData, setPasswordData] = useState({
     old_password: "",
     new_password: "",
@@ -37,6 +32,14 @@ const Profile = () => {
     address: "",
     license_number: "",
   });
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+
+    setTimeout(() => {
+      setToast({ message: "", type: "success" });
+    }, 3500);
+  };
 
   useEffect(() => {
     fetchProfileData();
@@ -89,6 +92,7 @@ const Profile = () => {
       }
     } catch (error) {
       console.error("Profile error:", error);
+      showToast("Failed to load profile data.", "error");
     } finally {
       setLoading(false);
     }
@@ -130,7 +134,7 @@ const Profile = () => {
 
   const handleSaveChanges = async () => {
     if (!driver) {
-      alert("Driver profile not found.");
+      showToast("Driver profile not found.", "error");
       return;
     }
 
@@ -154,12 +158,12 @@ const Profile = () => {
         throw new Error("Failed to update profile");
       }
 
-      alert("Profile updated successfully.");
+      showToast("Profile updated successfully.", "success");
       setShowEditForm(false);
       await fetchProfileData();
     } catch (error) {
       console.error("Save profile error:", error);
-      alert("Failed to update profile.");
+      showToast("Failed to update profile.", "error");
     } finally {
       setSaving(false);
     }
@@ -167,22 +171,22 @@ const Profile = () => {
 
   const handleChangePassword = async () => {
     if (!passwordData.old_password.trim()) {
-      alert("Please enter your old password.");
+      showToast("Please enter your old password.", "warning");
       return;
     }
 
     if (!passwordData.new_password.trim()) {
-      alert("Please enter your new password.");
+      showToast("Please enter your new password.", "warning");
       return;
     }
 
     if (passwordData.new_password.length < 6) {
-      alert("New password must be at least 6 characters long.");
+      showToast("New password must be at least 6 characters long.", "warning");
       return;
     }
 
     if (passwordData.new_password !== passwordData.confirm_password) {
-      alert("New password and confirm password do not match.");
+      showToast("New password and confirm password do not match.", "warning");
       return;
     }
 
@@ -209,7 +213,7 @@ const Profile = () => {
         throw new Error(data.error || data.detail || "Failed to change password");
       }
 
-      alert("Password changed successfully.");
+      showToast("Password changed successfully.", "success");
 
       setPasswordData({
         old_password: "",
@@ -218,7 +222,7 @@ const Profile = () => {
       });
     } catch (error) {
       console.error("Change password error:", error);
-      alert(error.message || "Failed to change password.");
+      showToast(error.message || "Failed to change password.", "error");
     } finally {
       setChangingPassword(false);
     }
@@ -228,212 +232,190 @@ const Profile = () => {
   const hasLicenseCopy = Boolean(driver?.license_copy_url);
   const documentsComplete = hasProfilePhoto && hasLicenseCopy;
 
+  const InfoBox = ({ label, value, full = false }) => (
+    <div className={`profile-info-box ${full ? "profile-info-box-full" : ""}`}>
+      <p className="profile-label">{label}</p>
+      <strong className="profile-value">{value || "-"}</strong>
+    </div>
+  );
+
   if (loading) {
-    return <div>Loading profile...</div>;
+    return (
+      <div className="profile-loading-card profile-reveal">
+        <DriverToast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "success" })}
+        />
+        <h4>Loading profile...</h4>
+        <p>Please wait while we fetch your profile data.</p>
+      </div>
+    );
   }
 
   if (!driver) {
-    return <div style={emptyStateStyle}>No driver profile found.</div>;
+    return (
+      <div className="profile-empty-card profile-reveal">
+        <DriverToast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "success" })}
+        />
+        No driver profile found.
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div style={pageHeroStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <h2 style={pageTitleStyle}>My Profile</h2>
-            <p style={pageSubtitleStyle}>
-              View your personal details, driver records, uploaded documents, and assigned vehicle information.
+    <div className="profile-page">
+      <DriverToast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "success" })}
+      />
+
+      <div className="profile-hero profile-reveal">
+        <div className="profile-hero-inner">
+          <div>
+            <div className="profile-kicker">
+              <span className="profile-status-dot" />
+              Driver Panel Overview
+            </div>
+
+            <h2 className="profile-hero-title">My Profile</h2>
+
+            <p className="profile-hero-subtitle">
+              Manage your personal details, driver records, uploaded documents,
+              assigned vehicle information, and account security in one clean place.
             </p>
           </div>
 
-          <button
-            onClick={handleOpenEdit}
-            style={{
-              ...primaryButtonStyle,
-              whiteSpace: "nowrap",
-            }}
-          >
+          <button onClick={handleOpenEdit} className="profile-primary-btn">
             Edit Profile
           </button>
         </div>
+      </div>
 
-        <div style={loggedInPillStyle}>
-          <span
-            style={{
-              width: "10px",
-              height: "10px",
-              borderRadius: "50%",
-              background: "#22c55e",
-              display: "inline-block",
-            }}
-          />
-          Active Driver Profile
+      <div className="profile-stats-grid profile-reveal profile-delay-1">
+        <div className="profile-stat-card profile-stat-blue">
+          <div className="profile-stat-icon-bg" />
+          <div className="profile-stat-icon">
+            <IconifyIcon icon="mdi:card-account-details-outline" />
+          </div>
+          <p className="profile-stat-label">Driver ID</p>
+          <strong className="profile-stat-value">#{driver.id}</strong>
+          <span className="profile-stat-note">Registered account</span>
+        </div>
+
+        <div className="profile-stat-card profile-stat-green">
+          <div className="profile-stat-icon-bg" />
+          <div className="profile-stat-icon">
+            <IconifyIcon icon="mdi:account-check-outline" />
+          </div>
+          <p className="profile-stat-label">Profile Status</p>
+          <strong className="profile-stat-value">Active</strong>
+          <span className="profile-stat-note">Driver account access</span>
+        </div>
+
+        <div className="profile-stat-card profile-stat-purple">
+          <div className="profile-stat-icon-bg" />
+          <div className="profile-stat-icon">
+            <IconifyIcon icon="mdi:car-outline" />
+          </div>
+          <p className="profile-stat-label">Assigned Vehicle</p>
+          <strong className="profile-stat-value">
+            {assignedCar ? `${assignedCar.make} ${assignedCar.model}` : "No Car"}
+          </strong>
+          <span className="profile-stat-note">Current vehicle</span>
+        </div>
+
+        <div className="profile-stat-card profile-stat-orange">
+          <div className="profile-stat-icon-bg" />
+          <div className="profile-stat-icon">
+            <IconifyIcon icon="mdi:file-document-check-outline" />
+          </div>
+          <p className="profile-stat-label">Documents</p>
+          <strong className="profile-stat-value">
+            {documentsComplete ? "Complete" : "Incomplete"}
+          </strong>
+          <span className="profile-stat-note">Profile + license copy</span>
         </div>
       </div>
 
       {showEditForm && (
-        <div
-          style={{
-            ...contentCardStyle,
-            marginBottom: "24px",
-            border: "1px solid #bfdbfe",
-            background: "#f8fbff",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "12px",
-              flexWrap: "wrap",
-              marginBottom: "18px",
-            }}
-          >
+        <div className="profile-card profile-edit-card profile-reveal">
+          <div className="profile-card-head">
             <div>
-              <h4 style={sectionTitleStyle}>Edit Profile</h4>
-              <p style={{ margin: "6px 0 0 0", color: "#64748b", fontSize: "14px" }}>
+              <h4 className="profile-section-title">Edit Profile</h4>
+              <p className="profile-section-subtitle">
                 You can update your email and address here.
               </p>
             </div>
 
-            <button
-              onClick={handleCloseEdit}
-              style={{
-                padding: "10px 14px",
-                borderRadius: "10px",
-                border: "1px solid #cbd5e1",
-                background: "#ffffff",
-                color: "#334155",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
+            <button onClick={handleCloseEdit} className="profile-secondary-btn">
               Cancel
             </button>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "14px",
-            }}
-          >
-            <div style={innerInfoCardStyle}>
-              <label style={infoLabelStyle}>Username</label>
+          <div className="profile-form-grid">
+            <div className="profile-info-box">
+              <label className="profile-label">Username</label>
               <input
                 type="text"
                 value={formData.username}
                 disabled
-                style={{
-                  width: "100%",
-                  marginTop: "8px",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #cbd5e1",
-                  outline: "none",
-                  background: "#f1f5f9",
-                }}
+                className="profile-input"
               />
             </div>
 
-            <div style={innerInfoCardStyle}>
-              <label style={infoLabelStyle}>Email</label>
+            <div className="profile-info-box">
+              <label className="profile-label">Email</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                style={{
-                  width: "100%",
-                  marginTop: "8px",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #cbd5e1",
-                  outline: "none",
-                }}
+                className="profile-input"
               />
             </div>
 
-            <div style={innerInfoCardStyle}>
-              <label style={infoLabelStyle}>CNIC</label>
+            <div className="profile-info-box">
+              <label className="profile-label">CNIC</label>
               <input
                 type="text"
                 value={formData.cnic}
                 disabled
-                style={{
-                  width: "100%",
-                  marginTop: "8px",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #cbd5e1",
-                  outline: "none",
-                  background: "#f1f5f9",
-                }}
+                className="profile-input"
               />
             </div>
 
-            <div style={innerInfoCardStyle}>
-              <label style={infoLabelStyle}>License Number</label>
+            <div className="profile-info-box">
+              <label className="profile-label">License Number</label>
               <input
                 type="text"
                 value={formData.license_number}
                 disabled
-                style={{
-                  width: "100%",
-                  marginTop: "8px",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #cbd5e1",
-                  outline: "none",
-                  background: "#f1f5f9",
-                }}
+                className="profile-input"
               />
             </div>
 
-            <div
-              style={{
-                ...innerInfoCardStyle,
-                gridColumn: "1 / -1",
-              }}
-            >
-              <label style={infoLabelStyle}>Address</label>
+            <div className="profile-info-box profile-info-box-full">
+              <label className="profile-label">Address</label>
               <textarea
                 name="address"
                 rows="4"
                 value={formData.address}
                 onChange={handleChange}
-                style={{
-                  width: "100%",
-                  marginTop: "8px",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #cbd5e1",
-                  outline: "none",
-                  resize: "none",
-                }}
+                className="profile-textarea"
               />
             </div>
           </div>
 
-          <div style={{ marginTop: "18px" }}>
+          <div className="profile-actions">
             <button
               onClick={handleSaveChanges}
               disabled={saving}
-              style={{
-                ...primaryButtonStyle,
-                opacity: saving ? 0.7 : 1,
-              }}
+              className="profile-primary-btn"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>
@@ -441,210 +423,82 @@ const Profile = () => {
         </div>
       )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "20px",
-        }}
-      >
-        <div style={contentCardStyle}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              marginBottom: "22px",
-              flexWrap: "wrap",
-            }}
-          >
+      <div className="profile-shell profile-reveal profile-delay-2">
+        <div className="profile-card">
+          <div className="profile-driver-head">
             {hasProfilePhoto ? (
               <img
                 src={driver.profile_photo_url}
                 alt={driver.user_name || "Driver"}
-                style={{
-                  width: "78px",
-                  height: "78px",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "3px solid #dbeafe",
-                  boxShadow: "0 10px 24px rgba(59, 130, 246, 0.18)",
-                  flexShrink: 0,
-                }}
+                className="profile-avatar"
               />
             ) : (
-              <div
-                style={{
-                  width: "68px",
-                  height: "68px",
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "26px",
-                  fontWeight: "700",
-                  boxShadow: "0 10px 24px rgba(59, 130, 246, 0.25)",
-                  flexShrink: 0,
-                }}
-              >
+              <div className="profile-avatar-fallback">
                 {String(driver.user_name || "D").charAt(0).toUpperCase()}
               </div>
             )}
 
-            <div style={{ minWidth: 0 }}>
-              <h4
-                style={{
-                  margin: 0,
-                  fontSize: "24px",
-                  color: "#0f172a",
-                  wordBreak: "break-word",
-                }}
-              >
-                {driver.user_name || "-"}
-              </h4>
-              <p style={{ margin: "6px 0 0 0", color: "#64748b", fontSize: "14px" }}>
-                Registered Driver Account
-              </p>
-
+            <div>
+              <h4 className="profile-driver-name">{driver.user_name || "-"}</h4>
+              <p className="profile-section-subtitle">Registered Driver Account</p>
               <span
-                style={{
-                  display: "inline-block",
-                  marginTop: "8px",
-                  padding: "6px 12px",
-                  borderRadius: "999px",
-                  background: documentsComplete ? "#dcfce7" : "#fef3c7",
-                  color: documentsComplete ? "#166534" : "#92400e",
-                  fontSize: "12px",
-                  fontWeight: "700",
-                }}
+                className={`profile-badge ${
+                  documentsComplete ? "profile-badge-success" : "profile-badge-warning"
+                }`}
               >
                 Documents {documentsComplete ? "Complete" : "Incomplete"}
               </span>
             </div>
           </div>
 
-          <h4 style={{ ...sectionTitleStyle, marginBottom: "18px" }}>
-            Personal Information
-          </h4>
+          <h4 className="profile-section-title">Personal Information</h4>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "14px",
-            }}
-          >
-            {[
-              { label: "Name", value: driver.user_name || "-" },
-              { label: "Username", value: user?.username || driver.user_name || "-" },
-              { label: "Email", value: user?.email || driver?.email || "-" },
-              { label: "Phone", value: "-" },
-              { label: "CNIC", value: driver.cnic || "-" },
-              { label: "License Number", value: driver.license_number || "-" },
-              { label: "Address", value: driver.address || "-", full: true },
-            ].map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  ...innerInfoCardStyle,
-                  gridColumn: item.full ? "1 / -1" : "auto",
-                }}
-              >
-                <p style={infoLabelStyle}>{item.label}</p>
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: "6px",
-                    color: "#0f172a",
-                    fontSize: "15px",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {item.value}
-                </strong>
-              </div>
-            ))}
+          <div className="profile-info-grid" style={{ marginTop: "18px" }}>
+            <InfoBox label="Name" value={driver.user_name} />
+            <InfoBox label="Username" value={user?.username || driver.user_name} />
+            <InfoBox label="Email" value={user?.email || driver?.email} />
+            <InfoBox label="Phone" value="-" />
+            <InfoBox label="CNIC" value={driver.cnic} />
+            <InfoBox label="License Number" value={driver.license_number} />
+            <InfoBox label="Address" value={driver.address} full />
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gap: "20px",
-            minWidth: 0,
-          }}
-        >
-          <div style={contentCardStyle}>
-            <h4 style={{ ...sectionTitleStyle, marginBottom: "18px" }}>
-              Uploaded Documents
-            </h4>
+        <div className="profile-side-stack">
+          <div className="profile-card">
+            <h4 className="profile-section-title">Uploaded Documents</h4>
 
-            <div style={{ display: "grid", gap: "14px" }}>
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Profile Photo</p>
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: "6px",
-                    color: hasProfilePhoto ? "#166534" : "#92400e",
-                    fontSize: "15px",
-                  }}
-                >
+            <div className="profile-info-grid" style={{ marginTop: "18px" }}>
+              <div className="profile-info-box profile-info-box-full">
+                <p className="profile-label">Profile Photo</p>
+                <strong className="profile-value">
                   {hasProfilePhoto ? "Uploaded" : "Not uploaded"}
                 </strong>
               </div>
 
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>License Copy</p>
+              <div className="profile-info-box profile-info-box-full">
+                <p className="profile-label">License Copy</p>
 
                 {hasLicenseCopy ? (
                   <a
                     href={driver.license_copy_url}
                     target="_blank"
                     rel="noreferrer"
-                    style={{
-                      display: "inline-block",
-                      marginTop: "8px",
-                      padding: "9px 14px",
-                      borderRadius: "10px",
-                      background: "#2563eb",
-                      color: "#ffffff",
-                      textDecoration: "none",
-                      fontSize: "13px",
-                      fontWeight: "700",
-                    }}
+                    className="profile-link-btn"
                   >
                     View License Copy
                   </a>
                 ) : (
-                  <strong
-                    style={{
-                      display: "block",
-                      marginTop: "6px",
-                      color: "#92400e",
-                      fontSize: "15px",
-                    }}
-                  >
-                    Not uploaded
-                  </strong>
+                  <strong className="profile-value">Not uploaded</strong>
                 )}
               </div>
 
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Document Status</p>
+              <div className="profile-info-box profile-info-box-full">
+                <p className="profile-label">Document Status</p>
                 <span
-                  style={{
-                    display: "inline-block",
-                    marginTop: "8px",
-                    padding: "7px 12px",
-                    borderRadius: "999px",
-                    background: documentsComplete ? "#dcfce7" : "#fef3c7",
-                    color: documentsComplete ? "#166534" : "#92400e",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                  }}
+                  className={`profile-badge ${
+                    documentsComplete ? "profile-badge-success" : "profile-badge-warning"
+                  }`}
                 >
                   {documentsComplete ? "Complete" : "Incomplete"}
                 </span>
@@ -652,182 +506,85 @@ const Profile = () => {
             </div>
           </div>
 
-          <div style={contentCardStyle}>
-            <h4 style={{ ...sectionTitleStyle, marginBottom: "18px" }}>
-              Work Information
-            </h4>
+          <div className="profile-card">
+            <h4 className="profile-section-title">Work Information</h4>
 
-            <div style={{ display: "grid", gap: "14px" }}>
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Assigned Car</p>
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: "6px",
-                    color: "#0f172a",
-                    fontSize: "16px",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {assignedCar
+            <div className="profile-info-grid" style={{ marginTop: "18px" }}>
+              <InfoBox
+                label="Assigned Car"
+                value={
+                  assignedCar
                     ? `${assignedCar.make} ${assignedCar.model}`
-                    : "No active car assigned"}
-                </strong>
-              </div>
+                    : "No active car assigned"
+                }
+                full
+              />
 
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Status</p>
-                <span
-                  style={{
-                    display: "inline-block",
-                    marginTop: "8px",
-                    padding: "7px 12px",
-                    borderRadius: "999px",
-                    background: "#dcfce7",
-                    color: "#166534",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                  }}
-                >
-                  Active
-                </span>
+              <div className="profile-info-box profile-info-box-full">
+                <p className="profile-label">Status</p>
+                <span className="profile-badge profile-badge-success">Active</span>
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div style={contentCardStyle}>
-            <h4 style={{ ...sectionTitleStyle, marginBottom: "18px" }}>
-              Change Password
-            </h4>
+      <div className="profile-card profile-security-card profile-reveal profile-delay-3">
+        <div className="profile-card-head">
+          <div>
+            <h4 className="profile-section-title">Account Security</h4>
+            <p className="profile-section-subtitle">
+              Change your password regularly to keep your driver account safe.
+            </p>
+          </div>
+        </div>
 
-            <div style={{ display: "grid", gap: "14px" }}>
-              <div style={innerInfoCardStyle}>
-                <label style={infoLabelStyle}>Old Password</label>
-                <input
-                  type="password"
-                  name="old_password"
-                  value={passwordData.old_password}
-                  onChange={handlePasswordChange}
-                  placeholder="Enter old password"
-                  style={{
-                    width: "100%",
-                    marginTop: "8px",
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid #cbd5e1",
-                    outline: "none",
-                  }}
-                />
-              </div>
-
-              <div style={innerInfoCardStyle}>
-                <label style={infoLabelStyle}>New Password</label>
-                <input
-                  type="password"
-                  name="new_password"
-                  value={passwordData.new_password}
-                  onChange={handlePasswordChange}
-                  placeholder="Enter new password"
-                  style={{
-                    width: "100%",
-                    marginTop: "8px",
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid #cbd5e1",
-                    outline: "none",
-                  }}
-                />
-              </div>
-
-              <div style={innerInfoCardStyle}>
-                <label style={infoLabelStyle}>Confirm New Password</label>
-                <input
-                  type="password"
-                  name="confirm_password"
-                  value={passwordData.confirm_password}
-                  onChange={handlePasswordChange}
-                  placeholder="Confirm new password"
-                  style={{
-                    width: "100%",
-                    marginTop: "8px",
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid #cbd5e1",
-                    outline: "none",
-                  }}
-                />
-              </div>
-
-              <button
-                onClick={handleChangePassword}
-                disabled={changingPassword}
-                style={{
-                  ...primaryButtonStyle,
-                  opacity: changingPassword ? 0.7 : 1,
-                }}
-              >
-                {changingPassword ? "Changing..." : "Change Password"}
-              </button>
-            </div>
+        <div className="profile-password-grid">
+          <div className="profile-info-box">
+            <label className="profile-label">Old Password</label>
+            <input
+              type="password"
+              name="old_password"
+              value={passwordData.old_password}
+              onChange={handlePasswordChange}
+              placeholder="Enter old password"
+              className="profile-input"
+            />
           </div>
 
-          <div style={contentCardStyle}>
-            <h4 style={{ ...sectionTitleStyle, marginBottom: "18px" }}>
-              Quick Overview
-            </h4>
-
-            <div style={{ display: "grid", gap: "12px" }}>
-              <div
-                style={{
-                  ...innerInfoCardStyle,
-                  background: "#eff6ff",
-                  border: "1px solid #dbeafe",
-                }}
-              >
-                <p style={infoLabelStyle}>Driver ID</p>
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: "6px",
-                    color: "#0f172a",
-                    fontSize: "16px",
-                  }}
-                >
-                  {driver.id || "-"}
-                </strong>
-              </div>
-
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Vehicle Condition</p>
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: "6px",
-                    color: "#0f172a",
-                    fontSize: "16px",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {assignedCar?.condition || "Not available"}
-                </strong>
-              </div>
-
-              <div style={innerInfoCardStyle}>
-                <p style={infoLabelStyle}>Registration Number</p>
-                <strong
-                  style={{
-                    display: "block",
-                    marginTop: "6px",
-                    color: "#0f172a",
-                    fontSize: "16px",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {assignedCar?.registration_number || "-"}
-                </strong>
-              </div>
-            </div>
+          <div className="profile-info-box">
+            <label className="profile-label">New Password</label>
+            <input
+              type="password"
+              name="new_password"
+              value={passwordData.new_password}
+              onChange={handlePasswordChange}
+              placeholder="Enter new password"
+              className="profile-input"
+            />
           </div>
+
+          <div className="profile-info-box">
+            <label className="profile-label">Confirm New Password</label>
+            <input
+              type="password"
+              name="confirm_password"
+              value={passwordData.confirm_password}
+              onChange={handlePasswordChange}
+              placeholder="Confirm new password"
+              className="profile-input"
+            />
+          </div>
+        </div>
+
+        <div className="profile-actions">
+          <button
+            onClick={handleChangePassword}
+            disabled={changingPassword}
+            className="profile-primary-btn"
+          >
+            {changingPassword ? "Changing..." : "Change Password"}
+          </button>
         </div>
       </div>
     </div>

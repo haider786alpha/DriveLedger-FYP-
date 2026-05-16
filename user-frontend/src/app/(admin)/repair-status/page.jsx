@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import "./RepairStatus.css";
 
 const RepairStatus = () => {
   const [driver, setDriver] = useState(null);
@@ -48,6 +50,7 @@ const RepairStatus = () => {
       setRepairs(carRepairs);
     } catch (error) {
       console.error("Repair status error:", error);
+      setRepairs([]);
     } finally {
       setLoading(false);
     }
@@ -63,6 +66,11 @@ const RepairStatus = () => {
     (item) => String(item.status).toLowerCase() === "completed"
   ).length;
 
+  const inProgressRepairs = repairs.filter((item) => {
+    const value = String(item.status || "").toLowerCase();
+    return value === "in_progress" || value === "in progress";
+  }).length;
+
   const totalEstimatedCost = repairs.reduce(
     (sum, item) => sum + Number(item.estimated_cost || 0),
     0
@@ -73,386 +81,275 @@ const RepairStatus = () => {
     0
   );
 
-  const getStatusStyle = (status) => {
+  const formatAmount = (value) => {
+    return `Rs. ${Number(value || 0).toLocaleString()}`;
+  };
+
+  const formatStatusText = (status) => {
+    return String(status || "unknown").replace("_", " ");
+  };
+
+  const getStatusMeta = (status) => {
     const value = String(status || "").toLowerCase();
 
     if (value === "completed") {
-      return { background: "#dcfce7", color: "#166534" };
+      return {
+        className: "repair-status-badge-completed",
+        icon: "mdi:check-decagram-outline",
+        label: "Completed",
+      };
     }
 
     if (value === "pending") {
-      return { background: "#fef3c7", color: "#92400e" };
+      return {
+        className: "repair-status-badge-pending",
+        icon: "mdi:clock-outline",
+        label: "Pending",
+      };
     }
 
     if (value === "in_progress" || value === "in progress") {
-      return { background: "#dbeafe", color: "#1d4ed8" };
+      return {
+        className: "repair-status-badge-progress",
+        icon: "mdi:progress-wrench",
+        label: "In Progress",
+      };
     }
 
-    return { background: "#e5e7eb", color: "#374151" };
+    return {
+      className: "repair-status-badge-muted",
+      icon: "mdi:information-outline",
+      label: formatStatusText(status),
+    };
   };
 
-  const getPriorityStyle = (priority) => {
+  const getPriorityMeta = (priority) => {
     const value = String(priority || "").toLowerCase();
 
     if (value === "high") {
-      return { background: "#fee2e2", color: "#991b1b" };
+      return {
+        className: "repair-status-priority-high",
+        icon: "mdi:alert-circle-outline",
+        label: "High Priority",
+      };
     }
 
     if (value === "medium") {
-      return { background: "#fef3c7", color: "#92400e" };
+      return {
+        className: "repair-status-priority-medium",
+        icon: "mdi:alert-outline",
+        label: "Medium Priority",
+      };
     }
 
-    return { background: "#dcfce7", color: "#166534" };
+    return {
+      className: "repair-status-priority-low",
+      icon: "mdi:arrow-down-circle-outline",
+      label: "Low Priority",
+    };
   };
 
-  const infoCardStyle = {
-    background: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    borderRadius: "14px",
-    padding: "16px",
-    minWidth: 0,
+  const InfoBox = ({ label, value, full = false, pre = false, children }) => {
+    return (
+      <div
+        className={`repair-status-info-box ${
+          full ? "repair-status-info-box-full" : ""
+        }`}
+      >
+        <p className="repair-status-label">{label}</p>
+
+        {children ? (
+          children
+        ) : (
+          <strong
+            className={`repair-status-value ${
+              pre ? "repair-status-value-pre" : ""
+            }`}
+          >
+            {value || "-"}
+          </strong>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
-    return <div>Loading repair status...</div>;
+    return (
+      <div className="repair-status-loading-card repair-status-reveal">
+        <h4>Loading repair status...</h4>
+        <p>Please wait while we fetch repair records for your assigned vehicle.</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div
-        style={{
-          background: "linear-gradient(135deg, #f5f3ff 0%, #f8fafc 100%)",
-          border: "1px solid #ddd6fe",
-          borderRadius: "18px",
-          padding: "24px",
-          marginBottom: "24px",
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.04)",
-        }}
-      >
-        <h2
-          style={{
-            margin: 0,
-            fontSize: "34px",
-            fontWeight: "700",
-            color: "#0f172a",
-          }}
-        >
-          Repair Status
-        </h2>
-
-        <p
-          style={{
-            margin: "10px 0 0 0",
-            color: "#475569",
-            fontSize: "15px",
-            lineHeight: "1.6",
-          }}
-        >
-          Track repair requests, maintenance issues, current progress, costs, and bills for your assigned vehicle.
-        </p>
-
-        {driver && (
-          <div
-            style={{
-              marginTop: "18px",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "#ffffff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontWeight: "600",
-              color: "#1e293b",
-              maxWidth: "100%",
-              flexWrap: "wrap",
-            }}
-          >
-            <span
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                background: "#8b5cf6",
-                display: "inline-block",
-              }}
-            />
-            Logged in as: {driver.user_name}
-          </div>
-        )}
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "20px",
-          marginBottom: "24px",
-        }}
-      >
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "22px",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-            minWidth: 0,
-          }}
-        >
-          <p style={{ margin: 0, color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
-            Total Repair Records
-          </p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#0f172a", fontSize: "26px" }}>
-            {totalRepairs}
-          </h3>
-        </div>
-
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "22px",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-            minWidth: 0,
-          }}
-        >
-          <p style={{ margin: 0, color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
-            High Priority
-          </p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#dc2626", fontSize: "26px" }}>
-            {highPriority}
-          </h3>
-        </div>
-
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "22px",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-            minWidth: 0,
-          }}
-        >
-          <p style={{ margin: 0, color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
-            Completed Repairs
-          </p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#16a34a", fontSize: "26px" }}>
-            {completedRepairs}
-          </h3>
-        </div>
-
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "22px",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-            minWidth: 0,
-          }}
-        >
-          <p style={{ margin: 0, color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
-            Total Actual Cost
-          </p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#0f172a", fontSize: "26px" }}>
-            Rs. {totalActualCost}
-          </h3>
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gap: "18px" }}>
-        {repairs.length > 0 ? (
-          repairs.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "18px",
-                padding: "22px",
-                boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-                minWidth: 0,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: "14px",
-                  flexWrap: "wrap",
-                  marginBottom: "18px",
-                }}
-              >
-                <div style={{ minWidth: 0 }}>
-                  <h4
-                    style={{
-                      margin: 0,
-                      fontSize: "22px",
-                      color: "#0f172a",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {item.issue}
-                  </h4>
-                  <p style={{ margin: "6px 0 0 0", color: "#64748b", fontSize: "14px" }}>
-                    Repair request for assigned vehicle
-                  </p>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  <span
-                    style={{
-                      ...getPriorityStyle(item.priority),
-                      padding: "7px 12px",
-                      borderRadius: "999px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      textTransform: "capitalize",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {item.priority} Priority
-                  </span>
-
-                  <span
-                    style={{
-                      ...getStatusStyle(item.status),
-                      padding: "7px 12px",
-                      borderRadius: "999px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      textTransform: "capitalize",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {String(item.status || "").replace("_", " ")}
-                  </span>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: "14px",
-                }}
-              >
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>
-                    Reported Date
-                  </p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    {item.reported_date || "-"}
-                  </strong>
-                </div>
-
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>
-                    Estimated Cost
-                  </p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    Rs. {item.estimated_cost || 0}
-                  </strong>
-                </div>
-
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>
-                    Actual Cost
-                  </p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a", wordBreak: "break-word" }}>
-                    Rs. {item.actual_cost || 0}
-                  </strong>
-                </div>
-
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>
-                    Repair ID
-                  </p>
-                  <strong style={{ display: "block", marginTop: "6px", color: "#0f172a" }}>
-                    #{item.id}
-                  </strong>
-                </div>
-
-                <div style={infoCardStyle}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>
-                    Bill / Receipt
-                  </p>
-
-                  {item.bill_receipt_url ? (
-                    <a
-                      href={item.bill_receipt_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        display: "inline-block",
-                        marginTop: "8px",
-                        padding: "9px 14px",
-                        borderRadius: "10px",
-                        background: "#2563eb",
-                        color: "#ffffff",
-                        textDecoration: "none",
-                        fontSize: "13px",
-                        fontWeight: "700",
-                      }}
-                    >
-                      View Bill / Receipt
-                    </a>
-                  ) : (
-                    <strong
-                      style={{
-                        display: "block",
-                        marginTop: "6px",
-                        color: "#92400e",
-                        fontSize: "15px",
-                      }}
-                    >
-                      Not uploaded
-                    </strong>
-                  )}
-                </div>
-
-                <div
-                  style={{
-                    ...infoCardStyle,
-                    gridColumn: "1 / -1",
-                  }}
-                >
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>
-                    Notes
-                  </p>
-                  <strong
-                    style={{
-                      display: "block",
-                      marginTop: "6px",
-                      color: "#0f172a",
-                      fontWeight: "600",
-                      wordBreak: "break-word",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {item.notes || "-"}
-                  </strong>
-                </div>
-              </div>
+    <div className="repair-status-page">
+      <div className="repair-status-hero repair-status-reveal">
+        <div className="repair-status-hero-inner">
+          <div>
+            <div className="repair-status-kicker">
+              <span className="repair-status-dot" />
+              Driver Panel Overview
             </div>
-          ))
+
+            <h2 className="repair-status-hero-title">Repair Status</h2>
+
+            <p className="repair-status-hero-subtitle">
+              Track repair requests, maintenance issues, current progress, costs,
+              bills, and priority status for your assigned vehicle.
+            </p>
+          </div>
+
+          <div className="repair-status-hero-glass">
+            <span>Logged in as</span>
+            <strong>{driver?.user_name || "Driver"}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="repair-status-stats-grid repair-status-reveal repair-status-delay-1">
+        <div className="repair-status-stat-card repair-status-stat-blue">
+          <div className="repair-status-stat-icon-bg" />
+          <div className="repair-status-stat-icon">
+            <IconifyIcon icon="mdi:car-wrench" />
+          </div>
+
+          <p className="repair-status-stat-label">Total Repair Records</p>
+          <strong className="repair-status-stat-value">{totalRepairs}</strong>
+          <span className="repair-status-stat-note">All repair requests</span>
+        </div>
+
+        <div className="repair-status-stat-card repair-status-stat-red">
+          <div className="repair-status-stat-icon-bg" />
+          <div className="repair-status-stat-icon">
+            <IconifyIcon icon="mdi:alert-circle-outline" />
+          </div>
+
+          <p className="repair-status-stat-label">High Priority</p>
+          <strong className="repair-status-stat-value">{highPriority}</strong>
+          <span className="repair-status-stat-note">Urgent repair issues</span>
+        </div>
+
+        <div className="repair-status-stat-card repair-status-stat-purple">
+          <div className="repair-status-stat-icon-bg" />
+          <div className="repair-status-stat-icon">
+            <IconifyIcon icon="mdi:check-decagram-outline" />
+          </div>
+
+          <p className="repair-status-stat-label">Completed Repairs</p>
+          <strong className="repair-status-stat-value">{completedRepairs}</strong>
+          <span className="repair-status-stat-note">
+            {inProgressRepairs} in progress
+          </span>
+        </div>
+
+        <div className="repair-status-stat-card repair-status-stat-orange">
+          <div className="repair-status-stat-icon-bg" />
+          <div className="repair-status-stat-icon">
+            <IconifyIcon icon="mdi:cash-multiple" />
+          </div>
+
+          <p className="repair-status-stat-label">Total Actual Cost</p>
+          <strong className="repair-status-stat-value">
+            {formatAmount(totalActualCost)}
+          </strong>
+          <span className="repair-status-stat-note">
+            Estimated: {formatAmount(totalEstimatedCost)}
+          </span>
+        </div>
+      </div>
+
+      <div className="repair-status-list repair-status-reveal repair-status-delay-2">
+        {repairs.length > 0 ? (
+          repairs.map((item) => {
+            const statusMeta = getStatusMeta(item.status);
+            const priorityMeta = getPriorityMeta(item.priority);
+
+            return (
+              <div className="repair-status-card" key={item.id}>
+                <div className="repair-status-card-head">
+                  <div className="repair-status-title-wrap">
+                    <div className="repair-status-card-icon">
+                      <IconifyIcon icon="mdi:tools" />
+                    </div>
+
+                    <div>
+                      <h4 className="repair-status-card-title">
+                        {item.issue || "Repair Request"}
+                      </h4>
+
+                      <p className="repair-status-card-subtitle">
+                        Repair request for assigned vehicle
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="repair-status-badge-wrap">
+                    <span
+                      className={`repair-status-badge ${priorityMeta.className}`}
+                    >
+                      <IconifyIcon icon={priorityMeta.icon} />
+                      {priorityMeta.label}
+                    </span>
+
+                    <span className={`repair-status-badge ${statusMeta.className}`}>
+                      <IconifyIcon icon={statusMeta.icon} />
+                      {statusMeta.label}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="repair-status-info-grid">
+                  <InfoBox label="Reported Date" value={item.reported_date} />
+
+                  <InfoBox label="Estimated Cost">
+                    <strong className="repair-status-value repair-status-cost">
+                      {formatAmount(item.estimated_cost)}
+                    </strong>
+                  </InfoBox>
+
+                  <InfoBox label="Actual Cost">
+                    <strong className="repair-status-value repair-status-cost">
+                      {formatAmount(item.actual_cost)}
+                    </strong>
+                  </InfoBox>
+
+                  <InfoBox label="Repair ID" value={`#${item.id}`} />
+
+                  <InfoBox label="Bill / Receipt">
+                    {item.bill_receipt_url ? (
+                      <a
+                        href={item.bill_receipt_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="repair-status-attachment-btn"
+                      >
+                        <IconifyIcon icon="mdi:file-eye-outline" />
+                        View Bill / Receipt
+                      </a>
+                    ) : (
+                      <strong className="repair-status-value">
+                        Not uploaded
+                      </strong>
+                    )}
+                  </InfoBox>
+
+                  <InfoBox label="Notes" value={item.notes || "-"} full pre />
+                </div>
+              </div>
+            );
+          })
         ) : (
-          <div
-            style={{
-              background: "#ffffff",
-              border: "1px dashed #cbd5e1",
-              borderRadius: "18px",
-              padding: "28px",
-              textAlign: "center",
-              color: "#64748b",
-              boxShadow: "0 10px 24px rgba(15, 23, 42, 0.03)",
-            }}
-          >
-            No repair records found for your assigned car.
+          <div className="repair-status-empty-card">
+            <div className="repair-status-empty-icon">
+              <IconifyIcon icon="mdi:car-wrench" />
+            </div>
+
+            <h4>No repair records found</h4>
+
+            <p>
+              No repair records are currently linked to your assigned vehicle.
+            </p>
           </div>
         )}
       </div>

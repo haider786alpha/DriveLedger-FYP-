@@ -1,20 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
-import {
-  pageHeroStyle,
-  pageTitleStyle,
-  pageSubtitleStyle,
-  loggedInPillStyle,
-  statCardStyle,
-  contentCardStyle,
-  emptyStateStyle,
-  sectionTitleStyle,
-  sectionSubtitleStyle,
-  statLabelStyle,
-  infoLabelStyle,
-  primaryButtonStyle,
-} from "@/helpers/panelStyles";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import DriverToast from "@/components/DriverToast";
+import "./Support.css";
 
 const Support = () => {
   const [driver, setDriver] = useState(null);
@@ -24,6 +13,19 @@ const Support = () => {
   const [issueAttachment, setIssueAttachment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+
+  const [toast, setToast] = useState({
+    message: "",
+    type: "success",
+  });
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+
+    setTimeout(() => {
+      setToast({ message: "", type: "success" });
+    }, 3500);
+  };
 
   useEffect(() => {
     fetchSupportMessages();
@@ -53,6 +55,7 @@ const Support = () => {
     } catch (error) {
       console.error("Support fetch error:", error);
       setMessages([]);
+      showToast("Failed to load support messages.", "error");
     } finally {
       setLoading(false);
     }
@@ -60,12 +63,12 @@ const Support = () => {
 
   const handleSendMessage = async () => {
     if (!driver) {
-      alert("Driver not found.");
+      showToast("Driver profile not found.", "error");
       return;
     }
 
     if (!subject.trim() || !messageText.trim()) {
-      alert("Please enter subject and message.");
+      showToast("Please enter both subject and message.", "warning");
       return;
     }
 
@@ -100,30 +103,29 @@ const Support = () => {
         fileInput.value = "";
       }
 
-      alert("Support message sent successfully.");
-      fetchSupportMessages();
+      showToast("Support message sent successfully.", "success");
+      await fetchSupportMessages();
     } catch (error) {
       console.error("Support send error:", error);
-      alert("Failed to send support message.");
+      showToast("Failed to send support message.", "error");
     } finally {
       setSending(false);
     }
   };
 
-  const statusStyle = (status) => {
+  const getStatusClass = (status) => {
     const value = String(status || "").toLowerCase();
 
     if (value === "resolved") {
-      return {
-        background: "#dcfce7",
-        color: "#166534",
-      };
+      return "support-badge-resolved";
     }
 
-    return {
-      background: "#fef3c7",
-      color: "#92400e",
-    };
+    return "support-badge-open";
+  };
+
+  const formatDateTime = (dateValue) => {
+    if (!dateValue) return "-";
+    return new Date(dateValue).toLocaleString();
   };
 
   const openCount = messages.filter(
@@ -138,183 +140,152 @@ const Support = () => {
     (item) => String(item.admin_reply || "").trim() !== ""
   ).length;
 
+  if (loading) {
+    return (
+      <div className="support-loading-card support-reveal">
+        <DriverToast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "success" })}
+        />
+        <h4>Loading support...</h4>
+        <p>Please wait while we fetch your support requests.</p>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <div style={pageHeroStyle}>
-        <h2 style={pageTitleStyle}>Support</h2>
-        <p style={pageSubtitleStyle}>
-          Contact admin for help, report issues, or ask questions related to your
-          account and assigned car.
-        </p>
+    <div className="support-page">
+      <DriverToast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "success" })}
+      />
 
-        {driver && (
-          <div style={loggedInPillStyle}>
-            <span
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                background: "#3b82f6",
-                display: "inline-block",
-              }}
-            />
-            Logged in as: {driver.user_name}
+      <div className="support-hero support-reveal">
+        <div className="support-hero-inner">
+          <div>
+            <div className="support-kicker">
+              <span className="support-status-dot" />
+              Driver Panel Overview
+            </div>
+
+            <h2 className="support-hero-title">Support</h2>
+
+            <p className="support-hero-subtitle">
+              Contact admin for help, report issues, upload attachments, and
+              track replies related to your account or assigned car.
+            </p>
           </div>
-        )}
-      </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "20px",
-          marginBottom: "24px",
-        }}
-      >
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Total Messages</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#0f172a", fontSize: "26px" }}>
-            {messages.length}
-          </h3>
-        </div>
-
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Open Requests</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#d97706", fontSize: "26px" }}>
-            {openCount}
-          </h3>
-        </div>
-
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Resolved</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#16a34a", fontSize: "26px" }}>
-            {resolvedCount}
-          </h3>
-        </div>
-
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Replies Received</p>
-          <h3 style={{ margin: "10px 0 0 0", color: "#2563eb", fontSize: "26px" }}>
-            {repliedCount}
-          </h3>
+          <div className="support-hero-glass">
+            <span>Logged in as</span>
+            <strong>{driver?.user_name || "Driver"}</strong>
+          </div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "20px",
-        }}
-      >
-        <div style={contentCardStyle}>
-          <h4 style={sectionTitleStyle}>Send Support / Report Issue</h4>
-          <p style={sectionSubtitleStyle}>
-            Describe your issue, repair concern, or question clearly so admin can help you faster.
-          </p>
+      <div className="support-stats-grid support-reveal support-delay-1">
+        <div className="support-stat-card support-stat-blue">
+          <div className="support-stat-icon-bg" />
+          <div className="support-stat-icon">
+            <IconifyIcon icon="mdi:message-text-outline" />
+          </div>
 
-          <div style={{ display: "grid", gap: "16px" }}>
+          <p className="support-stat-label">Total Messages</p>
+          <strong className="support-stat-value">{messages.length}</strong>
+          <span className="support-stat-note">All support requests</span>
+        </div>
+
+        <div className="support-stat-card support-stat-orange">
+          <div className="support-stat-icon-bg" />
+          <div className="support-stat-icon">
+            <IconifyIcon icon="mdi:message-alert-outline" />
+          </div>
+
+          <p className="support-stat-label">Open Requests</p>
+          <strong className="support-stat-value">{openCount}</strong>
+          <span className="support-stat-note">Waiting for resolution</span>
+        </div>
+
+        <div className="support-stat-card support-stat-purple">
+          <div className="support-stat-icon-bg" />
+          <div className="support-stat-icon">
+            <IconifyIcon icon="mdi:check-decagram-outline" />
+          </div>
+
+          <p className="support-stat-label">Resolved</p>
+          <strong className="support-stat-value">{resolvedCount}</strong>
+          <span className="support-stat-note">Completed requests</span>
+        </div>
+
+        <div className="support-stat-card support-stat-indigo">
+          <div className="support-stat-icon-bg" />
+          <div className="support-stat-icon">
+            <IconifyIcon icon="mdi:reply-outline" />
+          </div>
+
+          <p className="support-stat-label">Replies Received</p>
+          <strong className="support-stat-value">{repliedCount}</strong>
+          <span className="support-stat-note">Admin responses</span>
+        </div>
+      </div>
+
+      <div className="support-shell support-reveal support-delay-2">
+        <div className="support-card support-form-card">
+          <div className="support-card-head">
             <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#334155",
-                }}
-              >
-                Subject
-              </label>
+              <h4 className="support-section-title">Send Support Request</h4>
+              <p className="support-section-subtitle">
+                Describe your issue clearly so admin can help you faster.
+              </p>
+            </div>
+
+            <div className="support-header-icon">
+              <IconifyIcon icon="mdi:message-question-outline" />
+            </div>
+          </div>
+
+          <div className="support-form-grid">
+            <div className="support-field">
+              <label>Subject</label>
               <input
                 type="text"
                 placeholder="Enter subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 14px",
-                  borderRadius: "12px",
-                  border: "1px solid #cbd5e1",
-                  outline: "none",
-                  fontSize: "14px",
-                }}
+                className="support-input"
               />
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#334155",
-                }}
-              >
-                Message
-              </label>
+            <div className="support-field">
+              <label>Message</label>
               <textarea
                 rows="7"
                 placeholder="Write your issue, repair concern, or question here"
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 14px",
-                  borderRadius: "12px",
-                  border: "1px solid #cbd5e1",
-                  outline: "none",
-                  fontSize: "14px",
-                  resize: "none",
-                }}
+                className="support-textarea"
               />
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#334155",
-                }}
-              >
-                Issue Attachment Optional
-              </label>
+            <div className="support-field">
+              <label>Issue Attachment Optional</label>
               <input
                 id="issue-attachment-input"
                 type="file"
                 accept="image/*,.pdf"
                 onChange={(e) => setIssueAttachment(e.target.files?.[0] || null)}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "12px",
-                  border: "1px solid #cbd5e1",
-                  outline: "none",
-                  fontSize: "14px",
-                  background: "#ffffff",
-                }}
+                className="support-file-input"
               />
-              <small style={{ display: "block", marginTop: "6px", color: "#64748b" }}>
+
+              <small className="support-help-text">
                 Upload an issue photo, repair image, or PDF if available.
               </small>
 
               {issueAttachment && (
-                <div
-                  style={{
-                    marginTop: "10px",
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    background: "#eff6ff",
-                    color: "#1d4ed8",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    wordBreak: "break-word",
-                  }}
-                >
+                <div className="support-selected-file">
+                  <IconifyIcon icon="mdi:paperclip" />
                   Selected: {issueAttachment.name}
                 </div>
               )}
@@ -323,205 +294,111 @@ const Support = () => {
             <button
               onClick={handleSendMessage}
               disabled={sending}
-              style={{
-                ...primaryButtonStyle,
-                width: "100%",
-                opacity: sending ? 0.7 : 1,
-              }}
+              className="support-submit-btn"
             >
               {sending ? "Sending..." : "Send Message"}
             </button>
           </div>
         </div>
 
-        <div style={contentCardStyle}>
-          <h4 style={sectionTitleStyle}>Previous Messages</h4>
-          <p style={sectionSubtitleStyle}>
-            Track your support requests and view admin replies.
-          </p>
+        <div className="support-card">
+          <div className="support-card-head">
+            <div>
+              <h4 className="support-section-title">Previous Messages</h4>
+              <p className="support-section-subtitle">
+                Track your support requests and view admin replies.
+              </p>
+            </div>
 
-          <div style={{ display: "grid", gap: "14px", maxHeight: "600px", overflowY: "auto" }}>
-            {loading ? (
-              <div style={emptyStateStyle}>Loading support messages...</div>
-            ) : messages.length > 0 ? (
-              messages.map((item) => {
-                const badge = statusStyle(item.status);
+            <div className="support-header-icon">
+              <IconifyIcon icon="mdi:history" />
+            </div>
+          </div>
 
-                return (
-                  <div
-                    key={item.id}
-                    style={{
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "16px",
-                      padding: "16px",
-                      background: "#f8fafc",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        gap: "10px",
-                        marginBottom: "8px",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <p
-                        style={{
-                          margin: 0,
-                          fontWeight: "700",
-                          color: "#0f172a",
-                          fontSize: "16px",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {item.subject}
-                      </p>
+          <div className="support-message-list">
+            {messages.length > 0 ? (
+              messages.map((item) => (
+                <div className="support-message-card" key={item.id}>
+                  <div className="support-message-top">
+                    <div className="support-message-title-wrap">
+                      <div className="support-message-icon">
+                        <IconifyIcon icon="mdi:message-text-outline" />
+                      </div>
 
-                      <span
-                        style={{
-                          ...badge,
-                          padding: "6px 12px",
-                          borderRadius: "999px",
-                          fontSize: "12px",
-                          fontWeight: "700",
-                          textTransform: "capitalize",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {item.status}
-                      </span>
-                    </div>
-
-                    <div style={{ marginBottom: "10px" }}>
-                      <p style={{ ...infoLabelStyle, marginBottom: "6px" }}>Your Message</p>
-                      <div
-                        style={{
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "12px",
-                          padding: "12px",
-                          background: "#ffffff",
-                          color: "#475569",
-                          fontSize: "14px",
-                          lineHeight: "1.6",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {item.message}
+                      <div>
+                        <h4 className="support-message-title">{item.subject}</h4>
+                        <p className="support-message-meta">
+                          Sent: {formatDateTime(item.created_at)}
+                        </p>
                       </div>
                     </div>
 
-                    <div style={{ marginBottom: "10px" }}>
-                      <p style={{ ...infoLabelStyle, marginBottom: "6px" }}>
-                        Attachment
-                      </p>
-
-                      {item.issue_attachment_url ? (
-                        <a
-                          href={item.issue_attachment_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            display: "inline-block",
-                            padding: "9px 14px",
-                            borderRadius: "10px",
-                            background: "#2563eb",
-                            color: "#ffffff",
-                            textDecoration: "none",
-                            fontSize: "13px",
-                            fontWeight: "700",
-                          }}
-                        >
-                          View Attachment
-                        </a>
-                      ) : (
-                        <div
-                          style={{
-                            border: "1px dashed #cbd5e1",
-                            borderRadius: "12px",
-                            padding: "12px",
-                            background: "#ffffff",
-                            color: "#64748b",
-                            fontSize: "14px",
-                          }}
-                        >
-                          No attachment uploaded.
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ marginBottom: "10px" }}>
-                      <p style={{ ...infoLabelStyle, marginBottom: "6px" }}>Admin Reply</p>
-                      {item.admin_reply ? (
-                        <div
-                          style={{
-                            border: "1px solid #d1fae5",
-                            borderRadius: "12px",
-                            padding: "12px",
-                            background: "#ecfdf5",
-                            color: "#166534",
-                            fontSize: "14px",
-                            lineHeight: "1.6",
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                          }}
-                        >
-                          {item.admin_reply}
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            border: "1px dashed #cbd5e1",
-                            borderRadius: "12px",
-                            padding: "12px",
-                            background: "#ffffff",
-                            color: "#64748b",
-                            fontSize: "14px",
-                          }}
-                        >
-                          No reply yet.
-                        </div>
-                      )}
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "12px",
-                        flexWrap: "wrap",
-                        marginTop: "8px",
-                      }}
-                    >
-                      <small
-                        style={{
-                          color: "#64748b",
-                          fontSize: "13px",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        Sent: {new Date(item.created_at).toLocaleString()}
-                      </small>
-
-                      {item.replied_at && (
-                        <small
-                          style={{
-                            color: "#2563eb",
-                            fontSize: "13px",
-                            wordBreak: "break-word",
-                          }}
-                        >
-                          Replied: {new Date(item.replied_at).toLocaleString()}
-                        </small>
-                      )}
-                    </div>
+                    <span className={`support-badge ${getStatusClass(item.status)}`}>
+                      {item.status || "open"}
+                    </span>
                   </div>
-                );
-              })
+
+                  <div className="support-message-section">
+                    <p className="support-message-label">Your Message</p>
+                    <div className="support-message-box">{item.message}</div>
+                  </div>
+
+                  <div className="support-message-section">
+                    <p className="support-message-label">Attachment</p>
+
+                    {item.issue_attachment_url ? (
+                      <a
+                        href={item.issue_attachment_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="support-attachment-btn"
+                      >
+                        <IconifyIcon icon="mdi:file-eye-outline" />
+                        View Attachment
+                      </a>
+                    ) : (
+                      <div className="support-message-box support-message-box-empty">
+                        No attachment uploaded.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="support-message-section">
+                    <p className="support-message-label">Admin Reply</p>
+
+                    {item.admin_reply ? (
+                      <div className="support-message-box support-message-box-admin">
+                        {item.admin_reply}
+                      </div>
+                    ) : (
+                      <div className="support-message-box support-message-box-empty">
+                        No reply yet.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="support-message-footer">
+                    <small>Sent: {formatDateTime(item.created_at)}</small>
+
+                    {item.replied_at && (
+                      <small className="support-replied-time">
+                        Replied: {formatDateTime(item.replied_at)}
+                      </small>
+                    )}
+                  </div>
+                </div>
+              ))
             ) : (
-              <div style={emptyStateStyle}>No support messages found.</div>
+              <div className="support-empty-card">
+                <div className="support-empty-icon">
+                  <IconifyIcon icon="mdi:message-off-outline" />
+                </div>
+                <h4>No support messages found</h4>
+                <p>
+                  Once you send a support request, your conversation history will
+                  appear here.
+                </p>
+              </div>
             )}
           </div>
         </div>

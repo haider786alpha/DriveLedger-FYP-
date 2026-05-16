@@ -1,0 +1,567 @@
+.pending-dues-page,
+.pending-dues-page * {
+  box-sizing: border-box;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+.pending-dues-page {
+  width: 100%;
+}
+
+/* =========================
+   REVEAL ANIMATION
+========================= */
+
+.pending-dues-reveal {
+  opacity: 0;
+  transform: translateY(34px);
+  animation: pendingDuesReveal 0.7s ease forwards;
+}
+
+.pending-dues-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.pending-dues-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.pending-dues-delay-3 {
+  animation-delay: 0.24s;
+}
+
+@keyframes pendingDuesReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   HERO
+========================= */
+
+.pending-dues-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+  padding: 32px;
+  margin-bottom: 20px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(96, 165, 250, 0.36), transparent 28%),
+    radial-gradient(circle at 8% 92%, rgba(59, 130, 246, 0.22), transparent 35%),
+    linear-gradient(135deg, #020617 0%, #172554 48%, #2563eb 100%);
+  box-shadow: 0 26px 60px rgba(15, 23, 42, 0.24);
+}
+
+.pending-dues-hero::before {
+  content: "";
+  position: absolute;
+  right: -86px;
+  top: -86px;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pending-dues-hero::after {
+  content: "";
+  position: absolute;
+  left: -78px;
+  bottom: -98px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.pending-dues-hero-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.pending-dues-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #dbeafe;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pending-dues-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.2);
+  flex-shrink: 0;
+}
+
+.pending-dues-hero-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 34px;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.pending-dues-hero-subtitle {
+  margin: 10px 0 0 0;
+  max-width: 850px;
+  color: #dbeafe;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.pending-dues-hero-glass {
+  min-width: 250px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.pending-dues-hero-glass span {
+  display: block;
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pending-dues-hero-glass strong {
+  display: block;
+  margin-top: 6px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 950;
+  word-break: break-word;
+}
+
+/* =========================
+   KPI CARDS
+========================= */
+
+.pending-dues-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.pending-dues-stat-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 126px;
+  border-radius: 24px;
+  padding: 19px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.065);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.pending-dues-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 42px rgba(15, 23, 42, 0.09);
+}
+
+.pending-dues-stat-blue {
+  color: #2563eb;
+}
+
+.pending-dues-stat-red {
+  color: #dc2626;
+}
+
+.pending-dues-stat-orange {
+  color: #ea580c;
+}
+
+.pending-dues-stat-purple {
+  color: #6d28d9;
+}
+
+.pending-dues-stat-icon-bg {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  background: currentColor;
+  opacity: 0.12;
+  z-index: 1;
+}
+
+.pending-dues-stat-icon {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.pending-dues-stat-label {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding-right: 66px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.pending-dues-stat-value {
+  position: relative;
+  z-index: 2;
+  display: block;
+  margin-top: 10px;
+  padding-right: 66px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.pending-dues-stat-danger {
+  color: #dc2626;
+}
+
+.pending-dues-stat-note {
+  position: relative;
+  z-index: 2;
+  display: block;
+  margin-top: 9px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================
+   CARD / TABLE
+========================= */
+
+.pending-dues-card {
+  min-width: 0;
+  border-radius: 26px;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+}
+
+.pending-dues-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.pending-dues-section-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.pending-dues-section-subtitle {
+  margin: 6px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.pending-dues-total-chip {
+  padding: 12px 15px;
+  border-radius: 16px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.pending-dues-total-chip span {
+  display: block;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pending-dues-total-chip strong {
+  display: block;
+  margin-top: 4px;
+  color: #9a3412;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.pending-dues-table-wrap {
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+}
+
+.pending-dues-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.pending-dues-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pending-dues-table td {
+  padding: 14px;
+  color: #475569;
+  border-top: 1px solid #eef2f7;
+  vertical-align: middle;
+}
+
+.pending-dues-table td strong {
+  color: #0f172a;
+}
+
+.pending-dues-amount {
+  color: #dc2626 !important;
+  font-weight: 950;
+}
+
+.pending-dues-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: capitalize;
+}
+
+.pending-dues-badge-clear {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+/* =========================
+   MOBILE CARDS
+========================= */
+
+.pending-dues-mobile-list {
+  display: none;
+}
+
+.pending-dues-mobile-card {
+  display: grid;
+  gap: 10px;
+  padding: 15px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.pending-dues-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.pending-dues-mobile-row span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pending-dues-mobile-row strong {
+  color: #0f172a;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 900;
+  word-break: break-word;
+}
+
+/* =========================
+   EMPTY / LOADING
+========================= */
+
+.pending-dues-loading-card,
+.pending-dues-empty-card {
+  padding: 34px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+}
+
+.pending-dues-empty-card {
+  text-align: center;
+}
+
+.pending-dues-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.pending-dues-empty-card h4,
+.pending-dues-loading-card h4 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.pending-dues-empty-card p,
+.pending-dues-loading-card p {
+  margin: 8px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1200px) {
+  .pending-dues-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .pending-dues-hero {
+    border-radius: 24px;
+    padding: 24px;
+  }
+
+  .pending-dues-hero-title {
+    font-size: 29px;
+  }
+
+  .pending-dues-hero-inner {
+    align-items: flex-start;
+  }
+
+  .pending-dues-hero-glass {
+    width: 100%;
+  }
+
+  .pending-dues-card {
+    border-radius: 22px;
+    padding: 18px;
+  }
+
+  .pending-dues-table-wrap {
+    display: none;
+  }
+
+  .pending-dues-mobile-list {
+    display: grid;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .pending-dues-hero {
+    padding: 20px;
+    border-radius: 22px;
+  }
+
+  .pending-dues-hero-title {
+    font-size: 25px;
+  }
+
+  .pending-dues-hero-subtitle {
+    font-size: 13px;
+  }
+
+  .pending-dues-stats-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pending-dues-stats-grid::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .pending-dues-stats-grid::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .pending-dues-stats-grid::-webkit-scrollbar-thumb {
+    background: rgba(37, 99, 235, 0.35);
+    border-radius: 999px;
+  }
+
+  .pending-dues-stat-card {
+    min-width: 82%;
+    scroll-snap-align: start;
+  }
+
+  .pending-dues-stat-icon-bg,
+  .pending-dues-stat-icon {
+    top: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+  }
+
+  .pending-dues-stat-icon {
+    font-size: 20px;
+  }
+
+  .pending-dues-card-head {
+    display: grid;
+  }
+
+  .pending-dues-total-chip {
+    width: 100%;
+  }
+
+  .pending-dues-mobile-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .pending-dues-mobile-row strong {
+    text-align: left;
+  }
+}
