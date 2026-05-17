@@ -150,6 +150,7 @@
 
 .driveease-hero-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 30px;
@@ -161,9 +162,11 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
+  min-height: 52px;
   padding: 15px 20px;
   border-radius: 17px;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .driveease-primary-btn {
@@ -187,6 +190,8 @@
 
 .driveease-secondary-btn:hover {
   color: #1d4ed8 !important;
+  background: #eff6ff;
+  border-color: #bfdbfe;
   transform: translateY(-1px);
 }
 
@@ -454,6 +459,12 @@
   }
 }
 
+@media (max-width: 1200px) {
+  .driveease-hero-actions {
+    max-width: 640px;
+  }
+}
+
 @media (max-width: 1024px) {
   .driveease-hero-grid {
     grid-template-columns: 1fr;
@@ -485,6 +496,13 @@
 
   .driveease-hero-content p {
     font-size: 15px;
+  }
+
+  .driveease-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 100%;
   }
 
   .driveease-primary-btn,

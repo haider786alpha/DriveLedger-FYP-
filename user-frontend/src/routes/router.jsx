@@ -4,6 +4,7 @@ import { useAuthContext } from "@/context/useAuthContext";
 import { appRoutes, authRoutes } from "@/routes/index";
 import AdminLayout from "@/layouts/AdminLayout";
 import HomePage from "@/app/home/page";
+import BookingPage from "@/app/booking/page";
 
 const AppRouter = (props) => {
   const { isAuthenticated } = useAuthContext();
@@ -11,6 +12,7 @@ const AppRouter = (props) => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/booking" element={<BookingPage />} />
 
       {(authRoutes || []).map((route, idx) => (
         <Route
