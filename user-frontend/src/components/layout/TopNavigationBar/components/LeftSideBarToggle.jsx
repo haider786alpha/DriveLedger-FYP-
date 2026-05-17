@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { useLayoutContext } from '@/context/useLayoutContext';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useRef } from "react";
+import { useLayoutContext } from "@/context/useLayoutContext";
+import { useLocation } from "react-router-dom";
 
 const LeftSideBarToggle = () => {
   const {
@@ -21,15 +21,15 @@ const LeftSideBarToggle = () => {
       return;
     }
 
-    if (size === 'hidden') {
+    if (size === "hidden") {
       toggleBackdrop();
       return;
     }
 
-    if (size === 'condensed') {
-      changeMenuSize('default');
+    if (size === "condensed") {
+      changeMenuSize("default");
     } else {
-      changeMenuSize('condensed');
+      changeMenuSize("condensed");
     }
   };
 
@@ -45,7 +45,7 @@ const LeftSideBarToggle = () => {
   }, [pathname, closeBackdrop]);
 
   return (
-    <div className="topbar-item">
+    <div className="topbar-item driver-toggle-item">
       <button
         onClick={handleMenuSize}
         type="button"
@@ -53,9 +53,9 @@ const LeftSideBarToggle = () => {
         aria-label="Toggle sidebar"
       >
         <span className="driver-hamburger-icon" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
+          <span />
+          <span />
+          <span />
         </span>
       </button>
     </div>

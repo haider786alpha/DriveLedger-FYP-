@@ -396,3 +396,92 @@ html[data-menu-size="sm-hover-active"] .driver-custom-brand-mark {
 .driver-sidebar .sub-nav-link.active {
   transform: translateX(2px);
 }
+/* =========================
+   PREMIUM TOPBAR TOGGLE
+========================= */
+
+.driver-toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.driver-mobile-toggle {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 15px !important;
+  border: 1px solid #dbeafe !important;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9), transparent 32%),
+    linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%) !important;
+  color: #1d4ed8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-shadow:
+    0 10px 24px rgba(37, 99, 235, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  transition: all 0.18s ease !important;
+}
+
+.driver-mobile-toggle:hover {
+  transform: translateY(-1px);
+  border-color: #bfdbfe !important;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.95), transparent 32%),
+    linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%) !important;
+  box-shadow:
+    0 14px 28px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.driver-mobile-toggle:active {
+  transform: scale(0.97);
+}
+
+.driver-hamburger-icon {
+  width: 19px;
+  height: 15px;
+  display: grid;
+  gap: 4px;
+}
+
+.driver-hamburger-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2);
+}
+
+.driver-hamburger-icon span:nth-child(2) {
+  width: 72%;
+}
+
+.driver-hamburger-icon span:nth-child(3) {
+  width: 88%;
+}
+
+@media (max-width: 768px) {
+  .driver-mobile-toggle {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 14px !important;
+  }
+
+  .driver-hamburger-icon {
+    width: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .driver-mobile-toggle {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+  }
+}
