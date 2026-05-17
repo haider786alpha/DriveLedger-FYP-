@@ -15,16 +15,16 @@ const getMenuLinkStyle = (active, isChild = false) => ({
   width: "100%",
   padding: isChild ? "10px 13px" : "12px 14px",
   borderRadius: isChild ? "14px" : "16px",
-  marginBottom: isChild ? "6px" : "9px",
+  marginBottom: isChild ? "5px" : "7px",
   background: active
-    ? "radial-gradient(circle at 96% 12%, rgba(37, 99, 235, 0.1), transparent 28%), linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%)"
-    : "rgba(255, 255, 255, 0.64)",
+  ? "radial-gradient(circle at 96% 12%, rgba(37, 99, 235, 0.1), transparent 28%), linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%)"
+  : "transparent",
   border: active ? "1px solid #bfdbfe" : "1px solid transparent",
   boxShadow: active ? "0 14px 30px rgba(37, 99, 235, 0.14)" : "none",
   color: active ? "#1d4ed8" : "#475569",
   textDecoration: "none",
   transition: "all 0.22s ease",
-  minHeight: isChild ? "43px" : "50px",
+  minHeight: isChild ? "42px" : "48px",
   position: "relative",
   overflow: "hidden",
 });
