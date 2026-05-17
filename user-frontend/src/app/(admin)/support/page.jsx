@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
@@ -13,56 +13,105 @@ const Support = () => {
   const [issueAttachment, setIssueAttachment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [pageError, setPageError] = useState("");
+
+  const toastTimerRef = useRef(null);
 
   const [toast, setToast] = useState({
     message: "",
     type: "success",
   });
 
-  const showToast = (message, type = "success") => {
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
+
+  const fetchJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
 
-    setTimeout(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    toastTimerRef.current = setTimeout(() => {
       setToast({ message: "", type: "success" });
     }, 3500);
-  };
-
-  useEffect(() => {
-    fetchSupportMessages();
   }, []);
 
-  const fetchSupportMessages = async () => {
-    try {
-      setLoading(true);
+  const fetchSupportMessages = useCallback(
+    async (signal) => {
+      try {
+        setLoading(true);
+        setPageError("");
 
-      const loggedInDriver = await getLoggedInDriver();
-      setDriver(loggedInDriver);
+        const loggedInDriver = await getLoggedInDriver();
 
-      if (!loggedInDriver) {
+        if (signal?.aborted) return;
+
+        setDriver(loggedInDriver);
+
+        if (!loggedInDriver?.id) {
+          setMessages([]);
+          return;
+        }
+
+        const data = await fetchJson(API_URL("/api/support-messages/"), signal);
+
+        if (signal?.aborted) return;
+
+        const supportMessages = safeArray(data);
+
+        const driverMessages = supportMessages.filter(
+          (item) => Number(item.driver) === Number(loggedInDriver.id)
+        );
+
+        setMessages(driverMessages);
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+
+        console.error("Support fetch error:", error);
         setMessages([]);
-        setLoading(false);
-        return;
+        setPageError("Support messages could not be loaded. Please refresh the page.");
+        showToast("Failed to load support messages.", "error");
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+        }
       }
+    },
+    [showToast]
+  );
 
-      const res = await fetch(API_URL("/api/support-messages/"));
-      const data = await res.json();
+  useEffect(() => {
+    const controller = new AbortController();
 
-      const driverMessages = (Array.isArray(data) ? data : []).filter(
-        (item) => Number(item.driver) === Number(loggedInDriver.id)
-      );
+    fetchSupportMessages(controller.signal);
 
-      setMessages(driverMessages);
-    } catch (error) {
-      console.error("Support fetch error:", error);
-      setMessages([]);
-      showToast("Failed to load support messages.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      controller.abort();
+
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, [fetchSupportMessages]);
 
   const handleSendMessage = async () => {
-    if (!driver) {
+    if (sending) return;
+
+    if (!driver?.id) {
       showToast("Driver profile not found.", "error");
       return;
     }
@@ -90,8 +139,21 @@ const Support = () => {
         body: payload,
       });
 
+      let data = null;
+
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
       if (!res.ok) {
-        throw new Error("Failed to send support message");
+        throw new Error(
+          data?.detail ||
+            data?.error ||
+            data?.message ||
+            "Failed to send support message"
+        );
       }
 
       setSubject("");
@@ -99,15 +161,22 @@ const Support = () => {
       setIssueAttachment(null);
 
       const fileInput = document.getElementById("issue-attachment-input");
+
       if (fileInput) {
         fileInput.value = "";
       }
 
+      if (data?.id) {
+        setMessages((prev) => [data, ...prev]);
+      } else {
+        const controller = new AbortController();
+        await fetchSupportMessages(controller.signal);
+      }
+
       showToast("Support message sent successfully.", "success");
-      await fetchSupportMessages();
     } catch (error) {
       console.error("Support send error:", error);
-      showToast("Failed to send support message.", "error");
+      showToast(error.message || "Failed to send support message.", "error");
     } finally {
       setSending(false);
     }
@@ -125,20 +194,36 @@ const Support = () => {
 
   const formatDateTime = (dateValue) => {
     if (!dateValue) return "-";
-    return new Date(dateValue).toLocaleString();
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return date.toLocaleString();
   };
 
-  const openCount = messages.filter(
-    (item) => String(item.status).toLowerCase() === "open"
-  ).length;
+  const sortedMessages = useMemo(() => {
+    return [...messages].sort(
+      (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    );
+  }, [messages]);
 
-  const resolvedCount = messages.filter(
-    (item) => String(item.status).toLowerCase() === "resolved"
-  ).length;
+  const openCount = useMemo(() => {
+    return messages.filter(
+      (item) => String(item.status || "").toLowerCase() === "open"
+    ).length;
+  }, [messages]);
 
-  const repliedCount = messages.filter(
-    (item) => String(item.admin_reply || "").trim() !== ""
-  ).length;
+  const resolvedCount = useMemo(() => {
+    return messages.filter(
+      (item) => String(item.status || "").toLowerCase() === "resolved"
+    ).length;
+  }, [messages]);
+
+  const repliedCount = useMemo(() => {
+    return messages.filter((item) => String(item.admin_reply || "").trim() !== "")
+      .length;
+  }, [messages]);
 
   if (loading) {
     return (
@@ -148,6 +233,7 @@ const Support = () => {
           type={toast.type}
           onClose={() => setToast({ message: "", type: "success" })}
         />
+
         <h4>Loading support...</h4>
         <p>Please wait while we fetch your support requests.</p>
       </div>
@@ -185,6 +271,19 @@ const Support = () => {
         </div>
       </div>
 
+      {pageError && (
+        <div className="support-alert-card support-reveal support-delay-1">
+          <div className="support-alert-icon">
+            <IconifyIcon icon="mdi:alert-circle-outline" />
+          </div>
+
+          <div>
+            <strong>Unable to load support messages.</strong>
+            <p>{pageError}</p>
+          </div>
+        </div>
+      )}
+
       <div className="support-stats-grid support-reveal support-delay-1">
         <div className="support-stat-card support-stat-blue">
           <div className="support-stat-icon-bg" />
@@ -197,7 +296,7 @@ const Support = () => {
           <span className="support-stat-note">All support requests</span>
         </div>
 
-        <div className="support-stat-card support-stat-orange">
+        <div className="support-stat-card support-stat-amber">
           <div className="support-stat-icon-bg" />
           <div className="support-stat-icon">
             <IconifyIcon icon="mdi:message-alert-outline" />
@@ -208,7 +307,7 @@ const Support = () => {
           <span className="support-stat-note">Waiting for resolution</span>
         </div>
 
-        <div className="support-stat-card support-stat-purple">
+        <div className="support-stat-card support-stat-indigo">
           <div className="support-stat-icon-bg" />
           <div className="support-stat-icon">
             <IconifyIcon icon="mdi:check-decagram-outline" />
@@ -219,7 +318,7 @@ const Support = () => {
           <span className="support-stat-note">Completed requests</span>
         </div>
 
-        <div className="support-stat-card support-stat-indigo">
+        <div className="support-stat-card support-stat-slate">
           <div className="support-stat-icon-bg" />
           <div className="support-stat-icon">
             <IconifyIcon icon="mdi:reply-outline" />
@@ -316,8 +415,8 @@ const Support = () => {
           </div>
 
           <div className="support-message-list">
-            {messages.length > 0 ? (
-              messages.map((item) => (
+            {sortedMessages.length > 0 ? (
+              sortedMessages.map((item) => (
                 <div className="support-message-card" key={item.id}>
                   <div className="support-message-top">
                     <div className="support-message-title-wrap">
@@ -326,7 +425,9 @@ const Support = () => {
                       </div>
 
                       <div>
-                        <h4 className="support-message-title">{item.subject}</h4>
+                        <h4 className="support-message-title">
+                          {item.subject || "Support Request"}
+                        </h4>
                         <p className="support-message-meta">
                           Sent: {formatDateTime(item.created_at)}
                         </p>
@@ -340,7 +441,9 @@ const Support = () => {
 
                   <div className="support-message-section">
                     <p className="support-message-label">Your Message</p>
-                    <div className="support-message-box">{item.message}</div>
+                    <div className="support-message-box">
+                      {item.message || "No message available."}
+                    </div>
                   </div>
 
                   <div className="support-message-section">
@@ -393,6 +496,7 @@ const Support = () => {
                 <div className="support-empty-icon">
                   <IconifyIcon icon="mdi:message-off-outline" />
                 </div>
+
                 <h4>No support messages found</h4>
                 <p>
                   Once you send a support request, your conversation history will
