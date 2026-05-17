@@ -1,11 +1,18 @@
 .driver-sidebar {
   background:
-    radial-gradient(circle at 20% 0%, rgba(37, 99, 235, 0.07), transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, #f8fbff 48%, #ffffff 100%) !important;
-  border-right: 1px solid #e5e7eb !important;
-  box-shadow: 10px 0 32px rgba(15, 23, 42, 0.06) !important;
+    radial-gradient(circle at 18% 0%, rgba(37, 99, 235, 0.08), transparent 30%),
+    radial-gradient(circle at 92% 38%, rgba(99, 102, 241, 0.055), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 45%, #ffffff 100%) !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 12px 0 34px rgba(15, 23, 42, 0.07) !important;
 }
 
+/* Hide duplicate lower DRIVER PANEL title */
+.driver-sidebar .menu-title {
+  display: none !important;
+}
+
+/* Brand area */
 .driver-sidebar-brand-wrap {
   padding: 14px 14px 18px 14px;
   border-bottom: 1px solid #eef2f7;
@@ -17,16 +24,16 @@
 .driver-sidebar-brand-card {
   position: relative;
   overflow: hidden;
-  min-height: 108px;
-  border-radius: 24px;
-  padding: 16px 15px 14px 15px;
+  min-height: 120px;
+  border-radius: 26px;
+  padding: 17px 16px 15px 16px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(96, 165, 250, 0.14), transparent 31%),
-    radial-gradient(circle at 0% 100%, rgba(79, 70, 229, 0.07), transparent 34%),
-    linear-gradient(135deg, #ffffff 0%, #f8fbff 58%, #eef5ff 100%);
+    radial-gradient(circle at 100% 0%, rgba(96, 165, 250, 0.16), transparent 31%),
+    radial-gradient(circle at 0% 100%, rgba(79, 70, 229, 0.085), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 55%, #eef5ff 100%);
   border: 1px solid #dbeafe;
   box-shadow:
-    0 16px 34px rgba(15, 23, 42, 0.075),
+    0 18px 38px rgba(15, 23, 42, 0.085),
     inset 0 1px 0 rgba(255, 255, 255, 0.96);
 }
 
@@ -38,11 +45,11 @@
     linear-gradient(
       120deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.5) 42%,
+      rgba(255, 255, 255, 0.56) 42%,
       transparent 64%
     );
   transform: translateX(-120%);
-  animation: driverBrandShine 5.4s ease-in-out infinite;
+  animation: driverBrandShine 6s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -51,10 +58,10 @@
   position: absolute;
   right: -48px;
   top: -54px;
-  width: 132px;
-  height: 132px;
+  width: 138px;
+  height: 138px;
   border-radius: 50%;
-  background: rgba(37, 99, 235, 0.075);
+  background: rgba(37, 99, 235, 0.08);
   pointer-events: none;
 }
 
@@ -62,10 +69,10 @@
   position: absolute;
   left: -48px;
   bottom: -58px;
-  width: 132px;
-  height: 132px;
+  width: 138px;
+  height: 138px;
   border-radius: 999px;
-  background: rgba(79, 70, 229, 0.075);
+  background: rgba(79, 70, 229, 0.08);
   pointer-events: none;
 }
 
@@ -74,26 +81,32 @@
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   min-width: 0;
 }
 
 .driver-custom-brand-mark {
-  width: 46px;
-  height: 46px;
-  min-width: 46px;
-  border-radius: 16px;
+  width: 47px;
+  height: 47px;
+  min-width: 47px;
+  border-radius: 17px;
   background:
-    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.78), transparent 30%),
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.82), transparent 30%),
     linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 25px;
   box-shadow:
-    0 14px 26px rgba(37, 99, 235, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+    0 15px 28px rgba(37, 99, 235, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.driver-custom-brand-mark svg {
+  width: 1em;
+  height: 1em;
+  display: block;
 }
 
 .driver-custom-brand-text {
@@ -117,20 +130,20 @@
   position: relative;
   z-index: 2;
   width: fit-content;
-  margin-top: 13px;
+  margin-top: 15px;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 12px;
+  gap: 8px;
+  padding: 8px 13px;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.075);
-  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.16);
   color: #1d4ed8;
   font-size: 10.5px;
   font-weight: 950;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.06);
+  letter-spacing: 0.11em;
+  box-shadow: 0 9px 20px rgba(37, 99, 235, 0.065);
 }
 
 .driver-brand-badge span {
@@ -138,11 +151,72 @@
   height: 7px;
   border-radius: 999px;
   background: #2563eb;
-  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.13);
 }
 
+/* Sidebar menu spacing */
 .driver-sidebar-scroll {
-  padding: 14px 10px 18px 10px !important;
+  padding: 16px 10px 20px 10px !important;
+}
+
+/* Premium menu polish for AppMenu inline styles */
+.driver-sidebar .navbar-nav {
+  gap: 2px;
+}
+
+.driver-sidebar .nav-item {
+  margin-bottom: 2px;
+}
+
+.driver-sidebar .nav-link,
+.driver-sidebar .sub-nav-link {
+  position: relative;
+}
+
+.driver-sidebar .nav-link:hover,
+.driver-sidebar .sub-nav-link:hover {
+  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%) !important;
+  border-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+  transform: translateX(2px);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08) !important;
+}
+
+.driver-sidebar .nav-link:hover .nav-icon,
+.driver-sidebar .sub-nav-link:hover .nav-icon {
+  background: #dbeafe !important;
+  color: #2563eb !important;
+  border-color: #bfdbfe !important;
+}
+
+.driver-sidebar .nav-link.active,
+.driver-sidebar .sub-nav-link.active {
+  background:
+    radial-gradient(circle at 96% 12%, rgba(37, 99, 235, 0.08), transparent 24%),
+    linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%) !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12) !important;
+}
+
+.driver-sidebar .nav-link.active::before,
+.driver-sidebar .sub-nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 4px;
+  height: 28px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2563eb 0%, #4f46e5 100%);
+  transform: translateY(-50%);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.26);
+}
+
+.driver-sidebar .nav-icon svg {
+  width: 1em;
+  height: 1em;
+  display: block;
 }
 
 @keyframes driverBrandShine {
@@ -169,8 +243,8 @@ html[data-menu-size="sm-hover-active"] .driver-sidebar-brand-wrap {
 html[data-menu-size="condensed"] .driver-sidebar-brand-card,
 html[data-menu-size="sm-hover"] .driver-sidebar-brand-card,
 html[data-menu-size="sm-hover-active"] .driver-sidebar-brand-card {
-  min-height: 74px;
-  border-radius: 20px;
+  min-height: 76px;
+  border-radius: 21px;
   padding: 12px 10px;
 }
 
@@ -202,7 +276,12 @@ html[data-menu-size="sm-hover-active"] .driver-custom-brand-mark {
 /* Mobile sidebar */
 @media (max-width: 991px) {
   .driver-sidebar {
-    background: #ffffff !important;
+    width: 280px !important;
+    max-width: 86vw !important;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(37, 99, 235, 0.08), transparent 30%),
+      linear-gradient(180deg, #ffffff 0%, #f8fbff 52%, #ffffff 100%) !important;
+    box-shadow: 18px 0 42px rgba(15, 23, 42, 0.16) !important;
   }
 
   .driver-sidebar-brand-wrap {
@@ -210,13 +289,22 @@ html[data-menu-size="sm-hover-active"] .driver-custom-brand-mark {
   }
 
   .driver-sidebar-brand-card {
-    min-height: 104px;
+    min-height: 108px;
+  }
+
+  .driver-sidebar-scroll {
+    padding: 14px 10px 18px 10px !important;
   }
 }
 
 @media (max-width: 576px) {
+  .driver-sidebar {
+    width: 270px !important;
+    max-width: 88vw !important;
+  }
+
   .driver-sidebar-brand-card {
-    border-radius: 22px;
+    border-radius: 23px;
     padding: 15px 14px;
   }
 
@@ -234,6 +322,77 @@ html[data-menu-size="sm-hover-active"] .driver-custom-brand-mark {
 
   .driver-brand-badge {
     font-size: 10px;
-    padding: 6px 10px;
+    padding: 7px 11px;
   }
+}
+.driver-premium-menu {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.driver-premium-nav-item {
+  animation: driverMenuItemReveal 0.42s ease both;
+}
+
+.driver-premium-nav-item:nth-child(1) {
+  animation-delay: 0.03s;
+}
+
+.driver-premium-nav-item:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.driver-premium-nav-item:nth-child(3) {
+  animation-delay: 0.09s;
+}
+
+.driver-premium-nav-item:nth-child(4) {
+  animation-delay: 0.12s;
+}
+
+.driver-premium-nav-item:nth-child(5) {
+  animation-delay: 0.15s;
+}
+
+.driver-premium-nav-item:nth-child(6) {
+  animation-delay: 0.18s;
+}
+
+.driver-premium-nav-item:nth-child(7) {
+  animation-delay: 0.21s;
+}
+
+.driver-premium-nav-item:nth-child(8) {
+  animation-delay: 0.24s;
+}
+
+.driver-premium-nav-item:nth-child(9) {
+  animation-delay: 0.27s;
+}
+
+@keyframes driverMenuItemReveal {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.driver-sidebar .nav-link,
+.driver-sidebar .sub-nav-link {
+  backdrop-filter: blur(10px);
+}
+
+.driver-sidebar .nav-link:hover,
+.driver-sidebar .sub-nav-link:hover {
+  transform: translateX(3px);
+}
+
+.driver-sidebar .nav-link.active,
+.driver-sidebar .sub-nav-link.active {
+  transform: translateX(2px);
 }

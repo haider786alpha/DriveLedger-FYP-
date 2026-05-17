@@ -1,79 +1,76 @@
-import clsx from 'clsx';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { Collapse } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
-import IconifyIcon from '@/components/wrappers/IconifyIcon';
-import { findAllParent, findMenuItem, getMenuItemFromURL } from '@/helpers/menu';
-import { getLoggedInDriver } from '@/helpers/getLoggedInDriver';
-import { API_URL } from '@/helpers/apiConfig';
-import { useLayoutContext } from '@/context/useLayoutContext';
-
-const menuTitleStyle = {
-  fontSize: '11px',
-  fontWeight: '700',
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase',
-  color: '#94a3b8',
-  margin: '18px 0 10px 0',
-  padding: '0 14px',
-};
+import clsx from "clsx";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Collapse } from "react-bootstrap";
+import { Link, useLocation } from "react-router-dom";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import { findAllParent, findMenuItem, getMenuItemFromURL } from "@/helpers/menu";
+import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
+import { API_URL } from "@/helpers/apiConfig";
+import { useLayoutContext } from "@/context/useLayoutContext";
 
 const getMenuLinkStyle = (active, isChild = false) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  width: '100%',
-  padding: isChild ? '10px 14px' : '12px 14px',
-  borderRadius: '14px',
-  marginBottom: '8px',
+  display: "flex",
+  alignItems: "center",
+  gap: isChild ? "10px" : "12px",
+  width: "100%",
+  padding: isChild ? "10px 13px" : "12px 14px",
+  borderRadius: isChild ? "14px" : "16px",
+  marginBottom: isChild ? "6px" : "9px",
   background: active
-    ? 'linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%)'
-    : 'transparent',
-  border: active ? '1px solid #dbeafe' : '1px solid transparent',
-  boxShadow: active ? '0 8px 20px rgba(37, 99, 235, 0.10)' : 'none',
-  color: active ? '#1d4ed8' : '#475569',
-  textDecoration: 'none',
-  transition: 'all 0.2s ease',
-  minHeight: isChild ? '44px' : '48px',
+    ? "radial-gradient(circle at 96% 12%, rgba(37, 99, 235, 0.1), transparent 28%), linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%)"
+    : "rgba(255, 255, 255, 0.64)",
+  border: active ? "1px solid #bfdbfe" : "1px solid transparent",
+  boxShadow: active ? "0 14px 30px rgba(37, 99, 235, 0.14)" : "none",
+  color: active ? "#1d4ed8" : "#475569",
+  textDecoration: "none",
+  transition: "all 0.22s ease",
+  minHeight: isChild ? "43px" : "50px",
+  position: "relative",
+  overflow: "hidden",
 });
 
 const getIconWrapStyle = (active, isChild = false) => ({
-  width: isChild ? '30px' : '34px',
-  height: isChild ? '30px' : '34px',
-  minWidth: isChild ? '30px' : '34px',
-  borderRadius: '10px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: active ? '#dbeafe' : '#f8fafc',
-  color: active ? '#2563eb' : '#64748b',
-  border: active ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
-  fontSize: isChild ? '15px' : '17px',
+  width: isChild ? "31px" : "36px",
+  height: isChild ? "31px" : "36px",
+  minWidth: isChild ? "31px" : "36px",
+  borderRadius: isChild ? "11px" : "12px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: active
+    ? "linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)"
+    : "#f8fafc",
+  color: active ? "#2563eb" : "#64748b",
+  border: active ? "1px solid #bfdbfe" : "1px solid #e2e8f0",
+  fontSize: isChild ? "15px" : "18px",
+  boxShadow: active ? "0 8px 18px rgba(37, 99, 235, 0.13)" : "none",
+  transition: "all 0.22s ease",
 });
 
 const getTextStyle = (active, isChild = false) => ({
-  fontSize: isChild ? '14px' : '14.5px',
-  fontWeight: active ? '700' : '600',
-  color: active ? '#1d4ed8' : '#334155',
+  fontSize: isChild ? "13.5px" : "14.5px",
+  fontWeight: active ? "850" : "700",
+  color: active ? "#1d4ed8" : "#334155",
   flex: 1,
   minWidth: 0,
-  wordBreak: 'break-word',
+  wordBreak: "break-word",
+  letterSpacing: active ? "-0.01em" : "0",
 });
 
 const getArrowStyle = (open, active) => ({
-  fontSize: '18px',
-  color: active ? '#2563eb' : '#94a3b8',
-  transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-  transition: 'transform 0.2s ease',
+  fontSize: "18px",
+  color: active ? "#2563eb" : "#94a3b8",
+  transform: open ? "rotate(180deg)" : "rotate(0deg)",
+  transition: "transform 0.22s ease",
   flexShrink: 0,
 });
 
 const getSubMenuWrapStyle = () => ({
-  paddingLeft: '14px',
-  marginTop: '2px',
-  marginBottom: '6px',
-  borderLeft: '1px dashed #dbeafe',
-  marginLeft: '16px',
+  paddingLeft: "13px",
+  marginTop: "1px",
+  marginBottom: "7px",
+  borderLeft: "1px dashed #c7d2fe",
+  marginLeft: "18px",
 });
 
 const safeArray = (data) => {
@@ -88,22 +85,23 @@ const UnreadBadge = ({ count }) => {
   return (
     <span
       style={{
-        minWidth: '22px',
-        height: '22px',
-        padding: '0 7px',
-        borderRadius: '999px',
-        background: '#ef4444',
-        color: '#ffffff',
-        fontSize: '11px',
-        fontWeight: '700',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        minWidth: "23px",
+        height: "23px",
+        padding: "0 7px",
+        borderRadius: "999px",
+        background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+        color: "#ffffff",
+        fontSize: "11px",
+        fontWeight: "900",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
         flexShrink: 0,
-        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.28)',
+        boxShadow: "0 8px 18px rgba(239, 68, 68, 0.28)",
+        border: "1px solid rgba(255, 255, 255, 0.35)",
       }}
     >
-      {count > 99 ? '99+' : count}
+      {count > 99 ? "99+" : count}
     </span>
   );
 };
@@ -138,7 +136,7 @@ const MenuItemWithChildren = ({
 
   const getActiveClass = useCallback(
     (menuItem) => {
-      return activeMenuItems?.includes(menuItem.key) ? 'active' : '';
+      return activeMenuItems?.includes(menuItem.key) ? "active" : "";
     },
     [activeMenuItems]
   );
@@ -146,7 +144,7 @@ const MenuItemWithChildren = ({
   const isActive = activeMenuItems?.includes(item.key);
 
   return (
-    <li className={className} style={{ listStyle: 'none' }}>
+    <li className={className} style={{ listStyle: "none" }}>
       <div
         onClick={toggleMenuItem}
         aria-expanded={open}
@@ -174,9 +172,9 @@ const MenuItemWithChildren = ({
           <span
             className={`badge badge-pill text-end bg-${item.badge.variant}`}
             style={{
-              borderRadius: '999px',
-              fontSize: '11px',
-              padding: '6px 10px',
+              borderRadius: "999px",
+              fontSize: "11px",
+              padding: "6px 10px",
               flexShrink: 0,
             }}
           >
@@ -187,13 +185,16 @@ const MenuItemWithChildren = ({
 
       <Collapse in={open}>
         <div style={getSubMenuWrapStyle()}>
-          <ul className={clsx(subMenuClassName)} style={{ paddingLeft: 0, marginBottom: 0 }}>
+          <ul
+            className={clsx(subMenuClassName)}
+            style={{ paddingLeft: 0, marginBottom: 0 }}
+          >
             {(item.children || []).map((child, idx) => (
               <Fragment key={child.key + idx}>
                 {child.children ? (
                   <MenuItemWithChildren
                     item={child}
-                    linkClassName={clsx('nav-link', getActiveClass(child))}
+                    linkClassName={clsx("nav-link", getActiveClass(child))}
                     activeMenuItems={activeMenuItems}
                     className="sub-nav-item"
                     subMenuClassName="nav sub-navbar-nav"
@@ -204,7 +205,7 @@ const MenuItemWithChildren = ({
                   <MenuItem
                     item={child}
                     className="sub-nav-item"
-                    linkClassName={clsx('sub-nav-link', getActiveClass(child))}
+                    linkClassName={clsx("sub-nav-link", getActiveClass(child))}
                     isChild
                     onMenuLinkClick={onMenuLinkClick}
                   />
@@ -227,7 +228,7 @@ const MenuItem = ({
   onMenuLinkClick,
 }) => {
   return (
-    <li className={className} style={{ listStyle: 'none' }}>
+    <li className={className} style={{ listStyle: "none" }}>
       <MenuItemLink
         item={item}
         className={linkClassName}
@@ -246,11 +247,11 @@ const MenuItemLink = ({
   unreadAlerts = 0,
   onMenuLinkClick,
 }) => {
-  const isActive = className?.includes('active');
+  const isActive = className?.includes("active");
 
   return (
     <Link
-      to={item.url ?? ''}
+      to={item.url ?? ""}
       target={item.target}
       onClick={onMenuLinkClick}
       className={clsx(className, {
@@ -259,7 +260,7 @@ const MenuItemLink = ({
       style={{
         ...getMenuLinkStyle(isActive, isChild),
         opacity: item.isDisabled ? 0.6 : 1,
-        pointerEvents: item.isDisabled ? 'none' : 'auto',
+        pointerEvents: item.isDisabled ? "none" : "auto",
       }}
     >
       {item.icon && (
@@ -272,15 +273,15 @@ const MenuItemLink = ({
         {item.label}
       </span>
 
-      {item.key === 'alerts' && unreadAlerts > 0 ? (
+      {item.key === "alerts" && unreadAlerts > 0 ? (
         <UnreadBadge count={unreadAlerts} />
       ) : item.badge ? (
         <span
           className={`badge badge-pill text-end bg-${item.badge.variant}`}
           style={{
-            borderRadius: '999px',
-            fontSize: '11px',
-            padding: '6px 10px',
+            borderRadius: "999px",
+            fontSize: "11px",
+            padding: "6px 10px",
             flexShrink: 0,
           }}
         >
@@ -326,9 +327,12 @@ const AppMenu = ({ menuItems }) => {
         return;
       }
 
-      const res = await fetch(API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`), {
-        signal: controller.signal,
-      });
+      const res = await fetch(
+        API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`),
+        {
+          signal: controller.signal,
+        }
+      );
 
       if (!res.ok) {
         throw new Error(`Notifications request failed with status ${res.status}`);
@@ -342,17 +346,17 @@ const AppMenu = ({ menuItems }) => {
 
       const filteredAlerts = alerts.filter(
         (item) =>
-          item.recipient_type === 'all' ||
-          (item.recipient_type === 'driver' &&
+          item.recipient_type === "all" ||
+          (item.recipient_type === "driver" &&
             Number(item.driver) === Number(loggedInDriver.id))
       );
 
       const unreadCount = filteredAlerts.filter((item) => !item.is_read).length;
       setUnreadAlerts(unreadCount);
     } catch (error) {
-      if (error?.name === 'AbortError') return;
+      if (error?.name === "AbortError") return;
 
-      console.error('Sidebar unread alerts error:', error);
+      console.error("Sidebar unread alerts error:", error);
     }
   }, []);
 
@@ -364,16 +368,18 @@ const AppMenu = ({ menuItems }) => {
     }, 30000);
 
     const handleFocus = () => fetchUnreadAlerts();
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         fetchUnreadAlerts();
       }
     };
+
     const handleNotificationsUpdated = () => fetchUnreadAlerts();
 
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('notifications-updated', handleNotificationsUpdated);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("notifications-updated", handleNotificationsUpdated);
 
     return () => {
       clearInterval(interval);
@@ -382,9 +388,9 @@ const AppMenu = ({ menuItems }) => {
         notificationControllerRef.current.abort();
       }
 
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('notifications-updated', handleNotificationsUpdated);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("notifications-updated", handleNotificationsUpdated);
     };
   }, [fetchUnreadAlerts]);
 
@@ -396,13 +402,13 @@ const AppMenu = ({ menuItems }) => {
 
   const getActiveClass = useCallback(
     (item) => {
-      return activeMenuItems?.includes(item.key) ? 'active' : '';
+      return activeMenuItems?.includes(item.key) ? "active" : "";
     },
     [activeMenuItems]
   );
 
   const activeMenu = useCallback(() => {
-    const trimmedURL = pathname || '';
+    const trimmedURL = pathname || "";
     const matchingMenuItem = getMenuItemFromURL(menuItems, trimmedURL);
 
     const easeInOutQuad = (t, b, c, d) => {
@@ -451,7 +457,7 @@ const AppMenu = ({ menuItems }) => {
 
         if (activatedItem) {
           const simplebarContent = document.querySelector(
-            '#leftside-menu-container .simplebar-content-wrapper'
+            "#leftside-menu-container .simplebar-content-wrapper"
           );
 
           if (simplebarContent) {
@@ -470,36 +476,32 @@ const AppMenu = ({ menuItems }) => {
   }, [activeMenu, menuItems]);
 
   return (
-    <ul className="navbar-nav" style={{ paddingTop: '6px' }}>
+    <ul className="navbar-nav driver-premium-menu" style={{ paddingTop: "4px" }}>
       {(menuItems || []).map((item, idx) => {
+        if (item.isTitle) {
+          return null;
+        }
+
         return (
           <Fragment key={item.key + idx}>
-            {item.isTitle ? (
-              <li className="menu-title" style={menuTitleStyle}>
-                {item.label}
-              </li>
+            {item.children ? (
+              <MenuItemWithChildren
+                item={item}
+                toggleMenu={toggleMenu}
+                className="nav-item driver-premium-nav-item"
+                linkClassName={clsx("nav-link", getActiveClass(item))}
+                subMenuClassName="nav sub-navbar-nav"
+                activeMenuItems={activeMenuItems}
+                onMenuLinkClick={handleMenuLinkClick}
+              />
             ) : (
-              <>
-                {item.children ? (
-                  <MenuItemWithChildren
-                    item={item}
-                    toggleMenu={toggleMenu}
-                    className="nav-item"
-                    linkClassName={clsx('nav-link', getActiveClass(item))}
-                    subMenuClassName="nav sub-navbar-nav"
-                    activeMenuItems={activeMenuItems}
-                    onMenuLinkClick={handleMenuLinkClick}
-                  />
-                ) : (
-                  <MenuItem
-                    item={item}
-                    linkClassName={clsx('nav-link', getActiveClass(item))}
-                    className="nav-item"
-                    unreadAlerts={item.key === 'alerts' ? unreadAlerts : 0}
-                    onMenuLinkClick={handleMenuLinkClick}
-                  />
-                )}
-              </>
+              <MenuItem
+                item={item}
+                linkClassName={clsx("nav-link", getActiveClass(item))}
+                className="nav-item driver-premium-nav-item"
+                unreadAlerts={item.key === "alerts" ? unreadAlerts : 0}
+                onMenuLinkClick={handleMenuLinkClick}
+              />
             )}
           </Fragment>
         );
