@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
@@ -8,25 +8,45 @@ const PendingDues = () => {
   const [driver, setDriver] = useState(null);
   const [dues, setDues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
 
-  useEffect(() => {
-    fetchPendingDues();
-  }, []);
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
 
-  const fetchPendingDues = async () => {
+  const fetchJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const fetchPendingDues = useCallback(async (signal) => {
     try {
       setLoading(true);
+      setPageError("");
 
       const loggedInDriver = await getLoggedInDriver();
+
+      if (signal?.aborted) return;
+
       setDriver(loggedInDriver);
 
-      if (!loggedInDriver) {
-        setLoading(false);
+      if (!loggedInDriver?.id) {
+        setDues([]);
         return;
       }
 
-      const assignmentsRes = await fetch(API_URL("/api/assignments/"));
-      const assignments = await assignmentsRes.json();
+      const assignmentsData = await fetchJson(API_URL("/api/assignments/"), signal);
+
+      if (signal?.aborted) return;
+
+      const assignments = safeArray(assignmentsData);
 
       const driverAssignments = assignments.filter(
         (item) => Number(item.driver) === Number(loggedInDriver.id)
@@ -34,50 +54,78 @@ const PendingDues = () => {
 
       if (driverAssignments.length === 0) {
         setDues([]);
-        setLoading(false);
         return;
       }
 
       const assignmentIds = driverAssignments.map((item) => Number(item.id));
 
-      const paymentsRes = await fetch(API_URL("/api/payments/"));
-      const allPayments = await paymentsRes.json();
+      const paymentsData = await fetchJson(API_URL("/api/payments/"), signal);
+
+      if (signal?.aborted) return;
+
+      const allPayments = safeArray(paymentsData);
 
       const unpaidPayments = allPayments.filter(
         (payment) =>
           assignmentIds.includes(Number(payment.assignment)) &&
-          String(payment.status).toLowerCase() === "unpaid"
+          String(payment.status || "").toLowerCase() === "unpaid"
       );
 
       setDues(unpaidPayments);
     } catch (error) {
+      if (error?.name === "AbortError") return;
+
       console.error("Pending dues error:", error);
+      setDues([]);
+      setPageError("Pending dues could not be loaded. Please refresh the page.");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
-  const totalPending = dues.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0
-  );
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const latestDue = dues.length
-    ? [...dues].sort(
-        (a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0)
-      )[0]
-    : null;
+    fetchPendingDues(controller.signal);
 
-  const highestDue = dues.length
-    ? Math.max(...dues.map((item) => Number(item.amount || 0)))
-    : 0;
+    return () => {
+      controller.abort();
+    };
+  }, [fetchPendingDues]);
+
+  const sortedDues = useMemo(() => {
+    return [...dues].sort(
+      (a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0)
+    );
+  }, [dues]);
+
+  const totalPending = useMemo(() => {
+    return dues.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }, [dues]);
+
+  const latestDue = useMemo(() => {
+    return sortedDues.length > 0 ? sortedDues[0] : null;
+  }, [sortedDues]);
+
+  const highestDue = useMemo(() => {
+    return dues.length
+      ? Math.max(...dues.map((item) => Number(item.amount || 0)))
+      : 0;
+  }, [dues]);
 
   const formatAmount = (value) => {
-    return `Rs. ${Number(value || 0).toLocaleString()}`;
+    return `Rs. ${Number(value || 0).toLocaleString("en-PK")}`;
   };
 
   const formatDate = (dateValue) => {
     if (!dateValue) return "-";
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) return dateValue;
+
     return dateValue;
   };
 
@@ -115,6 +163,19 @@ const PendingDues = () => {
         </div>
       </div>
 
+      {pageError && (
+        <div className="pending-dues-alert-card pending-dues-reveal pending-dues-delay-1">
+          <div className="pending-dues-alert-icon">
+            <IconifyIcon icon="mdi:alert-circle-outline" />
+          </div>
+
+          <div>
+            <strong>Unable to load pending dues.</strong>
+            <p>{pageError}</p>
+          </div>
+        </div>
+      )}
+
       <div className="pending-dues-stats-grid pending-dues-reveal pending-dues-delay-1">
         <div className="pending-dues-stat-card pending-dues-stat-red">
           <div className="pending-dues-stat-icon-bg" />
@@ -140,7 +201,7 @@ const PendingDues = () => {
           <span className="pending-dues-stat-note">Unpaid payment records</span>
         </div>
 
-        <div className="pending-dues-stat-card pending-dues-stat-orange">
+        <div className="pending-dues-stat-card pending-dues-stat-indigo">
           <div className="pending-dues-stat-icon-bg" />
           <div className="pending-dues-stat-icon">
             <IconifyIcon icon="mdi:cash-clock" />
@@ -153,7 +214,7 @@ const PendingDues = () => {
           <span className="pending-dues-stat-note">Largest unpaid amount</span>
         </div>
 
-        <div className="pending-dues-stat-card pending-dues-stat-purple">
+        <div className="pending-dues-stat-card pending-dues-stat-slate">
           <div className="pending-dues-stat-icon-bg" />
           <div className="pending-dues-stat-icon">
             <IconifyIcon icon="mdi:clock-alert-outline" />
@@ -184,7 +245,7 @@ const PendingDues = () => {
           </div>
         </div>
 
-        {dues.length > 0 ? (
+        {sortedDues.length > 0 ? (
           <>
             <div className="pending-dues-table-wrap">
               <table className="pending-dues-table">
@@ -199,22 +260,26 @@ const PendingDues = () => {
                 </thead>
 
                 <tbody>
-                  {dues.map((due) => (
+                  {sortedDues.map((due) => (
                     <tr key={due.id}>
                       <td>
                         <strong>#{due.id}</strong>
                       </td>
+
                       <td>
                         <strong className="pending-dues-amount">
                           {formatAmount(due.amount)}
                         </strong>
                       </td>
+
                       <td>{formatDate(due.payment_date)}</td>
+
                       <td>
                         <span className="pending-dues-badge">
                           {due.status || "unpaid"}
                         </span>
                       </td>
+
                       <td>{due.remarks || "-"}</td>
                     </tr>
                   ))}
@@ -223,7 +288,7 @@ const PendingDues = () => {
             </div>
 
             <div className="pending-dues-mobile-list">
-              {dues.map((due) => (
+              {sortedDues.map((due) => (
                 <div className="pending-dues-mobile-card" key={due.id}>
                   <div className="pending-dues-mobile-row">
                     <span>Due ID</span>
