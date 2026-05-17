@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
 import DriverToast from "@/components/DriverToast";
@@ -13,6 +13,8 @@ const Profile = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+
+  const toastTimerRef = useRef(null);
 
   const [toast, setToast] = useState({
     message: "",
@@ -33,80 +35,125 @@ const Profile = () => {
     license_number: "",
   });
 
-  const showToast = (message, type = "success") => {
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
+
+  const fetchJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
 
-    setTimeout(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    toastTimerRef.current = setTimeout(() => {
       setToast({ message: "", type: "success" });
     }, 3500);
-  };
-
-  useEffect(() => {
-    fetchProfileData();
   }, []);
 
-  const fetchProfileData = async () => {
-    try {
-      setLoading(true);
+  const buildFormData = (loggedInDriver, matchedUser) => ({
+    username: matchedUser?.username || loggedInDriver?.user_name || "",
+    email: matchedUser?.email || loggedInDriver?.email || "",
+    cnic: loggedInDriver?.cnic || "",
+    address: loggedInDriver?.address || "",
+    license_number: loggedInDriver?.license_number || "",
+  });
 
-      const loggedInDriver = await getLoggedInDriver();
-      setDriver(loggedInDriver);
+  const fetchProfileData = useCallback(
+    async (signal) => {
+      try {
+        setLoading(true);
 
-      if (!loggedInDriver) {
-        setLoading(false);
-        return;
+        const loggedInDriver = await getLoggedInDriver();
+
+        if (signal?.aborted) return;
+
+        setDriver(loggedInDriver);
+
+        if (!loggedInDriver?.id) {
+          setUser(null);
+          setAssignedCar(null);
+          return;
+        }
+
+        const [usersData, assignmentsData] = await Promise.all([
+          fetchJson(API_URL("/api/users/"), signal),
+          fetchJson(API_URL("/api/assignments/"), signal),
+        ]);
+
+        if (signal?.aborted) return;
+
+        const users = safeArray(usersData);
+        const assignments = safeArray(assignmentsData);
+
+        const matchedUser = users.find(
+          (item) => Number(item.id) === Number(loggedInDriver.user)
+        );
+
+        const activeAssignment = assignments.find(
+          (item) =>
+            Number(item.driver) === Number(loggedInDriver.id) &&
+            String(item.status || "").toLowerCase() === "active"
+        );
+
+        setUser(matchedUser || null);
+        setFormData(buildFormData(loggedInDriver, matchedUser));
+
+        if (!activeAssignment?.car) {
+          setAssignedCar(null);
+          return;
+        }
+
+        const carData = await fetchJson(
+          API_URL(`/api/cars/${activeAssignment.car}/`),
+          signal
+        );
+
+        if (signal?.aborted) return;
+
+        setAssignedCar(carData || null);
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+
+        console.error("Profile error:", error);
+        showToast("Failed to load profile data.", "error");
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+        }
       }
+    },
+    [showToast]
+  );
 
-      const usersRes = await fetch(API_URL("/api/users/"));
-      const users = await usersRes.json();
+  useEffect(() => {
+    const controller = new AbortController();
 
-      const matchedUser = users.find(
-        (item) => Number(item.id) === Number(loggedInDriver.user)
-      );
+    fetchProfileData(controller.signal);
 
-      setUser(matchedUser || null);
+    return () => {
+      controller.abort();
 
-      setFormData({
-        username: matchedUser?.username || loggedInDriver.user_name || "",
-        email: matchedUser?.email || loggedInDriver.email || "",
-        cnic: loggedInDriver.cnic || "",
-        address: loggedInDriver.address || "",
-        license_number: loggedInDriver.license_number || "",
-      });
-
-      const assignmentsRes = await fetch(API_URL("/api/assignments/"));
-      const assignments = await assignmentsRes.json();
-
-      const activeAssignment = assignments.find(
-        (item) =>
-          Number(item.driver) === Number(loggedInDriver.id) &&
-          String(item.status).toLowerCase() === "active"
-      );
-
-      if (activeAssignment) {
-        const carRes = await fetch(API_URL(`/api/cars/${activeAssignment.car}/`));
-        const carData = await carRes.json();
-        setAssignedCar(carData);
-      } else {
-        setAssignedCar(null);
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
       }
-    } catch (error) {
-      console.error("Profile error:", error);
-      showToast("Failed to load profile data.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+  }, [fetchProfileData]);
 
   const handleOpenEdit = () => {
-    setFormData({
-      username: user?.username || driver?.user_name || "",
-      email: user?.email || driver?.email || "",
-      cnic: driver?.cnic || "",
-      address: driver?.address || "",
-      license_number: driver?.license_number || "",
-    });
-
+    setFormData(buildFormData(driver, user));
     setShowEditForm(true);
   };
 
@@ -132,9 +179,19 @@ const Profile = () => {
     }));
   };
 
+  const refreshAfterProfileUpdate = async () => {
+    const controller = new AbortController();
+    await fetchProfileData(controller.signal);
+  };
+
   const handleSaveChanges = async () => {
-    if (!driver) {
+    if (!driver?.id) {
       showToast("Driver profile not found.", "error");
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      showToast("Please enter your email address.", "warning");
       return;
     }
 
@@ -154,16 +211,29 @@ const Profile = () => {
         body: JSON.stringify(payload),
       });
 
+      let data = null;
+
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
       if (!res.ok) {
-        throw new Error("Failed to update profile");
+        throw new Error(
+          data?.error ||
+            data?.detail ||
+            data?.message ||
+            "Failed to update profile"
+        );
       }
 
       showToast("Profile updated successfully.", "success");
       setShowEditForm(false);
-      await fetchProfileData();
+      await refreshAfterProfileUpdate();
     } catch (error) {
       console.error("Save profile error:", error);
-      showToast("Failed to update profile.", "error");
+      showToast(error.message || "Failed to update profile.", "error");
     } finally {
       setSaving(false);
     }
@@ -199,7 +269,7 @@ const Profile = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           old_password: passwordData.old_password,
@@ -207,10 +277,21 @@ const Profile = () => {
         }),
       });
 
-      const data = await res.json();
+      let data = null;
+
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
 
       if (!res.ok) {
-        throw new Error(data.error || data.detail || "Failed to change password");
+        throw new Error(
+          data?.error ||
+            data?.detail ||
+            data?.message ||
+            "Failed to change password"
+        );
       }
 
       showToast("Password changed successfully.", "success");
@@ -232,6 +313,12 @@ const Profile = () => {
   const hasLicenseCopy = Boolean(driver?.license_copy_url);
   const documentsComplete = hasProfilePhoto && hasLicenseCopy;
 
+  const assignedCarName = useMemo(() => {
+    if (!assignedCar) return "No Car";
+
+    return `${assignedCar.make || ""} ${assignedCar.model || ""}`.trim() || "Assigned Car";
+  }, [assignedCar]);
+
   const InfoBox = ({ label, value, full = false }) => (
     <div className={`profile-info-box ${full ? "profile-info-box-full" : ""}`}>
       <p className="profile-label">{label}</p>
@@ -247,6 +334,7 @@ const Profile = () => {
           type={toast.type}
           onClose={() => setToast({ message: "", type: "success" })}
         />
+
         <h4>Loading profile...</h4>
         <p>Please wait while we fetch your profile data.</p>
       </div>
@@ -261,6 +349,7 @@ const Profile = () => {
           type={toast.type}
           onClose={() => setToast({ message: "", type: "success" })}
         />
+
         No driver profile found.
       </div>
     );
@@ -307,7 +396,7 @@ const Profile = () => {
           <span className="profile-stat-note">Registered account</span>
         </div>
 
-        <div className="profile-stat-card profile-stat-green">
+        <div className="profile-stat-card profile-stat-indigo">
           <div className="profile-stat-icon-bg" />
           <div className="profile-stat-icon">
             <IconifyIcon icon="mdi:account-check-outline" />
@@ -323,13 +412,11 @@ const Profile = () => {
             <IconifyIcon icon="mdi:car-outline" />
           </div>
           <p className="profile-stat-label">Assigned Vehicle</p>
-          <strong className="profile-stat-value">
-            {assignedCar ? `${assignedCar.make} ${assignedCar.model}` : "No Car"}
-          </strong>
+          <strong className="profile-stat-value">{assignedCarName}</strong>
           <span className="profile-stat-note">Current vehicle</span>
         </div>
 
-        <div className="profile-stat-card profile-stat-orange">
+        <div className="profile-stat-card profile-stat-slate">
           <div className="profile-stat-icon-bg" />
           <div className="profile-stat-icon">
             <IconifyIcon icon="mdi:file-document-check-outline" />
@@ -512,11 +599,7 @@ const Profile = () => {
             <div className="profile-info-grid" style={{ marginTop: "18px" }}>
               <InfoBox
                 label="Assigned Car"
-                value={
-                  assignedCar
-                    ? `${assignedCar.make} ${assignedCar.model}`
-                    : "No active car assigned"
-                }
+                value={assignedCar ? assignedCarName : "No active car assigned"}
                 full
               />
 
