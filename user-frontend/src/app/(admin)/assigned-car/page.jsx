@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
@@ -9,48 +9,90 @@ const AssignedCar = () => {
   const [assignment, setAssignment] = useState(null);
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
 
-  useEffect(() => {
-    fetchAssignedCar();
-  }, []);
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
 
-  const fetchAssignedCar = async () => {
+  const fetchJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const fetchAssignedCar = useCallback(async (signal) => {
     try {
       setLoading(true);
+      setPageError("");
 
       const loggedInDriver = await getLoggedInDriver();
+
+      if (signal?.aborted) return;
+
       setDriver(loggedInDriver);
 
-      if (!loggedInDriver) {
-        setLoading(false);
+      if (!loggedInDriver?.id) {
+        setAssignment(null);
+        setCar(null);
         return;
       }
 
-      const assignmentsRes = await fetch(API_URL("/api/assignments/"));
-      const assignments = await assignmentsRes.json();
+      const assignmentsData = await fetchJson(API_URL("/api/assignments/"), signal);
+      const assignments = safeArray(assignmentsData);
+
+      if (signal?.aborted) return;
 
       const activeAssignment = assignments.find(
         (item) =>
           Number(item.driver) === Number(loggedInDriver.id) &&
-          String(item.status).toLowerCase() === "active"
+          String(item.status || "").toLowerCase() === "active"
       );
 
       setAssignment(activeAssignment || null);
 
-      if (!activeAssignment) {
-        setLoading(false);
+      if (!activeAssignment?.car) {
+        setCar(null);
         return;
       }
 
-      const carRes = await fetch(API_URL(`/api/cars/${activeAssignment.car}/`));
-      const carData = await carRes.json();
-      setCar(carData);
+      const carData = await fetchJson(
+        API_URL(`/api/cars/${activeAssignment.car}/`),
+        signal
+      );
+
+      if (signal?.aborted) return;
+
+      setCar(carData || null);
     } catch (error) {
+      if (error?.name === "AbortError") return;
+
       console.error("Assigned car error:", error);
+      setPageError("Assigned car data could not be loaded. Please refresh the page.");
+      setAssignment(null);
+      setCar(null);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchAssignedCar(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [fetchAssignedCar]);
 
   const getDateStatus = (dateValue, type = "document") => {
     if (!dateValue) {
@@ -62,6 +104,13 @@ const AssignedCar = () => {
 
     const today = new Date();
     const targetDate = new Date(dateValue);
+
+    if (Number.isNaN(targetDate.getTime())) {
+      return {
+        label: "Invalid Date",
+        className: "assigned-car-badge-muted",
+      };
+    }
 
     today.setHours(0, 0, 0, 0);
     targetDate.setHours(0, 0, 0, 0);
@@ -90,17 +139,32 @@ const AssignedCar = () => {
     };
   };
 
-  const maintenanceStatus = getDateStatus(
-    car?.next_maintenance_date,
-    "maintenance"
+  const maintenanceStatus = useMemo(
+    () => getDateStatus(car?.next_maintenance_date, "maintenance"),
+    [car?.next_maintenance_date]
   );
 
-  const insuranceStatus = getDateStatus(car?.insurance_expiry, "document");
-
-  const registrationStatus = getDateStatus(
-    car?.registration_expiry,
-    "document"
+  const insuranceStatus = useMemo(
+    () => getDateStatus(car?.insurance_expiry, "document"),
+    [car?.insurance_expiry]
   );
+
+  const registrationStatus = useMemo(
+    () => getDateStatus(car?.registration_expiry, "document"),
+    [car?.registration_expiry]
+  );
+
+  const carName = useMemo(() => {
+    if (!car) return "No Car Assigned";
+
+    return `${car.make || ""} ${car.model || ""}`.trim() || "Assigned Car";
+  }, [car]);
+
+  const documentsStatus = useMemo(() => {
+    return insuranceStatus.label === "Valid" && registrationStatus.label === "Valid"
+      ? "Valid"
+      : "Check Status";
+  }, [insuranceStatus.label, registrationStatus.label]);
 
   const InfoBox = ({ label, value, full = false, pre = false, children }) => {
     return (
@@ -156,12 +220,23 @@ const AssignedCar = () => {
 
           <div className="assigned-car-hero-glass">
             <span>Current Vehicle</span>
-            <strong>
-              {car ? `${car.make || ""} ${car.model || ""}` : "No Car Assigned"}
-            </strong>
+            <strong>{carName}</strong>
           </div>
         </div>
       </div>
+
+      {pageError && (
+        <div className="assigned-car-alert-card assigned-car-reveal assigned-car-delay-1">
+          <div className="assigned-car-alert-icon">
+            <IconifyIcon icon="mdi:alert-circle-outline" />
+          </div>
+
+          <div>
+            <strong>Unable to load assigned car data.</strong>
+            <p>{pageError}</p>
+          </div>
+        </div>
+      )}
 
       {car ? (
         <>
@@ -173,18 +248,14 @@ const AssignedCar = () => {
               </div>
 
               <p className="assigned-car-stat-label">Assigned Vehicle</p>
-              <strong className="assigned-car-stat-value">
-                {car.make} {car.model}
-              </strong>
-              <span className="assigned-car-stat-note">
-                Current assigned car
-              </span>
+              <strong className="assigned-car-stat-value">{carName}</strong>
+              <span className="assigned-car-stat-note">Current assigned car</span>
             </div>
 
             <div className="assigned-car-stat-card assigned-car-stat-purple">
               <div className="assigned-car-stat-icon-bg" />
               <div className="assigned-car-stat-icon">
-                <IconifyIcon icon="mdi:link-variant" />
+                <IconifyIcon icon="mdi:file-document-check-outline" />
               </div>
 
               <p className="assigned-car-stat-label">Assignment Status</p>
@@ -196,34 +267,27 @@ const AssignedCar = () => {
               </span>
             </div>
 
-            <div className="assigned-car-stat-card assigned-car-stat-orange">
+            <div className="assigned-car-stat-card assigned-car-stat-indigo">
               <div className="assigned-car-stat-icon-bg" />
               <div className="assigned-car-stat-icon">
-                <IconifyIcon icon="mdi:tools" />
+                <IconifyIcon icon="mdi:car-wrench" />
               </div>
 
               <p className="assigned-car-stat-label">Maintenance</p>
               <strong className="assigned-car-stat-value">
                 {maintenanceStatus.label}
               </strong>
-              <span className="assigned-car-stat-note">
-                Next service status
-              </span>
+              <span className="assigned-car-stat-note">Next service status</span>
             </div>
 
-            <div className="assigned-car-stat-card assigned-car-stat-red">
+            <div className="assigned-car-stat-card assigned-car-stat-slate">
               <div className="assigned-car-stat-icon-bg" />
               <div className="assigned-car-stat-icon">
-                <IconifyIcon icon="mdi:file-document-check-outline" />
+                <IconifyIcon icon="mdi:file-document-alert-outline" />
               </div>
 
               <p className="assigned-car-stat-label">Documents</p>
-              <strong className="assigned-car-stat-value">
-                {insuranceStatus.label === "Valid" &&
-                registrationStatus.label === "Valid"
-                  ? "Valid"
-                  : "Check Status"}
-              </strong>
+              <strong className="assigned-car-stat-value">{documentsStatus}</strong>
               <span className="assigned-car-stat-note">
                 Insurance + registration
               </span>
@@ -234,9 +298,7 @@ const AssignedCar = () => {
             <div className="assigned-car-card">
               <div className="assigned-car-card-head">
                 <div>
-                  <h3 className="assigned-car-main-title">
-                    {car.make} {car.model}
-                  </h3>
+                  <h3 className="assigned-car-main-title">{carName}</h3>
 
                   <p className="assigned-car-section-subtitle">
                     Your current assigned vehicle profile and basic information.
@@ -300,9 +362,7 @@ const AssignedCar = () => {
               <div className="assigned-car-card">
                 <div className="assigned-car-card-head">
                   <div>
-                    <h4 className="assigned-car-section-title">
-                      Document Status
-                    </h4>
+                    <h4 className="assigned-car-section-title">Document Status</h4>
                     <p className="assigned-car-section-subtitle">
                       Track expiry state for vehicle documents.
                     </p>
@@ -353,11 +413,8 @@ const AssignedCar = () => {
                 </div>
 
                 <div className="assigned-car-info-grid">
-                  <InfoBox
-                    label="Driver"
-                    value={driver?.user_name || "-"}
-                    full
-                  />
+                  <InfoBox label="Driver" value={driver?.user_name || "-"} full />
+
                   <InfoBox
                     label="Assigned Date"
                     value={assignment?.start_date}
@@ -373,6 +430,7 @@ const AssignedCar = () => {
           <div className="assigned-car-empty-icon">
             <IconifyIcon icon="mdi:car-off" />
           </div>
+
           <h4>No active car assigned</h4>
           <p>
             Once admin assigns a vehicle to your account, it will appear here
