@@ -409,8 +409,8 @@ CORS_ALLOWED_ORIGINS = config(
         "http://localhost:5173,"
         "http://192.168.0.101:5173,"
         "https://driveease-fleet.vercel.app",
-        "https://driveledger-admin.vercel.app,"
-        "https://drive-ledger-driver.vercel.app"
+    "https://driveease-portal.vercel.app",
+    "https://drive-ledger-driver.vercel.app",
     )
 ).split(",")
 
@@ -420,9 +420,9 @@ CSRF_TRUSTED_ORIGINS = config(
         "http://localhost:3000,"
         "http://localhost:5173,"
         "http://192.168.0.101:5173,"
-         "https://driveease-fleet.vercel.app",
-        "https://driveledger-admin.vercel.app,"
-        "https://drive-ledger-driver.vercel.app"
+        "https://driveease-fleet.vercel.app",
+    "https://driveease-portal.vercel.app",
+    "https://drive-ledger-driver.vercel.app",
     )
 ).split(",")
 
