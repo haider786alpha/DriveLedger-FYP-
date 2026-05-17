@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
@@ -8,40 +8,62 @@ const RepairStatus = () => {
   const [driver, setDriver] = useState(null);
   const [repairs, setRepairs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
 
-  useEffect(() => {
-    fetchRepairs();
-  }, []);
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
 
-  const fetchRepairs = async () => {
+  const fetchJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const fetchRepairs = useCallback(async (signal) => {
     try {
       setLoading(true);
+      setPageError("");
 
       const loggedInDriver = await getLoggedInDriver();
+
+      if (signal?.aborted) return;
+
       setDriver(loggedInDriver);
 
-      if (!loggedInDriver) {
-        setLoading(false);
+      if (!loggedInDriver?.id) {
+        setRepairs([]);
         return;
       }
 
-      const assignmentsRes = await fetch(API_URL("/api/assignments/"));
-      const assignments = await assignmentsRes.json();
+      const assignmentsData = await fetchJson(API_URL("/api/assignments/"), signal);
+
+      if (signal?.aborted) return;
+
+      const assignments = safeArray(assignmentsData);
 
       const activeAssignment = assignments.find(
         (item) =>
           Number(item.driver) === Number(loggedInDriver.id) &&
-          String(item.status).toLowerCase() === "active"
+          String(item.status || "").toLowerCase() === "active"
       );
 
-      if (!activeAssignment) {
+      if (!activeAssignment?.car) {
         setRepairs([]);
-        setLoading(false);
         return;
       }
 
-      const repairsRes = await fetch(API_URL("/api/repairs/"));
-      const allRepairs = await repairsRes.json();
+      const repairsData = await fetchJson(API_URL("/api/repairs/"), signal);
+
+      if (signal?.aborted) return;
+
+      const allRepairs = safeArray(repairsData);
 
       const carRepairs = allRepairs.filter(
         (repair) => Number(repair.car) === Number(activeAssignment.car)
@@ -49,44 +71,69 @@ const RepairStatus = () => {
 
       setRepairs(carRepairs);
     } catch (error) {
+      if (error?.name === "AbortError") return;
+
       console.error("Repair status error:", error);
       setRepairs([]);
+      setPageError("Repair records could not be loaded. Please refresh the page.");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchRepairs(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [fetchRepairs]);
+
+  const sortedRepairs = useMemo(() => {
+    return [...repairs].sort(
+      (a, b) => new Date(b.reported_date || 0) - new Date(a.reported_date || 0)
+    );
+  }, [repairs]);
 
   const totalRepairs = repairs.length;
 
-  const highPriority = repairs.filter(
-    (item) => String(item.priority).toLowerCase() === "high"
-  ).length;
+  const highPriority = useMemo(() => {
+    return repairs.filter(
+      (item) => String(item.priority || "").toLowerCase() === "high"
+    ).length;
+  }, [repairs]);
 
-  const completedRepairs = repairs.filter(
-    (item) => String(item.status).toLowerCase() === "completed"
-  ).length;
+  const completedRepairs = useMemo(() => {
+    return repairs.filter(
+      (item) => String(item.status || "").toLowerCase() === "completed"
+    ).length;
+  }, [repairs]);
 
-  const inProgressRepairs = repairs.filter((item) => {
-    const value = String(item.status || "").toLowerCase();
-    return value === "in_progress" || value === "in progress";
-  }).length;
+  const inProgressRepairs = useMemo(() => {
+    return repairs.filter((item) => {
+      const value = String(item.status || "").toLowerCase();
+      return value === "in_progress" || value === "in progress";
+    }).length;
+  }, [repairs]);
 
-  const totalEstimatedCost = repairs.reduce(
-    (sum, item) => sum + Number(item.estimated_cost || 0),
-    0
-  );
+  const totalEstimatedCost = useMemo(() => {
+    return repairs.reduce((sum, item) => sum + Number(item.estimated_cost || 0), 0);
+  }, [repairs]);
 
-  const totalActualCost = repairs.reduce(
-    (sum, item) => sum + Number(item.actual_cost || 0),
-    0
-  );
+  const totalActualCost = useMemo(() => {
+    return repairs.reduce((sum, item) => sum + Number(item.actual_cost || 0), 0);
+  }, [repairs]);
 
   const formatAmount = (value) => {
-    return `Rs. ${Number(value || 0).toLocaleString()}`;
+    return `Rs. ${Number(value || 0).toLocaleString("en-PK")}`;
   };
 
   const formatStatusText = (status) => {
-    return String(status || "unknown").replace("_", " ");
+    return String(status || "unknown").replaceAll("_", " ");
   };
 
   const getStatusMeta = (status) => {
@@ -207,6 +254,19 @@ const RepairStatus = () => {
         </div>
       </div>
 
+      {pageError && (
+        <div className="repair-status-alert-card repair-status-reveal repair-status-delay-1">
+          <div className="repair-status-alert-icon">
+            <IconifyIcon icon="mdi:alert-circle-outline" />
+          </div>
+
+          <div>
+            <strong>Unable to load repair records.</strong>
+            <p>{pageError}</p>
+          </div>
+        </div>
+      )}
+
       <div className="repair-status-stats-grid repair-status-reveal repair-status-delay-1">
         <div className="repair-status-stat-card repair-status-stat-blue">
           <div className="repair-status-stat-icon-bg" />
@@ -230,7 +290,7 @@ const RepairStatus = () => {
           <span className="repair-status-stat-note">Urgent repair issues</span>
         </div>
 
-        <div className="repair-status-stat-card repair-status-stat-purple">
+        <div className="repair-status-stat-card repair-status-stat-indigo">
           <div className="repair-status-stat-icon-bg" />
           <div className="repair-status-stat-icon">
             <IconifyIcon icon="mdi:check-decagram-outline" />
@@ -243,7 +303,7 @@ const RepairStatus = () => {
           </span>
         </div>
 
-        <div className="repair-status-stat-card repair-status-stat-orange">
+        <div className="repair-status-stat-card repair-status-stat-slate">
           <div className="repair-status-stat-icon-bg" />
           <div className="repair-status-stat-icon">
             <IconifyIcon icon="mdi:cash-multiple" />
@@ -260,8 +320,8 @@ const RepairStatus = () => {
       </div>
 
       <div className="repair-status-list repair-status-reveal repair-status-delay-2">
-        {repairs.length > 0 ? (
-          repairs.map((item) => {
+        {sortedRepairs.length > 0 ? (
+          sortedRepairs.map((item) => {
             const statusMeta = getStatusMeta(item.status);
             const priorityMeta = getPriorityMeta(item.priority);
 
@@ -328,9 +388,7 @@ const RepairStatus = () => {
                         View Bill / Receipt
                       </a>
                     ) : (
-                      <strong className="repair-status-value">
-                        Not uploaded
-                      </strong>
+                      <strong className="repair-status-value">Not uploaded</strong>
                     )}
                   </InfoBox>
 
@@ -347,9 +405,7 @@ const RepairStatus = () => {
 
             <h4>No repair records found</h4>
 
-            <p>
-              No repair records are currently linked to your assigned vehicle.
-            </p>
+            <p>No repair records are currently linked to your assigned vehicle.</p>
           </div>
         )}
       </div>
