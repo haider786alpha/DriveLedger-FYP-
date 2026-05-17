@@ -1,0 +1,563 @@
+.driveease-home,
+.driveease-home * {
+  box-sizing: border-box;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+.driveease-home {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(37, 99, 235, 0.1), transparent 28%),
+    radial-gradient(circle at 88% 22%, rgba(79, 70, 229, 0.09), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 48%, #eef5ff 100%);
+  color: #0f172a;
+}
+
+.driveease-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.driveease-hero-bg {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(4px);
+}
+
+.driveease-hero-bg-one {
+  width: 310px;
+  height: 310px;
+  top: -110px;
+  right: -80px;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.driveease-hero-bg-two {
+  width: 290px;
+  height: 290px;
+  left: -95px;
+  bottom: -110px;
+  background: rgba(79, 70, 229, 0.09);
+}
+
+.driveease-nav {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 14px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid #dbeafe;
+  box-shadow: 0 20px 46px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(14px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.driveease-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.driveease-brand-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.82), transparent 30%),
+    linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
+}
+
+.driveease-brand svg,
+.driveease-primary-btn svg,
+.driveease-secondary-btn svg,
+.driveease-feature-row svg,
+.driveease-feature-card-icon svg,
+.driveease-panel-icon svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+.driveease-brand h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 23px;
+  font-weight: 950;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.driveease-brand p {
+  margin: 5px 0 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.driveease-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.driveease-nav-link,
+.driveease-nav-btn,
+.driveease-primary-btn,
+.driveease-secondary-btn {
+  border: none;
+  outline: none;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 900;
+  transition: all 0.18s ease;
+}
+
+.driveease-nav-link {
+  color: #1d4ed8;
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.driveease-nav-link:hover {
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.driveease-nav-btn {
+  padding: 12px 15px;
+  border-radius: 14px;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
+}
+
+.driveease-nav-btn:hover {
+  transform: translateY(-1px);
+  background: #1d4ed8;
+}
+
+.driveease-hero-grid {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  min-height: calc(100vh - 112px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+  gap: 30px;
+  align-items: center;
+  padding: 48px 0;
+}
+
+.driveease-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.driveease-kicker span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #2563eb;
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.13);
+}
+
+.driveease-hero-content h1 {
+  margin: 0;
+  max-width: 780px;
+  color: #0f172a;
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 950;
+  line-height: 1.02;
+  letter-spacing: -0.06em;
+}
+
+.driveease-hero-content h1 span {
+  color: #2563eb;
+}
+
+.driveease-hero-content p {
+  margin: 20px 0 0 0;
+  max-width: 680px;
+  color: #475569;
+  font-size: 17px;
+  line-height: 1.8;
+  font-weight: 650;
+}
+
+.driveease-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.driveease-primary-btn,
+.driveease-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 15px 19px;
+  border-radius: 17px;
+  font-size: 14px;
+}
+
+.driveease-primary-btn {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.28);
+}
+
+.driveease-primary-btn:hover {
+  color: #ffffff;
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.driveease-secondary-btn {
+  background: #ffffff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.driveease-secondary-btn:hover {
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.driveease-trust-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.driveease-trust-row div {
+  min-width: 142px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.055);
+}
+
+.driveease-trust-row strong {
+  display: block;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.driveease-trust-row span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.driveease-hero-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 32px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 96% 8%, rgba(37, 99, 235, 0.1), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #dbeafe;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.13);
+}
+
+.driveease-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.driveease-panel-header span {
+  display: block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.driveease-panel-header h4 {
+  margin: 6px 0 0 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.driveease-panel-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
+}
+
+.driveease-panel-list {
+  display: grid;
+  gap: 13px;
+}
+
+.driveease-feature-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.045);
+}
+
+.driveease-feature-row > div {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 15px;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.driveease-feature-row strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.driveease-feature-row small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.driveease-features {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px 24px 70px 24px;
+}
+
+.driveease-section-head {
+  max-width: 780px;
+  margin-bottom: 22px;
+}
+
+.driveease-section-head span {
+  display: inline-block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.driveease-section-head h2 {
+  margin: 9px 0 0 0;
+  color: #0f172a;
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 950;
+  letter-spacing: -0.045em;
+}
+
+.driveease-section-head p {
+  margin: 10px 0 0 0;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.driveease-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.driveease-feature-card {
+  padding: 19px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.07);
+  transition: all 0.18s ease;
+}
+
+.driveease-feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.1);
+}
+
+.driveease-feature-card-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 17px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.driveease-feature-card h4 {
+  margin: 15px 0 0 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.driveease-feature-card p {
+  margin: 8px 0 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.driveease-footer {
+  padding: 22px;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.driveease-footer p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 1024px) {
+  .driveease-hero-grid {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .driveease-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .driveease-hero {
+    padding: 14px;
+  }
+
+  .driveease-nav {
+    display: grid;
+  }
+
+  .driveease-nav-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .driveease-nav-link,
+  .driveease-nav-btn {
+    text-align: center;
+  }
+
+  .driveease-hero-grid {
+    padding: 36px 0;
+  }
+
+  .driveease-hero-content h1 {
+    font-size: 39px;
+  }
+
+  .driveease-hero-content p {
+    font-size: 15px;
+  }
+
+  .driveease-primary-btn,
+  .driveease-secondary-btn {
+    width: 100%;
+  }
+
+  .driveease-hero-panel {
+    border-radius: 26px;
+    padding: 18px;
+  }
+
+  .driveease-feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .driveease-brand h3 {
+    font-size: 21px;
+  }
+
+  .driveease-brand p {
+    font-size: 11px;
+  }
+
+  .driveease-brand-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 15px;
+  }
+
+  .driveease-nav-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .driveease-hero-content h1 {
+    font-size: 34px;
+  }
+
+  .driveease-trust-row div {
+    width: 100%;
+  }
+}

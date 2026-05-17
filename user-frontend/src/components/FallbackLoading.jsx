@@ -13,8 +13,8 @@ const FallbackLoading = () => {
           </div>
 
           <div>
-            <h1>DriveLedger</h1>
-            <p>Loading your dashboard</p>
+            <h1>DriveEase</h1>
+<p>Powered by DriveLedger</p>
           </div>
         </div>
 
