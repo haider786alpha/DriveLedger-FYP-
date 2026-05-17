@@ -20,29 +20,6 @@ const HomePage = () => {
         <div className="driveease-hero-bg driveease-hero-bg-one" />
         <div className="driveease-hero-bg driveease-hero-bg-two" />
 
-        <nav className="driveease-nav">
-          <div className="driveease-brand">
-            <div className="driveease-brand-mark">
-              <IconifyIcon icon="mdi:routes" />
-            </div>
-
-            <div>
-              <h3>DriveEase</h3>
-              <p>Powered by DriveLedger</p>
-            </div>
-          </div>
-
-          <div className="driveease-nav-actions">
-            <Link to="/auth/sign-in" className="driveease-nav-link">
-              Driver Login
-            </Link>
-
-            <button type="button" onClick={openAdminPortal} className="driveease-nav-btn">
-              Admin Portal
-            </button>
-          </div>
-        </nav>
-
         <div className="driveease-hero-grid">
           <div className="driveease-hero-content">
             <div className="driveease-kicker">
@@ -51,14 +28,13 @@ const HomePage = () => {
             </div>
 
             <h1>
-              DriveEase fleet management powered by{" "}
-              <span>DriveLedger</span>
+              DriveEase fleet management powered by <span>DriveLedger</span>
             </h1>
 
             <p>
-              A modern digital ledger system for managing drivers, assigned cars,
-              payments, repairs, locations, alerts, and support operations in one
-              professional platform.
+              A modern digital ledger system for managing drivers, assigned
+              cars, payments, repairs, locations, alerts, and support operations
+              in one professional platform.
             </p>
 
             <div className="driveease-hero-actions">
@@ -67,7 +43,11 @@ const HomePage = () => {
                 Driver Portal
               </Link>
 
-              <button type="button" onClick={openAdminPortal} className="driveease-secondary-btn">
+              <button
+                type="button"
+                onClick={openAdminPortal}
+                className="driveease-secondary-btn"
+              >
                 <IconifyIcon icon="mdi:shield-account-outline" />
                 Admin Portal
               </button>
@@ -104,10 +84,29 @@ const HomePage = () => {
             </div>
 
             <div className="driveease-panel-list">
-              <FeatureRow icon="mdi:car-outline" title="Vehicle Assignments" text="Track assigned cars and driver records." />
-              <FeatureRow icon="mdi:cash-multiple" title="Payment Ledger" text="Manage paid history and pending dues." />
-              <FeatureRow icon="mdi:map-marker-radius-outline" title="Driver Location" text="Allow drivers to share live coordinates manually." />
-              <FeatureRow icon="mdi:car-wrench" title="Repair Status" text="Monitor repair records, bills, and priorities." />
+              <FeatureRow
+                icon="mdi:car-outline"
+                title="Vehicle Assignments"
+                text="Track assigned cars and driver records."
+              />
+
+              <FeatureRow
+                icon="mdi:cash-multiple"
+                title="Payment Ledger"
+                text="Manage paid history and pending dues."
+              />
+
+              <FeatureRow
+                icon="mdi:map-marker-radius-outline"
+                title="Driver Location"
+                text="Allow drivers to share live coordinates manually."
+              />
+
+              <FeatureRow
+                icon="mdi:car-wrench"
+                title="Repair Status"
+                text="Monitor repair records, bills, and priorities."
+              />
             </div>
           </div>
         </div>
@@ -124,10 +123,29 @@ const HomePage = () => {
         </div>
 
         <div className="driveease-feature-grid">
-          <FeatureCard icon="mdi:account-group-outline" title="Driver Management" text="Maintain driver profiles, documents, and work details." />
-          <FeatureCard icon="mdi:file-document-check-outline" title="Assignment Tracking" text="View active vehicle assignments and related records." />
-          <FeatureCard icon="mdi:credit-card-check-outline" title="Payment Records" text="Track paid history, pending dues, and ledger summaries." />
-          <FeatureCard icon="mdi:bell-badge-outline" title="Alerts & Support" text="Send alerts, receive support requests, and manage replies." />
+          <FeatureCard
+            icon="mdi:account-group-outline"
+            title="Driver Management"
+            text="Maintain driver profiles, documents, and work details."
+          />
+
+          <FeatureCard
+            icon="mdi:file-document-check-outline"
+            title="Assignment Tracking"
+            text="View active vehicle assignments and related records."
+          />
+
+          <FeatureCard
+            icon="mdi:credit-card-check-outline"
+            title="Payment Records"
+            text="Track paid history, pending dues, and ledger summaries."
+          />
+
+          <FeatureCard
+            icon="mdi:bell-badge-outline"
+            title="Alerts & Support"
+            text="Send alerts, receive support requests, and manage replies."
+          />
         </div>
       </section>
 

@@ -8,13 +8,12 @@
 .driveease-home {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 18% 8%, rgba(37, 99, 235, 0.08), transparent 28%),
-    radial-gradient(circle at 88% 22%, rgba(79, 70, 229, 0.075), transparent 30%),
+    radial-gradient(circle at 14% 8%, rgba(37, 99, 235, 0.1), transparent 26%),
+    radial-gradient(circle at 92% 10%, rgba(79, 70, 229, 0.09), transparent 29%),
     linear-gradient(135deg, #ffffff 0%, #f8fbff 48%, #eef5ff 100%);
   color: #0f172a;
 }
 
-/* Force homepage readability if any global theme CSS affects opacity/color */
 .driveease-home h1,
 .driveease-home h2,
 .driveease-home h3,
@@ -32,7 +31,7 @@
   position: relative;
   overflow: hidden;
   min-height: 100vh;
-  padding: 24px;
+  padding: 32px 24px;
 }
 
 .driveease-hero::before {
@@ -40,7 +39,12 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 52%, rgba(239, 246, 255, 0.78) 100%);
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.97) 0%,
+      rgba(255, 255, 255, 0.91) 52%,
+      rgba(239, 246, 255, 0.78) 100%
+    );
   pointer-events: none;
   z-index: 0;
 }
@@ -54,95 +58,21 @@
 }
 
 .driveease-hero-bg-one {
-  width: 310px;
-  height: 310px;
-  top: -110px;
-  right: -80px;
+  width: 340px;
+  height: 340px;
+  top: -120px;
+  right: -90px;
   background: rgba(37, 99, 235, 0.1);
 }
 
 .driveease-hero-bg-two {
-  width: 290px;
-  height: 290px;
-  left: -95px;
-  bottom: -110px;
+  width: 300px;
+  height: 300px;
+  left: -110px;
+  bottom: -120px;
   background: rgba(79, 70, 229, 0.085);
 }
 
-.driveease-nav {
-  position: relative;
-  z-index: 2;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 14px;
-  border-radius: 26px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #dbeafe;
-  box-shadow: 0 20px 46px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(14px);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
-}
-
-.driveease-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.driveease-brand-mark {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  border-radius: 17px;
-  background:
-    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.82), transparent 30%),
-    linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 25px;
-  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
-}
-
-.driveease-brand svg,
-.driveease-primary-btn svg,
-.driveease-secondary-btn svg,
-.driveease-feature-row svg,
-.driveease-feature-card-icon svg,
-.driveease-panel-icon svg {
-  width: 1em;
-  height: 1em;
-  display: block;
-}
-
-.driveease-brand h3 {
-  margin: 0;
-  color: #0f172a !important;
-  font-size: 23px;
-  font-weight: 950;
-  letter-spacing: -0.045em;
-  line-height: 1;
-}
-
-.driveease-brand p {
-  margin: 5px 0 0 0;
-  color: #475569 !important;
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.driveease-nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.driveease-nav-link,
-.driveease-nav-btn,
 .driveease-primary-btn,
 .driveease-secondary-btn {
   border: none;
@@ -153,52 +83,29 @@
   transition: all 0.18s ease;
 }
 
-.driveease-nav-link {
-  color: #1d4ed8 !important;
-  padding: 11px 14px;
-  border-radius: 14px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-}
-
-.driveease-nav-link:hover {
-  color: #1d4ed8 !important;
-  transform: translateY(-1px);
-}
-
-.driveease-nav-btn {
-  padding: 12px 15px;
-  border-radius: 14px;
-  background: #2563eb;
-  color: #ffffff !important;
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
-}
-
-.driveease-nav-btn:hover {
-  transform: translateY(-1px);
-  background: #1d4ed8;
-  color: #ffffff !important;
-}
-
 .driveease-hero-grid {
   position: relative;
   z-index: 2;
   max-width: 1180px;
-  min-height: calc(100vh - 112px);
+  min-height: calc(100vh - 64px);
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
-  gap: 30px;
+  gap: 42px;
   align-items: center;
-  padding: 48px 0;
+  padding: 44px 0 64px 0;
+}
+
+.driveease-hero-content {
+  animation: driveeaseReveal 0.7s ease both;
 }
 
 .driveease-kicker {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 18px;
-  padding: 9px 14px;
+  margin-bottom: 22px;
+  padding: 10px 15px;
   border-radius: 999px;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
@@ -221,7 +128,7 @@
   margin: 0;
   max-width: 840px;
   color: #0f172a !important;
-  font-size: clamp(42px, 5vw, 68px);
+  font-size: clamp(44px, 5vw, 72px);
   font-weight: 950;
   line-height: 1.03;
   letter-spacing: -0.06em;
@@ -233,7 +140,7 @@
 }
 
 .driveease-hero-content p {
-  margin: 20px 0 0 0;
+  margin: 22px 0 0 0;
   max-width: 700px;
   color: #475569 !important;
   font-size: 17px;
@@ -245,7 +152,7 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 .driveease-primary-btn,
@@ -254,7 +161,7 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  padding: 15px 19px;
+  padding: 15px 20px;
   border-radius: 17px;
   font-size: 14px;
 }
@@ -283,16 +190,26 @@
   transform: translateY(-1px);
 }
 
+.driveease-primary-btn svg,
+.driveease-secondary-btn svg,
+.driveease-feature-row svg,
+.driveease-feature-card-icon svg,
+.driveease-panel-icon svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
 .driveease-trust-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 .driveease-trust-row div {
   min-width: 142px;
-  padding: 14px 16px;
+  padding: 15px 16px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid #e2e8f0;
@@ -325,6 +242,7 @@
   border: 1px solid #dbeafe;
   box-shadow: 0 30px 70px rgba(15, 23, 42, 0.13);
   opacity: 1 !important;
+  animation: driveeasePanelPop 0.75s ease both;
 }
 
 .driveease-panel-header {
@@ -414,7 +332,7 @@
 .driveease-features {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 40px 24px 70px 24px;
+  padding: 44px 24px 72px 24px;
   position: relative;
   z-index: 2;
 }
@@ -512,6 +430,30 @@
   font-weight: 800;
 }
 
+@keyframes driveeaseReveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes driveeasePanelPop {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 1024px) {
   .driveease-hero-grid {
     grid-template-columns: 1fr;
@@ -525,26 +467,16 @@
 
 @media (max-width: 768px) {
   .driveease-hero {
-    padding: 14px;
-  }
-
-  .driveease-nav {
-    display: grid;
-  }
-
-  .driveease-nav-actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .driveease-nav-link,
-  .driveease-nav-btn {
-    text-align: center;
+    padding: 28px 16px 34px 16px;
   }
 
   .driveease-hero-grid {
-    padding: 36px 0;
+    padding: 18px 0 34px 0;
+    gap: 26px;
+  }
+
+  .driveease-kicker {
+    margin-bottom: 20px;
   }
 
   .driveease-hero-content h1 {
@@ -571,27 +503,19 @@
 }
 
 @media (max-width: 480px) {
-  .driveease-brand h3 {
-    font-size: 21px;
+  .driveease-hero {
+    padding: 26px 14px 30px 14px;
   }
 
-  .driveease-brand p {
+  .driveease-kicker {
+    width: 100%;
+    justify-content: center;
     font-size: 11px;
   }
 
-  .driveease-brand-mark {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 15px;
-  }
-
-  .driveease-nav-actions {
-    grid-template-columns: 1fr;
-  }
-
   .driveease-hero-content h1 {
-    font-size: 34px;
+    font-size: 36px;
+    letter-spacing: -0.045em;
   }
 
   .driveease-trust-row div {
