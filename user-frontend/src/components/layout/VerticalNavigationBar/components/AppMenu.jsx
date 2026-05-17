@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Collapse } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import IconifyIcon from '@/components/wrappers/IconifyIcon';
@@ -75,6 +75,12 @@ const getSubMenuWrapStyle = () => ({
   borderLeft: '1px dashed #dbeafe',
   marginLeft: '16px',
 });
+
+const safeArray = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
 
 const UnreadBadge = ({ count }) => {
   if (!count || count <= 0) return null;
@@ -292,6 +298,8 @@ const AppMenu = ({ menuItems }) => {
   const [activeMenuItems, setActiveMenuItems] = useState([]);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
 
+  const notificationControllerRef = useRef(null);
+
   const handleMenuLinkClick = () => {
     if (window.innerWidth <= 991) {
       closeBackdrop();
@@ -300,17 +308,39 @@ const AppMenu = ({ menuItems }) => {
 
   const fetchUnreadAlerts = useCallback(async () => {
     try {
+      if (document.hidden) return;
+
+      if (notificationControllerRef.current) {
+        notificationControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      notificationControllerRef.current = controller;
+
       const loggedInDriver = await getLoggedInDriver();
 
-      if (!loggedInDriver) {
+      if (controller.signal.aborted) return;
+
+      if (!loggedInDriver?.id) {
         setUnreadAlerts(0);
         return;
       }
 
-      const res = await fetch(API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`));
+      const res = await fetch(API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`), {
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Notifications request failed with status ${res.status}`);
+      }
+
       const data = await res.json();
 
-      const filteredAlerts = (Array.isArray(data) ? data : []).filter(
+      if (controller.signal.aborted) return;
+
+      const alerts = safeArray(data);
+
+      const filteredAlerts = alerts.filter(
         (item) =>
           item.recipient_type === 'all' ||
           (item.recipient_type === 'driver' &&
@@ -320,24 +350,40 @@ const AppMenu = ({ menuItems }) => {
       const unreadCount = filteredAlerts.filter((item) => !item.is_read).length;
       setUnreadAlerts(unreadCount);
     } catch (error) {
+      if (error?.name === 'AbortError') return;
+
       console.error('Sidebar unread alerts error:', error);
-      setUnreadAlerts(0);
     }
   }, []);
 
   useEffect(() => {
     fetchUnreadAlerts();
 
-    const interval = setInterval(fetchUnreadAlerts, 30000);
+    const interval = setInterval(() => {
+      fetchUnreadAlerts();
+    }, 30000);
+
     const handleFocus = () => fetchUnreadAlerts();
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchUnreadAlerts();
+      }
+    };
     const handleNotificationsUpdated = () => fetchUnreadAlerts();
 
     window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('notifications-updated', handleNotificationsUpdated);
 
     return () => {
       clearInterval(interval);
+
+      if (notificationControllerRef.current) {
+        notificationControllerRef.current.abort();
+      }
+
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('notifications-updated', handleNotificationsUpdated);
     };
   }, [fetchUnreadAlerts]);
@@ -356,7 +402,7 @@ const AppMenu = ({ menuItems }) => {
   );
 
   const activeMenu = useCallback(() => {
-    const trimmedURL = pathname?.replaceAll('', '');
+    const trimmedURL = pathname || '';
     const matchingMenuItem = getMenuItemFromURL(menuItems, trimmedURL);
 
     const easeInOutQuad = (t, b, c, d) => {
