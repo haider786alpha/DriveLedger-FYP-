@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
@@ -11,66 +11,110 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [markingId, setMarkingId] = useState(null);
   const [markingAll, setMarkingAll] = useState(false);
+  const [pageError, setPageError] = useState("");
+
+  const toastTimerRef = useRef(null);
 
   const [toast, setToast] = useState({
     message: "",
     type: "success",
   });
 
-  const showToast = (message, type = "success") => {
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
+
+  const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
 
-    setTimeout(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    toastTimerRef.current = setTimeout(() => {
       setToast({ message: "", type: "success" });
     }, 3500);
-  };
-
-  useEffect(() => {
-    fetchAlerts();
   }, []);
 
-  const fetchAlerts = async () => {
-    try {
-      setLoading(true);
+  const fetchAlerts = useCallback(
+    async (signal) => {
+      try {
+        setLoading(true);
+        setPageError("");
 
-      const loggedInDriver = await getLoggedInDriver();
-      setDriver(loggedInDriver);
+        const loggedInDriver = await getLoggedInDriver();
 
-      if (!loggedInDriver) {
+        if (signal?.aborted) return;
+
+        setDriver(loggedInDriver);
+
+        if (!loggedInDriver?.id) {
+          setAlerts([]);
+          return;
+        }
+
+        const res = await fetch(
+          API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`),
+          { signal }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Request failed with status ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (signal?.aborted) return;
+
+        const notifications = safeArray(data);
+
+        const filteredAlerts = notifications.filter(
+          (item) =>
+            item.recipient_type === "all" ||
+            (item.recipient_type === "driver" &&
+              Number(item.driver) === Number(loggedInDriver.id))
+        );
+
+        setAlerts(filteredAlerts);
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+
+        console.error("Alerts error:", error);
         setAlerts([]);
-        setLoading(false);
-        return;
+        setPageError("Alerts could not be loaded. Please refresh the page.");
+        showToast("Failed to load alerts.", "error");
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+        }
       }
+    },
+    [showToast]
+  );
 
-      const res = await fetch(
-        API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`)
-      );
+  useEffect(() => {
+    const controller = new AbortController();
 
-      const data = await res.json();
+    fetchAlerts(controller.signal);
 
-      const filteredAlerts = (Array.isArray(data) ? data : []).filter(
-        (item) =>
-          item.recipient_type === "all" ||
-          (item.recipient_type === "driver" &&
-            Number(item.driver) === Number(loggedInDriver.id))
-      );
+    return () => {
+      controller.abort();
 
-      setAlerts(filteredAlerts);
-    } catch (error) {
-      console.error("Alerts error:", error);
-      showToast("Failed to load alerts.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, [fetchAlerts]);
 
   const markAsRead = async (notificationId) => {
-    if (!driver) return;
+    if (!driver?.id || !notificationId) return;
 
     try {
       setMarkingId(notificationId);
 
-      await fetch(API_URL(`/api/notifications/${notificationId}/mark-read/`), {
+      const res = await fetch(API_URL(`/api/notifications/${notificationId}/mark-read/`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,13 +124,17 @@ const Alerts = () => {
         }),
       });
 
+      if (!res.ok) {
+        throw new Error(`Mark read failed with status ${res.status}`);
+      }
+
       setAlerts((prev) =>
         prev.map((item) =>
           item.id === notificationId
             ? {
                 ...item,
                 is_read: true,
-                read_at: new Date().toISOString(),
+                read_at: item.read_at || new Date().toISOString(),
               }
             : item
         )
@@ -103,7 +151,7 @@ const Alerts = () => {
   };
 
   const markAllAsRead = async () => {
-    if (!driver) return;
+    if (!driver?.id) return;
 
     const unreadAlerts = alerts.filter((item) => !item.is_read);
 
@@ -115,30 +163,55 @@ const Alerts = () => {
     try {
       setMarkingAll(true);
 
-      for (const alertItem of unreadAlerts) {
-        await fetch(API_URL(`/api/notifications/${alertItem.id}/mark-read/`), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            driver: driver.id,
-          }),
-        });
+      const results = await Promise.allSettled(
+        unreadAlerts.map((alertItem) =>
+          fetch(API_URL(`/api/notifications/${alertItem.id}/mark-read/`), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              driver: driver.id,
+            }),
+          }).then((res) => {
+            if (!res.ok) {
+              throw new Error(`Failed to mark alert ${alertItem.id}`);
+            }
+
+            return alertItem.id;
+          })
+        )
+      );
+
+      const successfulIds = results
+        .filter((result) => result.status === "fulfilled")
+        .map((result) => result.value);
+
+      if (successfulIds.length === 0) {
+        throw new Error("No alerts were marked as read.");
       }
 
       const now = new Date().toISOString();
 
       setAlerts((prev) =>
-        prev.map((item) => ({
-          ...item,
-          is_read: true,
-          read_at: item.read_at || now,
-        }))
+        prev.map((item) =>
+          successfulIds.includes(item.id)
+            ? {
+                ...item,
+                is_read: true,
+                read_at: item.read_at || now,
+              }
+            : item
+        )
       );
 
       window.dispatchEvent(new Event("notifications-updated"));
-      showToast("All alerts marked as read.", "success");
+
+      if (successfulIds.length === unreadAlerts.length) {
+        showToast("All alerts marked as read.", "success");
+      } else {
+        showToast("Some alerts were marked as read. Please retry the remaining ones.", "warning");
+      }
     } catch (error) {
       console.error("Mark all read error:", error);
       showToast("Failed to mark all alerts as read.", "error");
@@ -181,22 +254,41 @@ const Alerts = () => {
 
   const formatDateTime = (dateValue) => {
     if (!dateValue) return "-";
-    return new Date(dateValue).toLocaleString();
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return date.toLocaleString();
   };
 
-  const infoCount = alerts.filter(
-    (item) => String(item.notification_type).toLowerCase() === "info"
-  ).length;
+  const sortedAlerts = useMemo(() => {
+    return [...alerts].sort(
+      (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    );
+  }, [alerts]);
 
-  const warningCount = alerts.filter(
-    (item) => String(item.notification_type).toLowerCase() === "warning"
-  ).length;
+  const infoCount = useMemo(() => {
+    return alerts.filter(
+      (item) => String(item.notification_type || "").toLowerCase() === "info"
+    ).length;
+  }, [alerts]);
 
-  const successCount = alerts.filter(
-    (item) => String(item.notification_type).toLowerCase() === "success"
-  ).length;
+  const warningCount = useMemo(() => {
+    return alerts.filter(
+      (item) => String(item.notification_type || "").toLowerCase() === "warning"
+    ).length;
+  }, [alerts]);
 
-  const unreadCount = alerts.filter((item) => !item.is_read).length;
+  const successCount = useMemo(() => {
+    return alerts.filter(
+      (item) => String(item.notification_type || "").toLowerCase() === "success"
+    ).length;
+  }, [alerts]);
+
+  const unreadCount = useMemo(() => {
+    return alerts.filter((item) => !item.is_read).length;
+  }, [alerts]);
 
   if (loading) {
     return (
@@ -206,6 +298,7 @@ const Alerts = () => {
           type={toast.type}
           onClose={() => setToast({ message: "", type: "success" })}
         />
+
         <h4>Loading alerts...</h4>
         <p>Please wait while we fetch your notifications.</p>
       </div>
@@ -253,6 +346,19 @@ const Alerts = () => {
         </div>
       </div>
 
+      {pageError && (
+        <div className="alerts-page-alert-card alerts-reveal alerts-delay-1">
+          <div className="alerts-page-alert-icon">
+            <IconifyIcon icon="mdi:alert-circle-outline" />
+          </div>
+
+          <div>
+            <strong>Unable to load alerts.</strong>
+            <p>{pageError}</p>
+          </div>
+        </div>
+      )}
+
       <div className="alerts-stats-grid alerts-reveal alerts-delay-1">
         <div className="alerts-stat-card alerts-stat-red">
           <div className="alerts-stat-icon-bg" />
@@ -276,7 +382,7 @@ const Alerts = () => {
           <span className="alerts-stat-note">General updates</span>
         </div>
 
-        <div className="alerts-stat-card alerts-stat-orange">
+        <div className="alerts-stat-card alerts-stat-indigo">
           <div className="alerts-stat-icon-bg" />
           <div className="alerts-stat-icon">
             <IconifyIcon icon="mdi:alert-outline" />
@@ -287,7 +393,7 @@ const Alerts = () => {
           <span className="alerts-stat-note">Important reminders</span>
         </div>
 
-        <div className="alerts-stat-card alerts-stat-purple">
+        <div className="alerts-stat-card alerts-stat-slate">
           <div className="alerts-stat-icon-bg" />
           <div className="alerts-stat-icon">
             <IconifyIcon icon="mdi:check-decagram-outline" />
@@ -300,8 +406,8 @@ const Alerts = () => {
       </div>
 
       <div className="alerts-list alerts-reveal alerts-delay-2">
-        {alerts.length > 0 ? (
-          alerts.map((alertItem) => {
+        {sortedAlerts.length > 0 ? (
+          sortedAlerts.map((alertItem) => {
             const meta = getAlertMeta(alertItem.notification_type);
 
             return (
@@ -319,7 +425,9 @@ const Alerts = () => {
                   <div className="alerts-card-content">
                     <div className="alerts-card-top">
                       <div>
-                        <h4 className="alerts-card-title">{alertItem.title}</h4>
+                        <h4 className="alerts-card-title">
+                          {alertItem.title || "Notification"}
+                        </h4>
 
                         {!alertItem.is_read && (
                           <span className="alerts-badge alerts-badge-unread">
@@ -336,7 +444,7 @@ const Alerts = () => {
                         {!alertItem.is_read && (
                           <button
                             onClick={() => markAsRead(alertItem.id)}
-                            disabled={markingId === alertItem.id}
+                            disabled={markingId === alertItem.id || markingAll}
                             className="alerts-secondary-btn"
                           >
                             {markingId === alertItem.id ? "Marking..." : "Mark Read"}
@@ -345,7 +453,9 @@ const Alerts = () => {
                       </div>
                     </div>
 
-                    <p className="alerts-card-message">{alertItem.message}</p>
+                    <p className="alerts-card-message">
+                      {alertItem.message || "No message available."}
+                    </p>
 
                     <div className="alerts-meta">
                       <small>Created: {formatDateTime(alertItem.created_at)}</small>
@@ -366,6 +476,7 @@ const Alerts = () => {
             <div className="alerts-empty-icon">
               <IconifyIcon icon="mdi:bell-off-outline" />
             </div>
+
             <h4>No alerts found</h4>
             <p>You currently have no notifications or account alerts.</p>
           </div>

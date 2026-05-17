@@ -106,8 +106,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #3b82f6;
-  box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.2);
+  background: #60a5fa;
+  box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.2);
   flex-shrink: 0;
 }
 
@@ -202,6 +202,54 @@
 }
 
 /* =========================
+   PAGE ALERT
+========================= */
+
+.alerts-page-alert-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  box-shadow: 0 12px 26px rgba(30, 64, 175, 0.06);
+}
+
+.alerts-page-alert-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: #dbeafe;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.alerts-page-alert-icon svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+.alerts-page-alert-card strong {
+  display: block;
+  color: #1d4ed8;
+  font-weight: 950;
+}
+
+.alerts-page-alert-card p {
+  margin: 5px 0 0 0;
+  color: #1e40af;
+  line-height: 1.5;
+}
+
+/* =========================
    KPI CARDS
 ========================= */
 
@@ -237,12 +285,20 @@
   color: #2563eb;
 }
 
+.alerts-stat-indigo {
+  color: #4f46e5;
+}
+
+.alerts-stat-slate {
+  color: #334155;
+}
+
 .alerts-stat-orange {
-  color: #ea580c;
+  color: #4f46e5;
 }
 
 .alerts-stat-purple {
-  color: #6d28d9;
+  color: #334155;
 }
 
 .alerts-stat-icon-bg {
@@ -270,6 +326,14 @@
   z-index: 3;
   font-size: 24px;
   line-height: 1;
+}
+
+.alerts-stat-icon svg,
+.alerts-card-icon svg,
+.alerts-empty-icon svg {
+  width: 1em;
+  height: 1em;
+  display: block;
 }
 
 .alerts-stat-label {
