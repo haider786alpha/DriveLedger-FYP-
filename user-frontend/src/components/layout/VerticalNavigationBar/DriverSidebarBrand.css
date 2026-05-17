@@ -688,3 +688,364 @@ html[data-menu-size="sm-hover-active"] .driver-custom-brand-mark {
     min-width: 240px !important;
   }
 }
+/* =========================
+   PREMIUM NOTIFICATIONS DROPDOWN
+========================= */
+
+.driver-notifications-toggle {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  padding: 0 !important;
+  border-radius: 16px !important;
+  border: 1px solid #dbeafe !important;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9), transparent 32%),
+    linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%) !important;
+  color: #1d4ed8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+  box-shadow:
+    0 10px 24px rgba(37, 99, 235, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  transition: all 0.18s ease !important;
+}
+
+.driver-notifications-toggle:hover {
+  transform: translateY(-1px);
+  border-color: #bfdbfe !important;
+  box-shadow:
+    0 14px 28px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.driver-notifications-toggle svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+.driver-notifications-badge {
+  position: absolute;
+  top: 5px;
+  right: 4px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  font-size: 10px;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.28);
+}
+
+.driver-notifications-menu {
+  width: 390px !important;
+  max-width: calc(100vw - 22px) !important;
+  padding: 0 !important;
+  border-radius: 24px !important;
+  border: 1px solid #dbeafe !important;
+  background:
+    radial-gradient(circle at 96% 8%, rgba(37, 99, 235, 0.08), transparent 28%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 100%) !important;
+  box-shadow: 0 24px 54px rgba(15, 23, 42, 0.16) !important;
+  overflow: hidden;
+}
+
+.driver-notifications-header {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background:
+    radial-gradient(circle at 94% 0%, rgba(37, 99, 235, 0.08), transparent 30%),
+    #ffffff;
+}
+
+.driver-notifications-header h6 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.driver-notifications-header p {
+  margin: 4px 0 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.driver-notifications-mark-all {
+  border: none;
+  outline: none;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 11px;
+  font-weight: 900;
+  transition: all 0.18s ease;
+}
+
+.driver-notifications-mark-all:hover:not(:disabled) {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.driver-notifications-mark-all:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.driver-notification-item {
+  padding: 14px 16px !important;
+  border-bottom: 1px solid #eef2f7 !important;
+  white-space: normal !important;
+  cursor: default !important;
+  background: #ffffff !important;
+}
+
+.driver-notification-item.driver-notification-unread {
+  background:
+    radial-gradient(circle at 96% 10%, rgba(37, 99, 235, 0.06), transparent 24%),
+    #f8fbff !important;
+}
+
+.driver-notification-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.driver-notification-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.driver-notification-icon svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+.driver-notification-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.driver-notification-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.driver-notification-success {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.driver-notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.driver-notification-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.driver-notification-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.driver-notification-type {
+  display: inline-flex;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.driver-notification-unread-badge {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.driver-notification-message {
+  margin: 8px 0 10px 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.driver-notification-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.driver-notification-footer small {
+  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.driver-notification-read-time {
+  color: #2563eb !important;
+}
+
+.driver-notification-mark-btn {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 850;
+  transition: all 0.18s ease;
+}
+
+.driver-notification-mark-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.driver-notification-mark-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.driver-notifications-empty {
+  padding: 26px 18px;
+  text-align: center;
+}
+
+.driver-notifications-empty div {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 12px auto;
+  border-radius: 18px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.driver-notifications-empty svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+.driver-notifications-empty h6 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.driver-notifications-empty p {
+  margin: 6px 0 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.driver-notifications-footer {
+  padding: 14px 16px;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.driver-notifications-view-all {
+  width: 100%;
+  border: none !important;
+  border-radius: 14px !important;
+  padding: 11px 14px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22) !important;
+}
+
+.driver-notifications-view-all:hover {
+  background: #1d4ed8 !important;
+  transform: translateY(-1px);
+}
+
+.driver-notifications-view-all svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .driver-notifications-toggle {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 14px !important;
+    font-size: 20px !important;
+  }
+
+  .driver-notifications-menu {
+    width: 340px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .driver-notifications-menu {
+    width: calc(100vw - 18px) !important;
+  }
+
+  .driver-notifications-header {
+    padding: 14px;
+  }
+
+  .driver-notification-item {
+    padding: 13px 14px !important;
+  }
+}
