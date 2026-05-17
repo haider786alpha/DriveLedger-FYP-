@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
 import "./Dashboard.css";
 
 const Dashboard = () => {
@@ -9,70 +10,125 @@ const Dashboard = () => {
   const [car, setCar] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
 
-  const fetchDashboardData = async () => {
+  const fetchJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const fetchDashboardData = useCallback(async (signal) => {
     try {
       setLoading(true);
+      setDashboardError("");
 
       const loggedInDriver = await getLoggedInDriver();
+
+      if (signal?.aborted) return;
+
       setDriver(loggedInDriver);
 
-      if (!loggedInDriver) {
-        setLoading(false);
+      if (!loggedInDriver?.id) {
+        setAssignment(null);
+        setCar(null);
+        setPayments([]);
         return;
       }
 
-      const assignmentsRes = await fetch(API_URL("/api/assignments/"));
-      const assignments = await assignmentsRes.json();
+      const assignmentsData = await fetchJson(API_URL("/api/assignments/"), signal);
+      const assignments = safeArray(assignmentsData);
 
       const activeAssignment = assignments.find(
         (item) =>
           Number(item.driver) === Number(loggedInDriver.id) &&
-          String(item.status).toLowerCase() === "active"
+          String(item.status || "").toLowerCase() === "active"
       );
+
+      if (signal?.aborted) return;
 
       setAssignment(activeAssignment || null);
 
-      if (!activeAssignment) {
-        setLoading(false);
+      if (!activeAssignment?.id) {
+        setCar(null);
+        setPayments([]);
         return;
       }
 
-      const carRes = await fetch(API_URL(`/api/cars/${activeAssignment.car}/`));
-      const carData = await carRes.json();
-      setCar(carData);
+      const [carData, paymentsData] = await Promise.all([
+        activeAssignment?.car
+          ? fetchJson(API_URL(`/api/cars/${activeAssignment.car}/`), signal)
+          : Promise.resolve(null),
+        fetchJson(API_URL("/api/payments/"), signal),
+      ]);
 
-      const paymentsRes = await fetch(API_URL("/api/payments/"));
-      const allPayments = await paymentsRes.json();
+      if (signal?.aborted) return;
+
+      const allPayments = safeArray(paymentsData);
 
       const relatedPayments = allPayments.filter(
         (payment) => Number(payment.assignment) === Number(activeAssignment.id)
       );
 
+      setCar(carData);
       setPayments(relatedPayments);
     } catch (error) {
+      if (error?.name === "AbortError") return;
+
       console.error("Dashboard error:", error);
+      setDashboardError("Dashboard data could not be loaded. Please refresh the page.");
+      setCar(null);
+      setPayments([]);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
-  const totalAmount = payments.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0
-  );
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const paidCount = payments.filter(
-    (item) => String(item.status).toLowerCase() === "paid"
-  ).length;
+    fetchDashboardData(controller.signal);
 
-  const unpaidCount = payments.filter(
-    (item) => String(item.status).toLowerCase() === "unpaid"
-  ).length;
+    return () => {
+      controller.abort();
+    };
+  }, [fetchDashboardData]);
+
+  const recentPayments = useMemo(() => {
+    return [...payments].slice(-6).reverse();
+  }, [payments]);
+
+  const totalAmount = useMemo(() => {
+    return payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }, [payments]);
+
+  const paidCount = useMemo(() => {
+    return payments.filter(
+      (item) => String(item.status || "").toLowerCase() === "paid"
+    ).length;
+  }, [payments]);
+
+  const unpaidCount = useMemo(() => {
+    return payments.filter(
+      (item) => String(item.status || "").toLowerCase() === "unpaid"
+    ).length;
+  }, [payments]);
+
+  const formattedTotalAmount = useMemo(() => {
+    return new Intl.NumberFormat("en-PK").format(totalAmount);
+  }, [totalAmount]);
 
   const getStatusBadgeClass = (status) => {
     const value = String(status || "").toLowerCase();
@@ -80,6 +136,8 @@ const Dashboard = () => {
     if (value === "paid") return "driver-badge driver-badge-success";
     if (value === "unpaid") return "driver-badge driver-badge-danger";
     if (value === "active") return "driver-badge driver-badge-info";
+    if (value === "completed") return "driver-badge driver-badge-success";
+    if (value === "pending") return "driver-badge driver-badge-warning";
 
     return "driver-badge driver-badge-muted";
   };
@@ -115,7 +173,7 @@ const Dashboard = () => {
           {driver && (
             <div className="driver-login-pill">
               <span className="driver-online-dot"></span>
-              Logged in as: <strong>{driver.user_name}</strong>
+              Logged in as: <strong>{driver.user_name || driver.name || "Driver"}</strong>
             </div>
           )}
         </div>
@@ -126,12 +184,25 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {dashboardError && (
+        <div className="driver-alert-card driver-reveal driver-delay-2">
+          <div className="driver-alert-icon">
+            <IconifyIcon icon="mdi:alert-circle-outline" />
+          </div>
+
+          <div>
+            <strong>Unable to load dashboard data.</strong>
+            <p>{dashboardError}</p>
+          </div>
+        </div>
+      )}
+
       <div className="driver-kpi-grid driver-reveal driver-delay-2">
         <StatCard
           title="Assigned Car"
-          value={car ? `${car.make} ${car.model}` : "No Car"}
+          value={car ? `${car.make || ""} ${car.model || ""}`.trim() : "No Car"}
           subtitle="Current assigned vehicle"
-          icon="🚗"
+          icon="mdi:car-sports"
           tone="blue"
         />
 
@@ -139,8 +210,8 @@ const Dashboard = () => {
           title="Assignment Status"
           value={assignment ? assignment.status : "No Assignment"}
           subtitle="Live assignment condition"
-          icon="🔗"
-          tone="teal"
+          icon="mdi:file-document-check-outline"
+          tone="purple"
           capitalize
         />
 
@@ -148,22 +219,25 @@ const Dashboard = () => {
           title="Total Payments"
           value={payments.length}
           subtitle="All payment records"
-          icon="💰"
-          tone="green"
+          icon="mdi:cash-multiple"
+          tone="indigo"
         />
 
         <StatCard
           title="Paid Records"
           value={paidCount}
           subtitle={`${unpaidCount} unpaid record(s)`}
-          icon="✅"
-          tone="purple"
+          icon="mdi:credit-card-check-outline"
+          tone="slate"
         />
       </div>
 
       {!assignment && (
         <div className="driver-alert-card driver-reveal driver-delay-2">
-          <div className="driver-alert-icon">!</div>
+          <div className="driver-alert-icon">
+            <IconifyIcon icon="mdi:information-outline" />
+          </div>
+
           <div>
             <strong>No active assignment found.</strong>
             <p>
@@ -184,11 +258,11 @@ const Dashboard = () => {
 
             <div className="driver-total-chip">
               <span>Total Amount</span>
-              <strong>Rs. {totalAmount}</strong>
+              <strong>Rs. {formattedTotalAmount}</strong>
             </div>
           </div>
 
-          {payments.length > 0 ? (
+          {recentPayments.length > 0 ? (
             <>
               <div className="driver-payment-table-wrap">
                 <table className="driver-payment-table">
@@ -201,15 +275,22 @@ const Dashboard = () => {
                   </thead>
 
                   <tbody>
-                    {payments.slice(-6).reverse().map((payment) => (
+                    {recentPayments.map((payment) => (
                       <tr key={payment.id}>
                         <td>
-                          <strong>Rs. {payment.amount}</strong>
+                          <strong>
+                            Rs.{" "}
+                            {new Intl.NumberFormat("en-PK").format(
+                              Number(payment.amount || 0)
+                            )}
+                          </strong>
                         </td>
+
                         <td>{payment.payment_date || "-"}</td>
+
                         <td>
                           <span className={getStatusBadgeClass(payment.status)}>
-                            {payment.status}
+                            {payment.status || "Unknown"}
                           </span>
                         </td>
                       </tr>
@@ -219,11 +300,16 @@ const Dashboard = () => {
               </div>
 
               <div className="driver-mobile-payment-list">
-                {payments.slice(-6).reverse().map((payment) => (
+                {recentPayments.map((payment) => (
                   <div className="driver-mobile-payment-card" key={payment.id}>
                     <div>
                       <span>Amount</span>
-                      <strong>Rs. {payment.amount}</strong>
+                      <strong>
+                        Rs.{" "}
+                        {new Intl.NumberFormat("en-PK").format(
+                          Number(payment.amount || 0)
+                        )}
+                      </strong>
                     </div>
 
                     <div>
@@ -235,7 +321,7 @@ const Dashboard = () => {
                       <span>Status</span>
                       <strong>
                         <span className={getStatusBadgeClass(payment.status)}>
-                          {payment.status}
+                          {payment.status || "Unknown"}
                         </span>
                       </strong>
                     </div>
@@ -245,7 +331,10 @@ const Dashboard = () => {
             </>
           ) : (
             <div className="driver-empty-state">
-              <div>💳</div>
+              <div>
+                <IconifyIcon icon="mdi:credit-card-outline" />
+              </div>
+
               <h5>No payments found</h5>
               <p>Your payment records will appear here after admin adds them.</p>
             </div>
@@ -261,24 +350,29 @@ const Dashboard = () => {
           </div>
 
           <div className="driver-summary-list">
-            <SummaryRow label="Driver" value={driver?.user_name || "-"} />
+            <SummaryRow label="Driver" value={driver?.user_name || driver?.name || "-"} />
+
             <SummaryRow
               label="Vehicle"
-              value={car ? `${car.make} ${car.model}` : "No car assigned"}
+              value={car ? `${car.make || ""} ${car.model || ""}`.trim() : "No car assigned"}
             />
+
             <SummaryRow
               label="Registration"
               value={car?.registration_number || "-"}
             />
+
             <SummaryRow
               label="Assignment"
               value={assignment?.status || "No active assignment"}
               badge={assignment?.status}
             />
+
             <SummaryRow
               label="Start Date"
               value={assignment?.start_date || "-"}
             />
+
             <SummaryRow
               label="End Date"
               value={assignment?.end_date || "Not ended"}
@@ -292,7 +386,9 @@ const Dashboard = () => {
 
 const StatCard = ({ title, value, subtitle, icon, tone, capitalize }) => (
   <div className={`driver-stat-card driver-stat-${tone}`}>
-    <div className="driver-stat-icon">{icon}</div>
+    <div className="driver-stat-icon">
+      <IconifyIcon icon={icon} />
+    </div>
 
     <p>{title}</p>
 

@@ -185,12 +185,16 @@
   color: #4f46e5;
 }
 
-.driver-stat-green {
-  color: #0284c7;
-}
-
 .driver-stat-purple {
   color: #7c3aed;
+}
+
+.driver-stat-indigo {
+  color: #4f46e5;
+}
+
+.driver-stat-slate {
+  color: #334155;
 }
 
 .driver-stat-icon {
@@ -203,8 +207,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 21px;
+  font-size: 24px;
   z-index: 3;
+}
+
+.driver-stat-icon svg,
+.driver-alert-icon svg,
+.driver-empty-state svg {
+  width: 1em;
+  height: 1em;
+  display: block;
 }
 
 .driver-stat-card p {
@@ -266,6 +278,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  font-size: 20px;
   font-weight: 950;
 }
 
@@ -464,6 +477,12 @@
   border: 1px solid #c7d2fe;
 }
 
+.driver-badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
 .driver-badge-muted {
   background: #f1f5f9;
   color: #64748b;
@@ -481,8 +500,17 @@
 }
 
 .driver-empty-state div {
-  font-size: 34px;
-  margin-bottom: 10px;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 12px auto;
+  border-radius: 18px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
 }
 
 .driver-empty-state h5 {
@@ -647,7 +675,7 @@
   }
 
   .driver-stat-icon {
-    font-size: 19px;
+    font-size: 22px;
   }
 
   .driver-stat-card p,
