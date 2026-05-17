@@ -328,7 +328,7 @@ const AppMenu = ({ menuItems }) => {
   useEffect(() => {
     fetchUnreadAlerts();
 
-    const interval = setInterval(fetchUnreadAlerts, 5000);
+    const interval = setInterval(fetchUnreadAlerts, 30000);
     const handleFocus = () => fetchUnreadAlerts();
     const handleNotificationsUpdated = () => fetchUnreadAlerts();
 
