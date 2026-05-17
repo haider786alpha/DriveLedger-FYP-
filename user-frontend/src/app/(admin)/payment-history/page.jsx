@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
 import DriverToast from "@/components/DriverToast";
@@ -10,81 +10,133 @@ const PaymentHistory = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const toastTimerRef = useRef(null);
+
   const [toast, setToast] = useState({
     message: "",
     type: "success",
   });
 
-  const showToast = (message, type = "success") => {
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
+
+  const fetchJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
 
-    setTimeout(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    toastTimerRef.current = setTimeout(() => {
       setToast({ message: "", type: "success" });
     }, 3500);
-  };
-
-  useEffect(() => {
-    fetchPayments();
   }, []);
 
-  const fetchPayments = async () => {
-    try {
-      setLoading(true);
+  const fetchPayments = useCallback(
+    async (signal) => {
+      try {
+        setLoading(true);
 
-      const loggedInDriver = await getLoggedInDriver();
-      setDriver(loggedInDriver);
+        const loggedInDriver = await getLoggedInDriver();
 
-      if (!loggedInDriver) {
-        setLoading(false);
-        return;
-      }
+        if (signal?.aborted) return;
 
-      const assignmentsRes = await fetch(API_URL("/api/assignments/"));
-      const assignments = await assignmentsRes.json();
+        setDriver(loggedInDriver);
 
-      const driverAssignments = assignments.filter(
-        (item) => Number(item.driver) === Number(loggedInDriver.id)
-      );
+        if (!loggedInDriver?.id) {
+          setPayments([]);
+          return;
+        }
 
-      if (driverAssignments.length === 0) {
+        const assignmentsData = await fetchJson(API_URL("/api/assignments/"), signal);
+
+        if (signal?.aborted) return;
+
+        const assignments = safeArray(assignmentsData);
+
+        const driverAssignments = assignments.filter(
+          (item) => Number(item.driver) === Number(loggedInDriver.id)
+        );
+
+        if (driverAssignments.length === 0) {
+          setPayments([]);
+          return;
+        }
+
+        const assignmentIds = driverAssignments.map((item) => Number(item.id));
+
+        const paymentsData = await fetchJson(API_URL("/api/payments/"), signal);
+
+        if (signal?.aborted) return;
+
+        const allPayments = safeArray(paymentsData);
+
+        const driverPayments = allPayments.filter(
+          (payment) =>
+            assignmentIds.includes(Number(payment.assignment)) &&
+            String(payment.status || "").toLowerCase() === "paid"
+        );
+
+        setPayments(driverPayments);
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+
+        console.error("Payment history error:", error);
         setPayments([]);
-        setLoading(false);
-        return;
+        showToast("Failed to load payment history.", "error");
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+        }
       }
-
-      const assignmentIds = driverAssignments.map((item) => Number(item.id));
-
-      const paymentsRes = await fetch(API_URL("/api/payments/"));
-      const allPayments = await paymentsRes.json();
-
-      const driverPayments = allPayments.filter(
-        (payment) =>
-          assignmentIds.includes(Number(payment.assignment)) &&
-          String(payment.status).toLowerCase() === "paid"
-      );
-
-      setPayments(driverPayments);
-    } catch (error) {
-      console.error("Payment history error:", error);
-      showToast("Failed to load payment history.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const totalPaidAmount = payments.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0
+    },
+    [showToast]
   );
 
-  const latestPayment = payments.length
-    ? [...payments].sort(
-        (a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0)
-      )[0]
-    : null;
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const averagePayment =
-    payments.length > 0 ? Math.round(totalPaidAmount / payments.length) : 0;
+    fetchPayments(controller.signal);
+
+    return () => {
+      controller.abort();
+
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, [fetchPayments]);
+
+  const sortedPayments = useMemo(() => {
+    return [...payments].sort(
+      (a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0)
+    );
+  }, [payments]);
+
+  const totalPaidAmount = useMemo(() => {
+    return payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }, [payments]);
+
+  const latestPayment = useMemo(() => {
+    return sortedPayments.length > 0 ? sortedPayments[0] : null;
+  }, [sortedPayments]);
+
+  const averagePayment = useMemo(() => {
+    return payments.length > 0 ? Math.round(totalPaidAmount / payments.length) : 0;
+  }, [payments.length, totalPaidAmount]);
 
   const downloadPaymentSummary = () => {
     if (!payments || payments.length === 0) {
@@ -94,11 +146,11 @@ const PaymentHistory = () => {
 
     const headers = ["ID", "Amount", "Payment Date", "Status", "Remarks"];
 
-    const rows = payments.map((payment) => [
-      payment.id,
-      payment.amount,
-      payment.payment_date,
-      payment.status,
+    const rows = sortedPayments.map((payment) => [
+      payment.id || "-",
+      payment.amount || "0",
+      payment.payment_date || "-",
+      payment.status || "paid",
       payment.remarks || "-",
     ]);
 
@@ -134,11 +186,16 @@ const PaymentHistory = () => {
   };
 
   const formatAmount = (value) => {
-    return `Rs. ${Number(value || 0).toLocaleString()}`;
+    return `Rs. ${Number(value || 0).toLocaleString("en-PK")}`;
   };
 
   const formatDate = (dateValue) => {
     if (!dateValue) return "-";
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) return dateValue;
+
     return dateValue;
   };
 
@@ -150,6 +207,7 @@ const PaymentHistory = () => {
           type={toast.type}
           onClose={() => setToast({ message: "", type: "success" })}
         />
+
         <h4>Loading payment history...</h4>
         <p>Please wait while we fetch your completed payment records.</p>
       </div>
@@ -222,7 +280,7 @@ const PaymentHistory = () => {
           <span className="payment-history-stat-note">All paid records</span>
         </div>
 
-        <div className="payment-history-stat-card payment-history-stat-orange">
+        <div className="payment-history-stat-card payment-history-stat-indigo">
           <div className="payment-history-stat-icon-bg" />
           <div className="payment-history-stat-icon">
             <IconifyIcon icon="mdi:chart-bar" />
@@ -235,7 +293,7 @@ const PaymentHistory = () => {
           <span className="payment-history-stat-note">Estimated average</span>
         </div>
 
-        <div className="payment-history-stat-card payment-history-stat-green">
+        <div className="payment-history-stat-card payment-history-stat-slate">
           <div className="payment-history-stat-icon-bg" />
           <div className="payment-history-stat-icon">
             <IconifyIcon icon="mdi:check-decagram-outline" />
@@ -266,7 +324,7 @@ const PaymentHistory = () => {
           </div>
         </div>
 
-        {payments.length > 0 ? (
+        {sortedPayments.length > 0 ? (
           <>
             <div className="payment-history-table-wrap">
               <table className="payment-history-table">
@@ -281,7 +339,7 @@ const PaymentHistory = () => {
                 </thead>
 
                 <tbody>
-                  {payments.map((payment) => (
+                  {sortedPayments.map((payment) => (
                     <tr key={payment.id}>
                       <td>
                         <strong>#{payment.id}</strong>
@@ -303,7 +361,7 @@ const PaymentHistory = () => {
             </div>
 
             <div className="payment-history-mobile-list">
-              {payments.map((payment) => (
+              {sortedPayments.map((payment) => (
                 <div className="payment-history-mobile-card" key={payment.id}>
                   <div className="payment-history-mobile-row">
                     <span>Payment ID</span>
