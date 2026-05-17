@@ -106,8 +106,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.18);
+  background: #60a5fa;
+  box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.2);
   flex-shrink: 0;
 }
 
@@ -188,12 +188,16 @@
   color: #6d28d9;
 }
 
-.share-location-stat-orange {
-  color: #ea580c;
+.share-location-stat-indigo {
+  color: #4f46e5;
 }
 
 .share-location-stat-slate {
-  color: #475569;
+  color: #334155;
+}
+
+.share-location-stat-orange {
+  color: #4f46e5;
 }
 
 .share-location-stat-icon-bg {
@@ -219,8 +223,17 @@
   align-items: center;
   justify-content: center;
   z-index: 3;
-  font-size: 22px;
+  font-size: 23px;
   line-height: 1;
+}
+
+.share-location-stat-icon svg,
+.share-location-action-icon svg,
+.share-location-empty-icon svg,
+.share-location-map-pin svg {
+  width: 1em;
+  height: 1em;
+  display: block;
 }
 
 .share-location-stat-label {
@@ -500,8 +513,17 @@
 }
 
 .share-location-empty-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px auto;
+  border-radius: 20px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
 }
 
 .share-location-empty-card h4,
@@ -608,7 +630,7 @@
   }
 
   .share-location-stat-icon {
-    font-size: 20px;
+    font-size: 21px;
   }
 
   .share-location-info-grid {

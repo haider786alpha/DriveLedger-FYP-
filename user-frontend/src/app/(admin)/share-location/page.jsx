@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
 import { API_URL } from "@/helpers/apiConfig";
 import DriverToast from "@/components/DriverToast";
@@ -11,57 +11,108 @@ const ShareLocation = () => {
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
 
+  const toastTimerRef = useRef(null);
+  const locationRecordRef = useRef(null);
+
   const [toast, setToast] = useState({
     message: "",
     type: "success",
   });
 
-  const showToast = (message, type = "success") => {
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
+
+  const fetchJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
 
-    setTimeout(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    toastTimerRef.current = setTimeout(() => {
       setToast({ message: "", type: "success" });
     }, 3500);
-  };
-
-  useEffect(() => {
-    fetchLocationData();
   }, []);
 
-  const fetchLocationData = async () => {
-    try {
-      setLoading(true);
+  const fetchLocationData = useCallback(
+    async (signal) => {
+      try {
+        setLoading(true);
 
-      const loggedInDriver = await getLoggedInDriver();
-      setDriver(loggedInDriver);
+        const loggedInDriver = await getLoggedInDriver();
 
-      if (!loggedInDriver) {
-        setLoading(false);
-        return;
+        if (signal?.aborted) return;
+
+        setDriver(loggedInDriver);
+
+        if (!loggedInDriver?.id) {
+          setLocationRecord(null);
+          locationRecordRef.current = null;
+          return;
+        }
+
+        const data = await fetchJson(API_URL("/api/driver-locations/"), signal);
+
+        if (signal?.aborted) return;
+
+        const locations = safeArray(data);
+
+        const matchedLocation = locations.find(
+          (item) => Number(item.driver) === Number(loggedInDriver.id)
+        );
+
+        setLocationRecord(matchedLocation || null);
+        locationRecordRef.current = matchedLocation || null;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+
+        console.error("Location fetch error:", error);
+        setLocationRecord(null);
+        locationRecordRef.current = null;
+        showToast("Failed to load location data.", "error");
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+        }
       }
+    },
+    [showToast]
+  );
 
-      const res = await fetch(API_URL("/api/driver-locations/"));
-      const data = await res.json();
+  useEffect(() => {
+    const controller = new AbortController();
 
-      const matchedLocation = (Array.isArray(data) ? data : []).find(
-        (item) => Number(item.driver) === Number(loggedInDriver.id)
-      );
+    fetchLocationData(controller.signal);
 
-      setLocationRecord(matchedLocation || null);
-    } catch (error) {
-      console.error("Location fetch error:", error);
-      setLocationRecord(null);
-      showToast("Failed to load location data.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      controller.abort();
+
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, [fetchLocationData]);
 
   const saveLocation = async (latitude, longitude) => {
-    if (!driver) {
+    if (!driver?.id) {
       showToast("Driver profile not found.", "error");
       return;
     }
+
+    const currentLocationRecord = locationRecordRef.current;
 
     const payload = {
       driver: driver.id,
@@ -70,11 +121,11 @@ const ShareLocation = () => {
       address_note: "Shared from driver panel",
     };
 
-    const url = locationRecord
-      ? API_URL(`/api/driver-locations/${locationRecord.id}/`)
+    const url = currentLocationRecord?.id
+      ? API_URL(`/api/driver-locations/${currentLocationRecord.id}/`)
       : API_URL("/api/driver-locations/");
 
-    const method = locationRecord ? "PATCH" : "POST";
+    const method = currentLocationRecord?.id ? "PATCH" : "POST";
 
     const res = await fetch(url, {
       method,
@@ -84,16 +135,35 @@ const ShareLocation = () => {
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    let data = null;
+
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
 
     if (!res.ok) {
-      throw new Error(data?.detail || data?.error || "Failed to save location");
+      throw new Error(
+        data?.detail ||
+          data?.error ||
+          data?.message ||
+          "Failed to save location"
+      );
     }
 
     setLocationRecord(data);
+    locationRecordRef.current = data;
   };
 
   const handleShareLocation = () => {
+    if (sharing) return;
+
+    if (!driver?.id) {
+      showToast("Driver profile not found. Please log in again.", "error");
+      return;
+    }
+
     if (!navigator.geolocation) {
       showToast("Geolocation is not supported by this browser.", "error");
       return;
@@ -106,10 +176,13 @@ const ShareLocation = () => {
         try {
           const { latitude, longitude } = position.coords;
 
+          if (!latitude || !longitude) {
+            throw new Error("Unable to read location coordinates.");
+          }
+
           await saveLocation(latitude, longitude);
 
           showToast("Current location shared successfully.", "success");
-          await fetchLocationData();
         } catch (error) {
           console.error("Save location error:", error);
           showToast(error.message || "Failed to share location.", "error");
@@ -121,9 +194,15 @@ const ShareLocation = () => {
         console.error("Geolocation error:", error);
 
         if (error.code === 1) {
-          showToast("Location permission denied. Please allow location access.", "warning");
+          showToast(
+            "Location permission denied. Please allow location access.",
+            "warning"
+          );
         } else if (error.code === 2) {
-          showToast("Location unavailable. Please check your device/location settings.", "warning");
+          showToast(
+            "Location unavailable. Please check your device/location settings.",
+            "warning"
+          );
         } else if (error.code === 3) {
           showToast("Location request timed out. Please try again.", "warning");
         } else {
@@ -141,17 +220,23 @@ const ShareLocation = () => {
   };
 
   const openMap = () => {
-    if (!locationRecord) return;
+    if (!locationRecord?.latitude || !locationRecord?.longitude) return;
 
     window.open(
       `https://www.google.com/maps?q=${locationRecord.latitude},${locationRecord.longitude}`,
-      "_blank"
+      "_blank",
+      "noopener,noreferrer"
     );
   };
 
   const formatDate = (dateValue) => {
     if (!dateValue) return "-";
-    return new Date(dateValue).toLocaleString();
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return date.toLocaleString();
   };
 
   const InfoBox = ({ label, value, full = false, children }) => {
@@ -180,6 +265,7 @@ const ShareLocation = () => {
           type={toast.type}
           onClose={() => setToast({ message: "", type: "success" })}
         />
+
         <h4>Loading location...</h4>
         <p>Please wait while we fetch your latest shared location.</p>
       </div>
@@ -264,7 +350,7 @@ const ShareLocation = () => {
           <span className="share-location-stat-note">Current coordinate</span>
         </div>
 
-        <div className="share-location-stat-card share-location-stat-orange">
+        <div className="share-location-stat-card share-location-stat-indigo">
           <div className="share-location-stat-icon-bg" />
           <div className="share-location-stat-icon">
             <IconifyIcon icon="mdi:earth" />
