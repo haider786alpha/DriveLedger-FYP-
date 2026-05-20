@@ -3,6 +3,9 @@ import { useMemo, useState } from "react";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
 import "./Booking.css";
 
+const API_BASE_URL = "https://driveledger-backend.onrender.com/api";
+
+
 const cities = [
   "Rawalpindi",
   "Islamabad",
@@ -90,6 +93,7 @@ const BookingPage = () => {
   const [form, setForm] = useState(initialForm);
   const [submittedRequest, setSubmittedRequest] = useState(null);
   const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const routeKey = useMemo(() => {
     if (!form.fromCity || !form.toCity) return "";
@@ -152,13 +156,33 @@ const BookingPage = () => {
     return `Rs. ${Number(value || 0).toLocaleString("en-PK")}`;
   };
 
-  const generateReference = () => {
-    const random = Math.floor(1000 + Math.random() * 9000);
-    const date = new Date();
-    return `DE-${date.getFullYear()}-${random}`;
+  const buildBookingPayload = () => {
+    return {
+      customer_name: form.fullName.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim() || null,
+
+      from_city: form.fromCity,
+      to_city: form.toCity,
+      pickup_point: form.pickupPoint.trim(),
+      dropoff_point: form.dropoffPoint.trim(),
+
+      travel_date: form.travelDate,
+      pickup_time: form.pickupTime,
+
+      trip_type: form.tripType,
+      return_date: form.tripType === "round_trip" ? form.returnDate : null,
+
+      vehicle_type: form.vehicleType,
+      passengers: Number(form.passengers || 1),
+      luggage_bags: Number(form.luggageBags || 0),
+      special_instructions: form.specialInstructions.trim() || null,
+
+      estimated_fare: estimate.total || 0,
+    };
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
@@ -185,16 +209,46 @@ const BookingPage = () => {
       return;
     }
 
-    setSubmittedRequest({
-      reference: generateReference(),
-      total: estimate.total,
-      customQuoteRequired: estimate.customQuoteRequired,
-    });
+    try {
+      setIsSubmitting(true);
+      setFormError("");
+      setSubmittedRequest(null);
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+      const response = await fetch(`${API_BASE_URL}/city-bookings/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(buildBookingPayload()),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error("Booking API error:", data);
+        throw new Error("Booking request could not be submitted.");
+      }
+
+      setSubmittedRequest({
+        reference: data?.booking_reference || "Submitted",
+        total: data?.estimated_fare || estimate.total,
+        customQuoteRequired: estimate.customQuoteRequired,
+      });
+
+      setForm(initialForm);
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } catch (error) {
+      console.error("Booking submit failed:", error);
+      setFormError(
+        "Booking request failed. Please check your internet/backend server and try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -431,9 +485,15 @@ const BookingPage = () => {
                 </Field>
               </div>
 
-              <button type="submit" className="booking-submit-btn">
-                Submit Booking Request
-                <IconifyIcon icon="mdi:arrow-right" />
+              <button
+                type="submit"
+                className="booking-submit-btn"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting Request..." : "Submit Booking Request"}
+                <IconifyIcon
+                  icon={isSubmitting ? "mdi:loading" : "mdi:arrow-right"}
+                />
               </button>
             </form>
 
