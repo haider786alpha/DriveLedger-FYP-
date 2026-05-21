@@ -4,9 +4,130 @@ import html2pdf from "html2pdf.js";
 import { API_URL } from "../../helpers/apiConfig";
 import "./Reports.css";
 
+const defaultBookingSummary = {
+  total_requests: 0,
+  pending_requests: 0,
+  contacted_requests: 0,
+  confirmed_requests: 0,
+  completed_requests: 0,
+  cancelled_requests: 0,
+  total_booking_value: 0,
+  pending_value: 0,
+  contacted_value: 0,
+  confirmed_value: 0,
+  completed_earnings: 0,
+  cancelled_value: 0,
+};
+
+const getAccessToken = () => {
+  const accessToken = localStorage.getItem("access");
+
+  if (accessToken) return accessToken;
+
+  try {
+    const authUser = JSON.parse(localStorage.getItem("authUser"));
+    return authUser?.token || "";
+  } catch (error) {
+    return "";
+  }
+};
+
+const getRefreshToken = () => localStorage.getItem("refresh") || "";
+
+const saveAccessToken = (newAccessToken) => {
+  localStorage.setItem("access", newAccessToken);
+
+  try {
+    const authUser = JSON.parse(localStorage.getItem("authUser"));
+
+    if (authUser) {
+      localStorage.setItem(
+        "authUser",
+        JSON.stringify({
+          ...authUser,
+          token: newAccessToken,
+        })
+      );
+    }
+  } catch (error) {
+    // ignore
+  }
+};
+
+const refreshAccessToken = async () => {
+  const refreshToken = getRefreshToken();
+
+  if (!refreshToken) {
+    throw new Error("Admin session expired.");
+  }
+
+  const response = await fetch(API_URL("/api/token/refresh/"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      refresh: refreshToken,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data?.access) {
+    throw new Error("Admin session expired.");
+  }
+
+  saveAccessToken(data.access);
+
+  return data.access;
+};
+
+const authFetch = async (path, options = {}, retry = true) => {
+  const accessToken = getAccessToken();
+
+  if (!accessToken) {
+    throw new Error("Admin token not found.");
+  }
+
+  const response = await fetch(API_URL(path), {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      ...(options.headers || {}),
+    },
+  });
+
+  if (response.status === 401 && retry) {
+    const newAccessToken = await refreshAccessToken();
+
+    return fetch(API_URL(path), {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${newAccessToken}`,
+        ...(options.headers || {}),
+      },
+    });
+  }
+
+  return response;
+};
+
+const normalizeResponse = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.results)) return res.results;
+  if (Array.isArray(res?.data?.results)) return res.data.results;
+  return [];
+};
+
+const formatAmount = (value) => Number(value || 0).toLocaleString("en-PK");
+
 const Reports = () => {
   const reportRef = useRef(null);
 
+  const [bookingSummary, setBookingSummary] = useState(defaultBookingSummary);
   const [data, setData] = useState({
     drivers: [],
     cars: [],
@@ -20,12 +141,26 @@ const Reports = () => {
     fetchReportData();
   }, []);
 
-  const normalizeResponse = (res) => {
-    if (Array.isArray(res)) return res;
-    if (Array.isArray(res?.data)) return res.data;
-    if (Array.isArray(res?.results)) return res.results;
-    if (Array.isArray(res?.data?.results)) return res.data.results;
-    return [];
+  const fetchBookingSummary = async () => {
+    try {
+      const response = await authFetch("/api/city-bookings/summary/", {
+        method: "GET",
+      });
+
+      const summaryData = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Booking summary request failed.");
+      }
+
+      setBookingSummary({
+        ...defaultBookingSummary,
+        ...summaryData,
+      });
+    } catch (error) {
+      console.warn("Booking summary unavailable:", error);
+      setBookingSummary(defaultBookingSummary);
+    }
   };
 
   const fetchReportData = async () => {
@@ -54,6 +189,8 @@ const Reports = () => {
         expenses: normalizeResponse(expensesRes),
         repairs: normalizeResponse(repairsRes),
       });
+
+      await fetchBookingSummary();
     } catch (error) {
       console.error("Reports error:", error);
 
@@ -71,9 +208,7 @@ const Reports = () => {
   const handleDownloadReport = async () => {
     const element = reportRef.current;
 
-    if (!element) {
-      return;
-    }
+    if (!element) return;
 
     document.body.classList.add("reports-pdf-mode");
 
@@ -122,6 +257,12 @@ const Reports = () => {
     0
   );
 
+  const completedBookingEarnings = Number(
+    bookingSummary.completed_earnings || 0
+  );
+
+  const totalRevenue = totalPayments + completedBookingEarnings;
+
   const completedRepairCost = data.repairs
     .filter((item) => item.status === "completed")
     .reduce(
@@ -133,7 +274,7 @@ const Reports = () => {
     .filter((item) => item.status !== "completed")
     .reduce((sum, item) => sum + Number(item.estimated_cost || 0), 0);
 
-  const profit = totalPayments - totalExpenses;
+  const profit = totalRevenue - totalExpenses;
 
   const paidCount = data.payments.filter((p) => p.status === "paid").length;
   const unpaidCount = data.payments.filter((p) => p.status === "unpaid").length;
@@ -200,8 +341,8 @@ const Reports = () => {
     1
   );
 
-  const financeTotal = totalPayments + totalExpenses;
-  const paymentWidth = financeTotal ? (totalPayments / financeTotal) * 100 : 0;
+  const financeTotal = totalRevenue + totalExpenses;
+  const revenueWidth = financeTotal ? (totalRevenue / financeTotal) * 100 : 0;
   const expenseWidth = financeTotal ? (totalExpenses / financeTotal) * 100 : 0;
 
   return (
@@ -216,8 +357,8 @@ const Reports = () => {
 
             <h4>Reports & Analytics</h4>
             <p>
-              Monthly profit, financial health, repair risk, payment status and
-              operational summary.
+              Monthly profit, booking earnings, financial health, repair risk,
+              payment status and operational summary.
             </p>
           </div>
 
@@ -235,8 +376,8 @@ const Reports = () => {
             <ReportAlert
               type="danger"
               title="Loss Alert"
-              message={`Your expenses are higher than payments. Current loss is Rs. ${Math.abs(
-                profit
+              message={`Your expenses are higher than total revenue. Current loss is Rs. ${formatAmount(
+                Math.abs(profit)
               )}.`}
             />
           )}
@@ -245,7 +386,9 @@ const Reports = () => {
             <ReportAlert
               type="warning"
               title="Repair Risk"
-              message={`Pending repair estimate is Rs. ${pendingRepairCost}. This may affect future profit.`}
+              message={`Pending repair estimate is Rs. ${formatAmount(
+                pendingRepairCost
+              )}. This may affect future profit.`}
             />
           )}
 
@@ -262,9 +405,9 @@ const Reports = () => {
               icon="🔗"
             />
             <ReportCard
-              title="Pending Repairs"
-              value={pendingRepairs}
-              icon="🛠️"
+              title="Booking Requests"
+              value={bookingSummary.total_requests}
+              icon="📅"
             />
           </div>
 
@@ -276,16 +419,16 @@ const Reports = () => {
               icon="💰"
             />
             <MoneyCard
+              title="Completed Booking Earnings"
+              value={completedBookingEarnings}
+              tone="positive"
+              icon="📅"
+            />
+            <MoneyCard
               title="Total Expenses"
               value={totalExpenses}
               tone="negative"
               icon="📉"
-            />
-            <MoneyCard
-              title="Completed Repair Cost"
-              value={completedRepairCost}
-              tone="warning"
-              icon="🧾"
             />
             <MoneyCard
               title="Net Profit / Loss"
@@ -298,10 +441,56 @@ const Reports = () => {
           <div className="report-card reports-reveal reports-delay-3 pdf-avoid-break">
             <div className="report-card-head">
               <div>
+                <h5>Booking Earnings Report</h5>
+                <p>
+                  Completed bookings are counted as actual revenue. Pending and
+                  confirmed bookings are shown as future pipeline value.
+                </p>
+              </div>
+            </div>
+
+            <div className="booking-report-grid">
+              <BookingReportItem
+                label="Total Booking Value"
+                value={`Rs. ${formatAmount(bookingSummary.total_booking_value)}`}
+                tone="report-info"
+              />
+              <BookingReportItem
+                label="Pending Value"
+                value={`Rs. ${formatAmount(bookingSummary.pending_value)}`}
+                tone="report-warning"
+              />
+              <BookingReportItem
+                label="Confirmed Earnings"
+                value={`Rs. ${formatAmount(bookingSummary.confirmed_value)}`}
+                tone="report-info"
+              />
+              <BookingReportItem
+                label="Completed Earnings"
+                value={`Rs. ${formatAmount(bookingSummary.completed_earnings)}`}
+                tone="report-positive"
+              />
+              <BookingReportItem
+                label="Cancelled Lost Value"
+                value={`Rs. ${formatAmount(bookingSummary.cancelled_value)}`}
+                tone="report-negative"
+              />
+              <BookingReportItem
+                label="Completed Bookings"
+                value={bookingSummary.completed_requests}
+                tone="report-positive"
+              />
+            </div>
+          </div>
+
+          <div className="report-card reports-reveal reports-delay-3 pdf-avoid-break">
+            <div className="report-card-head">
+              <div>
                 <h5>Financial Distribution</h5>
                 <p>
-                  Profit uses payments minus total expenses. Completed repairs
-                  are shown separately for repair cost visibility.
+                  Net profit uses payments plus completed booking earnings minus
+                  total expenses. Completed repairs are shown separately for
+                  repair cost visibility.
                 </p>
               </div>
             </div>
@@ -309,9 +498,9 @@ const Reports = () => {
             <div className="report-distribution">
               <div
                 className="report-distribution-income"
-                style={{ width: `${paymentWidth}%` }}
+                style={{ width: `${revenueWidth}%` }}
               >
-                Payments
+                Revenue
               </div>
 
               <div
@@ -323,8 +512,8 @@ const Reports = () => {
             </div>
 
             <div className="report-distribution-footer">
-              <span>Income: Rs. {totalPayments}</span>
-              <span>Costs: Rs. {totalExpenses}</span>
+              <span>Revenue: Rs. {formatAmount(totalRevenue)}</span>
+              <span>Costs: Rs. {formatAmount(totalExpenses)}</span>
             </div>
           </div>
 
@@ -344,22 +533,66 @@ const Reports = () => {
                 [
                   "Best Month",
                   bestMonth
-                    ? `${bestMonth.month} — Rs. ${bestMonth.profit}`
+                    ? `${bestMonth.month} — Rs. ${formatAmount(
+                        bestMonth.profit
+                      )}`
                     : "-",
                   "report-positive",
                 ],
                 [
                   "Weakest Month",
                   worstMonth
-                    ? `${worstMonth.month} — Rs. ${worstMonth.profit}`
+                    ? `${worstMonth.month} — Rs. ${formatAmount(
+                        worstMonth.profit
+                      )}`
                     : "-",
                   "report-negative",
                 ],
                 [
                   "Pending Repair Estimate",
-                  `Rs. ${pendingRepairCost}`,
+                  `Rs. ${formatAmount(pendingRepairCost)}`,
                   "report-warning",
                 ],
+              ]}
+            />
+
+            <SummaryBox
+              title="Booking Pipeline Summary"
+              lines={[
+                [
+                  "Pending Requests",
+                  `${bookingSummary.pending_requests} — Rs. ${formatAmount(
+                    bookingSummary.pending_value
+                  )}`,
+                  "report-warning",
+                ],
+                [
+                  "Confirmed Requests",
+                  `${bookingSummary.confirmed_requests} — Rs. ${formatAmount(
+                    bookingSummary.confirmed_value
+                  )}`,
+                  "report-info",
+                ],
+                [
+                  "Cancelled Requests",
+                  `${bookingSummary.cancelled_requests} — Rs. ${formatAmount(
+                    bookingSummary.cancelled_value
+                  )}`,
+                  "report-negative",
+                ],
+              ]}
+            />
+
+            <SummaryBox
+              title="Repair Workload"
+              lines={[
+                ["Pending Repairs", pendingRepairs, "report-warning"],
+                [
+                  "Completed Repair Cost",
+                  `Rs. ${formatAmount(completedRepairCost)}`,
+                  "report-negative",
+                ],
+                ["Total Repair Records", data.repairs.length, ""],
               ]}
             />
           </div>
@@ -387,7 +620,7 @@ const Reports = () => {
                           : "report-negative"
                       }
                     >
-                      Rs. {month.profit}
+                      Rs. {formatAmount(month.profit)}
                     </strong>
                   </div>
 
@@ -398,7 +631,7 @@ const Reports = () => {
                         width: `${(month.income / maxMonthlyValue) * 100}%`,
                       }}
                     >
-                      Income Rs. {month.income}
+                      Income Rs. {formatAmount(month.income)}
                     </div>
                   </div>
 
@@ -409,7 +642,7 @@ const Reports = () => {
                         width: `${(month.expense / maxMonthlyValue) * 100}%`,
                       }}
                     >
-                      Expense Rs. {month.expense}
+                      Expense Rs. {formatAmount(month.expense)}
                     </div>
                   </div>
                 </div>
@@ -426,7 +659,7 @@ const Reports = () => {
             render={(item, index) => (
               <>
                 <td>{index + 1}</td>
-                <td>Rs. {item.amount}</td>
+                <td>Rs. {formatAmount(item.amount)}</td>
                 <td>{item.payment_date || "-"}</td>
                 <td>
                   <span
@@ -451,7 +684,7 @@ const Reports = () => {
             render={(item, index) => (
               <>
                 <td>{index + 1}</td>
-                <td>Rs. {item.amount}</td>
+                <td>Rs. {formatAmount(item.amount)}</td>
                 <td>{item.expense_date || "-"}</td>
                 <td>
                   <span className="report-badge report-badge-info">
@@ -487,7 +720,7 @@ const Reports = () => {
                     {item.status}
                   </span>
                 </td>
-                <td>Rs. {item.estimated_cost}</td>
+                <td>Rs. {formatAmount(item.estimated_cost)}</td>
               </>
             )}
           />
@@ -533,14 +766,23 @@ const MoneyCard = ({ title, value, tone, icon }) => {
       <div className="report-money-card">
         <div className="report-card-icon">{icon}</div>
         <div className="report-money-label">{title}</div>
-        <h4 className={`report-money-value ${toneClass}`}>Rs. {value}</h4>
+        <h4 className={`report-money-value ${toneClass}`}>
+          Rs. {formatAmount(value)}
+        </h4>
       </div>
     </div>
   );
 };
 
+const BookingReportItem = ({ label, value, tone }) => (
+  <div className="booking-report-item">
+    <span>{label}</span>
+    <strong className={tone}>{value}</strong>
+  </div>
+);
+
 const SummaryBox = ({ title, lines }) => (
-  <div className="col-md-6">
+  <div className="col-xl-3 col-md-6">
     <div className="report-summary-box">
       <h5>{title}</h5>
 

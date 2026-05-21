@@ -28,6 +28,7 @@ import Expenses from "../Pages/Expenses";
 import Notifications from "../Pages/Notifications";
 import Repairs from "../Pages/Repairs";
 import Reports from "../Pages/Reports";
+import BookingRequests from "../Pages/BookingRequests";
 
 // Public/Auth pages
 import Error404 from "../Pages/Utility/Error404-Page";
@@ -41,6 +42,7 @@ const authProtectedRoutes = [
   { path: "/driver-locations", component: <DriverLocations /> },
   { path: "/cars", component: <Cars /> },
   { path: "/assignments", component: <Assignments /> },
+  { path: "/booking-requests", component: <BookingRequests /> },
   { path: "/payments", component: <Payments /> },
   { path: "/expenses", component: <Expenses /> },
   { path: "/notifications", component: <Notifications /> },

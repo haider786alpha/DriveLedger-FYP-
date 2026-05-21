@@ -31,7 +31,6 @@ class CityBookingRequestSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "booking_reference",
-            "status",
             "created_at",
             "updated_at",
         ]

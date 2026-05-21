@@ -40,6 +40,12 @@ const sidebarData = [
     url: "/assignments",
   },
   {
+  id: "booking-requests",
+  label: "Booking Requests",
+  icon: "bx bx-calendar-check",
+  url: "/booking-requests",
+},
+  {
     id: "payments",
     label: "Payments",
     icon: "bx bx-wallet",

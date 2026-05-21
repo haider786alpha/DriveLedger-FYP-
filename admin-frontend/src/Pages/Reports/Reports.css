@@ -674,3 +674,47 @@ body.reports-pdf-mode .pdf-avoid-break {
   break-inside: avoid;
   page-break-inside: avoid;
 }
+
+/* BOOKING EARNINGS REPORT */
+.booking-report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.booking-report-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.booking-report-item span {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.booking-report-item strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 950;
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .booking-report-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.reports-pdf-mode .booking-report-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+body.reports-pdf-mode .booking-report-item {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
