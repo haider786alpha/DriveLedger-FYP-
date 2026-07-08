@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AuthLayout from "@/layouts/AuthLayout";
 import { useAuthContext } from "@/context/useAuthContext";
 import { appRoutes, authRoutes } from "@/routes/index";
-import AdminLayout from "@/layouts/AdminLayout";
+import  DriverLayout from "@/layouts/DriverLayout";
 import HomePage from "@/app/home/page";
 import BookingPage from "@/app/booking/page";
 
@@ -28,7 +28,7 @@ const AppRouter = (props) => {
           path={route.path}
           element={
             isAuthenticated ? (
-              <AdminLayout {...props}>{route.element}</AdminLayout>
+              <DriverLayout {...props}>{route.element}</DriverLayout>
             ) : (
               <Navigate
                 to={{

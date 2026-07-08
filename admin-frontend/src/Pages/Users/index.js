@@ -149,11 +149,11 @@ const Users = () => {
       return;
     }
 
-    if (resetPasswordData.new_password.length < 6) {
+    if (resetPasswordData.new_password.length < 8) {
       showToast(
         "error",
         "Password Too Short",
-        "Password must be at least 6 characters long."
+        "Password must be at least 8 characters long."
       );
       return;
     }

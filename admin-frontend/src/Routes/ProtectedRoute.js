@@ -3,7 +3,7 @@ import { Navigate, Route } from "react-router-dom";
 
 import { useProfile } from "../Hooks/UserHooks";
 
-const AuthProtected = (props) => {
+const ProtectedRoute = (props) => {
   const { userProfile, loading } = useProfile();
 
   /*
@@ -30,7 +30,7 @@ const AccessRoute = ({ component: Component, ...rest }) => {
   );
 };
 
-export { AuthProtected, AccessRoute };
+export { ProtectedRoute, AccessRoute };
 
 
 // import React from "react";

@@ -8,6 +8,7 @@ const AddDriver = () => {
   const navigate = useNavigate();
 
   const [availableUsers, setAvailableUsers] = useState([]);
+  const [existingDrivers, setExistingDrivers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
@@ -54,6 +55,7 @@ const AddDriver = () => {
 
       const users = normalizeResponse(usersRes);
       const drivers = normalizeResponse(driversRes);
+      setExistingDrivers(drivers);
 
       const linkedUserIds = drivers.map((driver) => Number(driver.user));
 
@@ -65,6 +67,7 @@ const AddDriver = () => {
     } catch (error) {
       console.error("Fetch available driver users error:", error);
       setAvailableUsers([]);
+      setExistingDrivers([]);
 
       showToast(
         "error",
@@ -93,16 +96,135 @@ const AddDriver = () => {
     });
   };
 
+  const validateDriverForm = () => {
+  const cnic = formData.cnic.trim();
+  const licenseNumber = formData.license_number.trim();
+  const address = formData.address.trim();
+
+  const cnicPattern = /^\d{5}-\d{7}-\d$/;
+
+  if (!formData.user) {
+    return "Please select a driver user.";
+  }
+
+  if (!cnic) {
+    return "CNIC is required. Please enter driver CNIC.";
+  }
+
+  if (!cnicPattern.test(cnic)) {
+    return "CNIC must be in this format: 12345-1234567-1.";
+  }
+
+  const cnicAlreadyExists = existingDrivers.some(
+    (driver) =>
+      driver.cnic &&
+      driver.cnic.trim().toLowerCase() === cnic.toLowerCase()
+  );
+
+  if (cnicAlreadyExists) {
+    return "This CNIC is already registered. Please enter a different CNIC.";
+  }
+
+  if (!licenseNumber) {
+    return "License number is required. Please enter license number.";
+  }
+
+  if (licenseNumber.length < 4) {
+    return "License number must be at least 4 characters long.";
+  }
+
+  const licenseAlreadyExists = existingDrivers.some(
+    (driver) =>
+      driver.license_number &&
+      driver.license_number.trim().toLowerCase() ===
+        licenseNumber.toLowerCase()
+  );
+
+  if (licenseAlreadyExists) {
+    return "This license number is already registered. Please enter a different license number.";
+  }
+
+  if (!address) {
+    return "Address is required. Please enter driver address.";
+  }
+
+  if (address.length < 5) {
+    return "Address must be at least 5 characters long.";
+  }
+
+  if (formData.profile_photo) {
+    const allowedPhotoTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const maxPhotoSize = 2 * 1024 * 1024;
+
+    if (!allowedPhotoTypes.includes(formData.profile_photo.type)) {
+      return "Profile photo must be JPG, JPEG, PNG, or WEBP.";
+    }
+
+    if (formData.profile_photo.size > maxPhotoSize) {
+      return "Profile photo size must not exceed 2 MB.";
+    }
+  }
+
+  if (formData.license_copy) {
+    const allowedLicenseTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+    ];
+    const maxLicenseSize = 5 * 1024 * 1024;
+
+    if (!allowedLicenseTypes.includes(formData.license_copy.type)) {
+      return "License copy must be an image or PDF file.";
+    }
+
+    if (formData.license_copy.size > maxLicenseSize) {
+      return "License copy size must not exceed 5 MB.";
+    }
+  }
+
+  return "";
+};
+const getDriverErrorMessage = (error) => {
+  const data = error.response?.data;
+  const text = data ? JSON.stringify(data).toLowerCase() : "";
+
+  if (text.includes("cnic")) {
+    return "This CNIC is already registered or invalid. Please check the CNIC.";
+  }
+
+  if (text.includes("license")) {
+    return "This license number is already registered or invalid. Please check the license number.";
+  }
+
+  if (text.includes("user")) {
+    return "This driver user is already linked with another driver profile.";
+  }
+
+  if (text.includes("profile_photo")) {
+    return "Profile photo must be a valid image and must not exceed 2 MB.";
+  }
+
+  if (text.includes("license_copy")) {
+    return "License copy must be an image or PDF and must not exceed 5 MB.";
+  }
+
+  return "Driver profile could not be saved. Please check CNIC, license number, address, and files.";
+};
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.user) {
-      showToast("error", "Driver User Required", "Please select a driver user.");
-      return;
-    }
+    setToast(null);
+
+    const validationError = validateDriverForm();
+
+   if (validationError) {
+    showToast("error", "Invalid Driver Form", validationError);
+    return;
+}
 
     setSaving(true);
-    setToast(null);
 
     try {
       const payload = new FormData();
@@ -141,7 +263,7 @@ const AddDriver = () => {
       showToast(
         "error",
         "Add Driver Failed",
-        "Driver could not be added. Please check the form and try again."
+        getDriverErrorMessage(error)
       );
     } finally {
       setSaving(false);

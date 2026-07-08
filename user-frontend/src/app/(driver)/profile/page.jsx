@@ -250,10 +250,15 @@ const Profile = () => {
       return;
     }
 
-    if (passwordData.new_password.length < 6) {
-      showToast("New password must be at least 6 characters long.", "warning");
+    if (passwordData.new_password.length < 8) {
+     showToast("New password must be at least 8 characters long.", "warning");
       return;
-    }
+}
+
+   if (passwordData.old_password === passwordData.new_password) {
+    showToast("New password cannot be the same as old password.", "warning");
+     return;
+}  
 
     if (passwordData.new_password !== passwordData.confirm_password) {
       showToast("New password and confirm password do not match.", "warning");
@@ -272,9 +277,10 @@ const Profile = () => {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          old_password: passwordData.old_password,
-          new_password: passwordData.new_password,
-        }),
+        old_password: passwordData.old_password,
+        new_password: passwordData.new_password,
+        confirm_password: passwordData.confirm_password,
+}),
       });
 
       let data = null;

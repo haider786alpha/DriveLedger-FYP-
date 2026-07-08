@@ -9,6 +9,7 @@ const EditDriver = () => {
   const navigate = useNavigate();
 
   const [linkedUser, setLinkedUser] = useState(null);
+  const [existingDrivers, setExistingDrivers] = useState([]);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -27,9 +28,10 @@ const EditDriver = () => {
   });
 
   useEffect(() => {
-    fetchDriver();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  fetchDriver();
+  fetchExistingDrivers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
   const showToast = (type, title, message) => {
     setToast({ type, title, message });
@@ -40,7 +42,23 @@ const EditDriver = () => {
       }, 3500);
     }
   };
+const normalizeResponse = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.results)) return res.results;
+  if (Array.isArray(res?.data?.results)) return res.data.results;
+  return [];
+};
 
+const fetchExistingDrivers = async () => {
+  try {
+    const response = await axios.get(API_URL("/api/drivers/"));
+    setExistingDrivers(normalizeResponse(response));
+  } catch (error) {
+    console.log("Drivers list could not be loaded:", error.message);
+    setExistingDrivers([]);
+  }
+};
   const fetchDriver = async () => {
     try {
       const driverResponse = await axios.get(API_URL(`/api/drivers/${id}/`));
@@ -94,11 +112,128 @@ const EditDriver = () => {
       [name]: value,
     });
   };
+const validateDriverForm = () => {
+  const cnic = formData.cnic.trim();
+  const licenseNumber = formData.license_number.trim();
+  const address = formData.address.trim();
 
+  const cnicPattern = /^\d{5}-\d{7}-\d$/;
+
+  if (!cnic) {
+    return "CNIC is required. Please enter driver CNIC.";
+  }
+
+  if (!cnicPattern.test(cnic)) {
+    return "CNIC must be in this format: 12345-1234567-1.";
+  }
+
+  const cnicAlreadyExists = existingDrivers.some(
+    (driver) =>
+      Number(driver.id) !== Number(id) &&
+      driver.cnic &&
+      driver.cnic.trim().toLowerCase() === cnic.toLowerCase()
+  );
+
+  if (cnicAlreadyExists) {
+    return "This CNIC is already registered. Please enter a different CNIC.";
+  }
+
+  if (!licenseNumber) {
+    return "License number is required. Please enter license number.";
+  }
+
+  if (licenseNumber.length < 4) {
+    return "License number must be at least 4 characters long.";
+  }
+
+  const licenseAlreadyExists = existingDrivers.some(
+    (driver) =>
+      Number(driver.id) !== Number(id) &&
+      driver.license_number &&
+      driver.license_number.trim().toLowerCase() ===
+        licenseNumber.toLowerCase()
+  );
+
+  if (licenseAlreadyExists) {
+    return "This license number is already registered. Please enter a different license number.";
+  }
+
+  if (!address) {
+    return "Address is required. Please enter driver address.";
+  }
+
+  if (address.length < 5) {
+    return "Address must be at least 5 characters long.";
+  }
+
+  if (formData.profile_photo) {
+    const allowedPhotoTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const maxPhotoSize = 2 * 1024 * 1024;
+
+    if (!allowedPhotoTypes.includes(formData.profile_photo.type)) {
+      return "Profile photo must be JPG, JPEG, PNG, or WEBP.";
+    }
+
+    if (formData.profile_photo.size > maxPhotoSize) {
+      return "Profile photo size must not exceed 2 MB.";
+    }
+  }
+
+  if (formData.license_copy) {
+    const allowedLicenseTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+    ];
+    const maxLicenseSize = 5 * 1024 * 1024;
+
+    if (!allowedLicenseTypes.includes(formData.license_copy.type)) {
+      return "License copy must be an image or PDF file.";
+    }
+
+    if (formData.license_copy.size > maxLicenseSize) {
+      return "License copy size must not exceed 5 MB.";
+    }
+  }
+
+  return "";
+};
+const getDriverErrorMessage = (error) => {
+  const data = error.response?.data;
+  const text = data ? JSON.stringify(data).toLowerCase() : "";
+
+  if (text.includes("cnic")) {
+    return "This CNIC is already registered or invalid. Please check the CNIC.";
+  }
+
+  if (text.includes("license")) {
+    return "This license number is already registered or invalid. Please check the license number.";
+  }
+
+  if (text.includes("profile_photo")) {
+    return "Profile photo must be a valid image and must not exceed 2 MB.";
+  }
+
+  if (text.includes("license_copy")) {
+    return "License copy must be an image or PDF and must not exceed 5 MB.";
+  }
+
+  return "Driver profile could not be updated. Please check CNIC, license number, address, and files.";
+};
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaving(true);
-    setToast(null);
+setToast(null);
+
+const validationError = validateDriverForm();
+
+if (validationError) {
+  showToast("error", "Invalid Driver Form", validationError);
+  return;
+}
+
+setSaving(true);
 
     try {
       const payload = new FormData();
@@ -136,7 +271,7 @@ const EditDriver = () => {
       showToast(
         "error",
         "Update Failed",
-        "Driver could not be updated. Please check the form and try again."
+        getDriverErrorMessage(error)
       );
     } finally {
       setSaving(false);

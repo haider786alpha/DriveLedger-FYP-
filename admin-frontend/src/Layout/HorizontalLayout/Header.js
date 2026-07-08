@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import NotificationDropdown from "../../components/Common/TopbarDropdown/NotificationDropdown";
 
 //i18n
-import { withTranslation } from "react-i18next";
+// import { withTranslation } from "react-i18next";
 
 //import images
 import logoSm from "../../assets/images/logo-sm.png";
@@ -202,4 +202,4 @@ export default connect(mapStatetoProps, {
   showRightSidebarAction,
   toggleLeftmenu,
   changeSidebarType,
-})(withTranslation()(Header));
+})(Header);

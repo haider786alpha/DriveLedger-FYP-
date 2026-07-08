@@ -31,8 +31,8 @@ import Reports from "../Pages/Reports";
 import BookingRequests from "../Pages/BookingRequests";
 
 // Public/Auth pages
-import Error404 from "../Pages/Utility/Error404-Page";
-import Error500 from "../Pages/Utility/Error500-Page";
+import Error404 from "../Pages/ErrorPages/Error404Page";
+import Error500 from "../Pages/ErrorPages/Error500Page";
 
 const authProtectedRoutes = [
   // DriveLedger Admin Pages

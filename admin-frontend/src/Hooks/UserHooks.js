@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getLoggedinUser } from "../helpers/api_helper";
+import { getLoggedinUser } from "../helpers/apiHelper";
 
 const useProfile = () => {
   const userProfileSession = getLoggedinUser();

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Collapse, Row, Col, Container } from "reactstrap";
 import classname from "classnames";
 
-import { withTranslation } from "react-i18next";
+// import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
 import withRouter from "../../components/Common/withRouter";
@@ -192,5 +192,5 @@ const mapStatetoProps = (state) => {
 };
 
 export default withRouter(
-  connect(mapStatetoProps, {})(withTranslation()(Navbar))
+  connect(mapStatetoProps, {})(Navbar)
 );
