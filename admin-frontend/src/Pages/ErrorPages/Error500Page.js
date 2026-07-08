@@ -3,7 +3,7 @@ import { Container, Row, Col } from "reactstrap";
 import { Link } from "react-router-dom";
 
 const Error500 = () => {
-  document.title = "500 Error  | Upzet - React Admin & Dashboard Template";
+  document.title = "500 Error  | DRIVELEDGER";
 
   return (
     <React.Fragment>

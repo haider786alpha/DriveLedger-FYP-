@@ -73,7 +73,7 @@ const TopNavigationBar = () => {
               flexShrink: 0,
             }}
           >
-            <ThemeModeToggle />
+            {/* <ThemeModeToggle /> */}
 
             <Suspense fallback={null}>
               <Notifications />
