@@ -1,0 +1,643 @@
+.share-location-page,
+.share-location-page * {
+  box-sizing: border-box;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+.share-location-page {
+  width: 100%;
+}
+
+/* =========================
+   PREMIUM REVEAL ANIMATION
+========================= */
+
+.share-location-reveal {
+  opacity: 0;
+  transform: translateY(34px);
+  animation: shareLocationReveal 0.7s ease forwards;
+}
+
+.share-location-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.share-location-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.share-location-delay-3 {
+  animation-delay: 0.24s;
+}
+
+@keyframes shareLocationReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   HERO
+========================= */
+
+.share-location-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+  padding: 32px;
+  margin-bottom: 20px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(96, 165, 250, 0.36), transparent 28%),
+    radial-gradient(circle at 8% 92%, rgba(59, 130, 246, 0.22), transparent 35%),
+    linear-gradient(135deg, #020617 0%, #172554 48%, #2563eb 100%);
+  box-shadow: 0 26px 60px rgba(15, 23, 42, 0.24);
+}
+
+.share-location-hero::before {
+  content: "";
+  position: absolute;
+  right: -86px;
+  top: -86px;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.share-location-hero::after {
+  content: "";
+  position: absolute;
+  left: -78px;
+  bottom: -98px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.share-location-hero-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.share-location-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #dbeafe;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.share-location-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #60a5fa;
+  box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.2);
+  flex-shrink: 0;
+}
+
+.share-location-hero-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 34px;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.share-location-hero-subtitle {
+  margin: 10px 0 0 0;
+  max-width: 850px;
+  color: #dbeafe;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.share-location-hero-glass {
+  min-width: 230px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.share-location-hero-glass span {
+  display: block;
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.share-location-hero-glass strong {
+  display: block;
+  margin-top: 6px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 950;
+  word-break: break-word;
+}
+
+/* =========================
+   KPI CARDS
+========================= */
+
+.share-location-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.share-location-stat-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 126px;
+  border-radius: 24px;
+  padding: 19px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.065);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.share-location-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 42px rgba(15, 23, 42, 0.09);
+}
+
+.share-location-stat-blue {
+  color: #2563eb;
+}
+
+.share-location-stat-purple {
+  color: #6d28d9;
+}
+
+.share-location-stat-indigo {
+  color: #4f46e5;
+}
+
+.share-location-stat-slate {
+  color: #334155;
+}
+
+.share-location-stat-orange {
+  color: #4f46e5;
+}
+
+.share-location-stat-icon-bg {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  background: currentColor;
+  opacity: 0.12;
+  z-index: 1;
+}
+
+.share-location-stat-icon {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  font-size: 23px;
+  line-height: 1;
+}
+
+.share-location-stat-icon svg,
+.share-location-action-icon svg,
+.share-location-empty-icon svg,
+.share-location-map-pin svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+.share-location-stat-label {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding-right: 66px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.share-location-stat-value {
+  position: relative;
+  z-index: 2;
+  display: block;
+  margin-top: 10px;
+  padding-right: 66px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.share-location-stat-note {
+  position: relative;
+  z-index: 2;
+  display: block;
+  margin-top: 9px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.share-location-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 20px;
+}
+
+.share-location-side-stack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.share-location-card {
+  min-width: 0;
+  border-radius: 26px;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+}
+
+.share-location-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.share-location-section-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 21px;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.share-location-section-subtitle {
+  margin: 6px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.share-location-action-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(37, 99, 235, 0.1), transparent 28%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border-color: #bfdbfe;
+}
+
+.share-location-action-icon {
+  width: 74px;
+  height: 74px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #2563eb 0%, #6366f1 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 31px;
+  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.25);
+  margin-bottom: 16px;
+}
+
+.share-location-primary-btn,
+.share-location-secondary-btn {
+  width: 100%;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-weight: 850;
+  transition: all 0.18s ease;
+}
+
+.share-location-primary-btn {
+  margin-top: 18px;
+  padding: 14px 18px;
+  border-radius: 15px;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
+}
+
+.share-location-primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.36);
+}
+
+.share-location-primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.share-location-secondary-btn {
+  padding: 13px 18px;
+  border-radius: 15px;
+  background: #1d4ed8;
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
+}
+
+.share-location-secondary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.share-location-note {
+  margin-top: 18px;
+  padding: 15px;
+  border-radius: 16px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  color: #1e3a8a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* =========================
+   INFO BOXES
+========================= */
+
+.share-location-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 14px;
+}
+
+.share-location-info-box {
+  min-width: 0;
+  padding: 15px 16px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.share-location-info-box-full {
+  grid-column: 1 / -1;
+}
+
+.share-location-label {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.share-location-value {
+  display: block;
+  margin-top: 7px;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 850;
+  word-break: break-word;
+}
+
+/* =========================
+   MINI MAP PREVIEW
+========================= */
+
+.share-location-map-preview {
+  position: relative;
+  overflow: hidden;
+  min-height: 210px;
+  border-radius: 22px;
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+    linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  background-size: 34px 34px, 34px 34px, 100% 100%;
+  border: 1px solid #dbeafe;
+  margin-bottom: 18px;
+}
+
+.share-location-map-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64px;
+  height: 64px;
+  transform: translate(-50%, -50%);
+  border-radius: 22px;
+  background: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.32);
+}
+
+.share-location-map-pulse {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 96px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid rgba(37, 99, 235, 0.28);
+  animation: shareLocationPulse 1.8s ease infinite;
+}
+
+@keyframes shareLocationPulse {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(0.75);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
+
+/* =========================
+   EMPTY / LOADING
+========================= */
+
+.share-location-loading-card,
+.share-location-empty-card {
+  padding: 34px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+}
+
+.share-location-empty-card {
+  text-align: center;
+}
+
+.share-location-empty-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px auto;
+  border-radius: 20px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+}
+
+.share-location-empty-card h4,
+.share-location-loading-card h4 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.share-location-empty-card p,
+.share-location-loading-card p {
+  margin: 8px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1200px) {
+  .share-location-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .share-location-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .share-location-hero {
+    border-radius: 24px;
+    padding: 24px;
+  }
+
+  .share-location-hero-title {
+    font-size: 29px;
+  }
+
+  .share-location-hero-inner {
+    align-items: flex-start;
+  }
+
+  .share-location-hero-glass {
+    width: 100%;
+  }
+
+  .share-location-card {
+    border-radius: 22px;
+    padding: 18px;
+  }
+}
+
+@media (max-width: 576px) {
+  .share-location-hero {
+    padding: 20px;
+    border-radius: 22px;
+  }
+
+  .share-location-hero-title {
+    font-size: 25px;
+  }
+
+  .share-location-hero-subtitle {
+    font-size: 13px;
+  }
+
+  .share-location-stats-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .share-location-stats-grid::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .share-location-stats-grid::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .share-location-stats-grid::-webkit-scrollbar-thumb {
+    background: rgba(37, 99, 235, 0.35);
+    border-radius: 999px;
+  }
+
+  .share-location-stat-card {
+    min-width: 82%;
+    scroll-snap-align: start;
+  }
+
+  .share-location-stat-icon-bg,
+  .share-location-stat-icon {
+    top: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+  }
+
+  .share-location-stat-icon {
+    font-size: 21px;
+  }
+
+  .share-location-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .share-location-card-head {
+    display: grid;
+  }
+}

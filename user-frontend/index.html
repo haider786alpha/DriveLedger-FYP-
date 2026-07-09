@@ -1,57 +1,264 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriveLedger | Fleet Management System</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DriveLedger | Fleet Management System</title>
+    <style>
+      #splash-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 20% 15%, rgba(37, 99, 235, 0.12), transparent 28%),
+          radial-gradient(circle at 82% 28%, rgba(79, 70, 229, 0.1), transparent 30%),
+          linear-gradient(135deg, #ffffff 0%, #f8fbff 48%, #eef5ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        opacity: 1;
+        transition: opacity 0.45s ease, visibility 0.45s ease;
+      }
 
-  <style>
-    #splash-screen {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      background: white;
-      display: flex;
-      height: 100%;
-      width: 100%;
-      transform: translate(-50%, -50%);
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      opacity: 1;
-      transition: all 15s linear;
-      overflow: hidden;
-    }
-
-    #splash-screen.remove {
-      animation: fadeout 0.7s forwards;
-      z-index: 0;
-    }
-
-    @keyframes fadeout {
-      to {
+      #splash-screen.remove {
         opacity: 0;
         visibility: hidden;
+        pointer-events: none;
       }
-    }
-  </style>
 
-</head>
+      .splash-bg-one,
+      .splash-bg-two {
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(4px);
+        pointer-events: none;
+      }
 
-<body>
-  <div id="root"></div>
-  <div id="splash-screen">
-    <img alt="Logo" class="light" src="/logo-dark-full.png" style="height: 10%" />
-  </div>
-  <script type="module" src="/src/main"></script>
-  <script>
-    const rootEl = document.querySelector('#root')
-    new MutationObserver(() => {
-      document.querySelector('#splash-screen')?.classList.add('remove');
-    }).observe(rootEl, { childList: true });
-  </script>
-</body>
+      .splash-bg-one {
+        width: 280px;
+        height: 280px;
+        top: -90px;
+        right: -70px;
+        background: rgba(37, 99, 235, 0.09);
+      }
 
+      .splash-bg-two {
+        width: 260px;
+        height: 260px;
+        left: -80px;
+        bottom: -90px;
+        background: rgba(79, 70, 229, 0.08);
+      }
+
+      .splash-card {
+        position: relative;
+        width: min(92vw, 430px);
+        padding: 26px;
+        border-radius: 30px;
+        background:
+          radial-gradient(circle at 96% 8%, rgba(37, 99, 235, 0.1), transparent 30%),
+          linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 251, 255, 0.94) 100%);
+        border: 1px solid #dbeafe;
+        box-shadow:
+          0 30px 70px rgba(15, 23, 42, 0.14),
+          inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        animation: splashPop 0.7s ease both;
+      }
+
+      .splash-logo-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .splash-mark {
+        width: 58px;
+        height: 58px;
+        min-width: 58px;
+        border-radius: 20px;
+        background:
+          radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.82), transparent 30%),
+          linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow:
+          0 18px 34px rgba(37, 99, 235, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.28);
+        animation: splashLogoPulse 1.8s ease-in-out infinite;
+      }
+
+      .splash-mark svg {
+        width: 31px;
+        height: 31px;
+        display: block;
+      }
+
+      .splash-card h1 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 29px;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: -0.045em;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .splash-card p {
+        margin: 7px 0 0 0;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 800;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .splash-progress {
+        position: relative;
+        overflow: hidden;
+        height: 10px;
+        margin-top: 24px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        border: 1px solid #dbeafe;
+      }
+
+      .splash-progress span {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 42%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+        animation: splashProgress 1.25s ease-in-out infinite;
+      }
+
+      .splash-note {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        font-size: 13px;
+        font-weight: 850;
+        text-align: center;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      @keyframes splashPop {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.97);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes splashLogoPulse {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-2px);
+        }
+      }
+
+      @keyframes splashProgress {
+        0% {
+          left: -45%;
+          width: 42%;
+        }
+
+        50% {
+          width: 55%;
+        }
+
+        100% {
+          left: 105%;
+          width: 42%;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .splash-card {
+          width: calc(100vw - 34px);
+          padding: 22px;
+          border-radius: 26px;
+        }
+
+        .splash-mark {
+          width: 52px;
+          height: 52px;
+          min-width: 52px;
+          border-radius: 18px;
+        }
+
+        .splash-mark svg {
+          width: 28px;
+          height: 28px;
+        }
+
+        .splash-card h1 {
+          font-size: 25px;
+        }
+
+        .splash-note {
+          font-size: 12px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <div id="splash-screen">
+      <div class="splash-bg-one"></div>
+      <div class="splash-bg-two"></div>
+
+      <div class="splash-card">
+        <div class="splash-logo-row">
+          <div class="splash-mark">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M5 4a1 1 0 0 1 1-1h7.5a4.5 4.5 0 0 1 4.47 4H21a1 1 0 1 1 0 2h-3.03a4.5 4.5 0 0 1-4.47 4H8v2h7a1 1 0 0 1 0 2H8v3a1 1 0 1 1-2 0v-3H3a1 1 0 1 1 0-2h3v-2H3a1 1 0 1 1 0-2h10.5a2.5 2.5 0 0 0 0-5H6a1 1 0 0 1-1-1Z"
+              />
+            </svg>
+          </div>
+
+          <div>
+  <h1>DriveEase</h1>
+  <p>Powered by DriveLedger</p>
+</div>
+        </div>
+
+        <div class="splash-progress">
+          <span></span>
+        </div>
+
+        <!-- <div class="splash-note">Preparing your premium driver workspace...</div> -->
+      </div>
+    </div>
+
+    <script type="module" src="/src/main"></script>
+
+    <script>
+      const rootEl = document.querySelector("#root");
+
+      new MutationObserver(() => {
+        document.querySelector("#splash-screen")?.classList.add("remove");
+      }).observe(rootEl, { childList: true });
+    </script>
+  </body>
 </html>

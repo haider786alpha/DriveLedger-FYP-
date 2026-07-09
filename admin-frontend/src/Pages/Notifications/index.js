@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import { API_URL } from "../../helpers/apiConfig";
+import "./Notifications.css";
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState("notifications");
@@ -18,14 +20,24 @@ const Notifications = () => {
   const [updatingId, setUpdatingId] = useState(null);
   const [selectedSupport, setSelectedSupport] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [toast, setToast] = useState(null);
 
-  const [lastSeenSupportId, setLastSeenSupportId] = useState(() => {
-    return Number(localStorage.getItem("lastSeenSupportId") || 0);
+  const [deleteModal, setDeleteModal] = useState({
+    open: false,
+    type: "",
+    id: null,
+    title: "",
+    message: "",
+    deleting: false,
   });
 
-  const [lastSeenResetRequestId, setLastSeenResetRequestId] = useState(() => {
-    return Number(localStorage.getItem("lastSeenResetRequestId") || 0);
-  });
+  const [lastSeenSupportId, setLastSeenSupportId] = useState(() =>
+    Number(localStorage.getItem("lastSeenSupportId") || 0)
+  );
+
+  const [lastSeenResetRequestId, setLastSeenResetRequestId] = useState(() =>
+    Number(localStorage.getItem("lastSeenResetRequestId") || 0)
+  );
 
   const [formData, setFormData] = useState({
     title: "",
@@ -36,10 +48,7 @@ const Notifications = () => {
   });
 
   useEffect(() => {
-    fetchNotifications();
-    fetchDrivers();
-    fetchSupportMessages();
-    fetchPasswordResetRequests();
+    fetchAllData();
   }, []);
 
   const normalizeResponse = (res) => {
@@ -48,6 +57,21 @@ const Notifications = () => {
     if (Array.isArray(res?.results)) return res.results;
     if (Array.isArray(res?.data?.results)) return res.data.results;
     return [];
+  };
+
+  const showToast = (type, title, message) => {
+    setToast({ type, title, message });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3500);
+  };
+
+  const fetchAllData = async () => {
+    fetchNotifications();
+    fetchDrivers();
+    fetchSupportMessages();
+    fetchPasswordResetRequests();
   };
 
   const fetchNotifications = async () => {
@@ -90,6 +114,21 @@ const Notifications = () => {
     }
   };
 
+  const formatDate = (value) => {
+    if (!value) return "-";
+
+    try {
+      return new Date(value).toLocaleString();
+    } catch {
+      return "-";
+    }
+  };
+
+  const trimText = (text, length = 70) => {
+    if (!text) return "-";
+    return text.length > length ? `${text.slice(0, length)}...` : text;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -112,12 +151,12 @@ const Notifications = () => {
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.message.trim()) {
-      alert("Title and message are required.");
+      showToast("error", "Missing Fields", "Title and message are required.");
       return;
     }
 
     if (formData.recipient_type === "driver" && !formData.driver) {
-      alert("Please select a driver.");
+      showToast("error", "Driver Required", "Please select a driver.");
       return;
     }
 
@@ -139,7 +178,11 @@ const Notifications = () => {
         headers: { "Content-Type": "application/json" },
       });
 
-      alert("Notification created successfully.");
+      showToast(
+        "success",
+        "Notification Sent",
+        "Notification has been created successfully."
+      );
 
       setFormData({
         title: "",
@@ -152,22 +195,75 @@ const Notifications = () => {
       fetchNotifications();
     } catch (error) {
       console.error("Create notification error:", error);
-      alert("Failed to create notification.");
+      showToast("error", "Send Failed", "Failed to create notification.");
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteNotification = async (id) => {
-    if (!window.confirm("Delete this notification?")) return;
+  const openDeleteModal = (type, id, title, message) => {
+    setDeleteModal({
+      open: true,
+      type,
+      id,
+      title,
+      message,
+      deleting: false,
+    });
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModal({
+      open: false,
+      type: "",
+      id: null,
+      title: "",
+      message: "",
+      deleting: false,
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.id || !deleteModal.type) return;
+
+    setDeleteModal((prev) => ({ ...prev, deleting: true }));
 
     try {
-      await axios.delete(API_URL(`/api/notifications/${id}/`));
-      alert("Notification deleted.");
-      fetchNotifications();
+      if (deleteModal.type === "notification") {
+        await axios.delete(API_URL(`/api/notifications/${deleteModal.id}/`));
+        fetchNotifications();
+      }
+
+      if (deleteModal.type === "support") {
+        await axios.delete(API_URL(`/api/support-messages/${deleteModal.id}/`));
+        fetchSupportMessages();
+
+        if (selectedSupport && selectedSupport.id === deleteModal.id) {
+          setSelectedSupport(null);
+          setReplyText("");
+        }
+      }
+
+      if (deleteModal.type === "reset") {
+        await axios.delete(
+          API_URL(`/api/password-reset-requests/${deleteModal.id}/`)
+        );
+        fetchPasswordResetRequests();
+      }
+
+      closeDeleteModal();
+
+      showToast(
+        "success",
+        "Deleted Successfully",
+        "Selected record has been removed."
+      );
     } catch (error) {
-      console.error("Delete notification error:", error);
-      alert("Failed to delete notification.");
+      console.error("Delete error:", error);
+
+      setDeleteModal((prev) => ({ ...prev, deleting: false }));
+
+      showToast("error", "Delete Failed", "Could not delete this record.");
     }
   };
 
@@ -188,29 +284,13 @@ const Notifications = () => {
           res?.data || { ...selectedSupport, status: newStatus }
         );
       }
+
+      showToast("success", "Status Updated", "Support status has been updated.");
     } catch (error) {
       console.error("Support status update error:", error);
-      alert("Failed to update support message status.");
+      showToast("error", "Update Failed", "Failed to update support status.");
     } finally {
       setUpdatingId(null);
-    }
-  };
-
-  const deleteSupportMessage = async (id) => {
-    if (!window.confirm("Delete this support message?")) return;
-
-    try {
-      await axios.delete(API_URL(`/api/support-messages/${id}/`));
-      alert("Support message deleted.");
-      fetchSupportMessages();
-
-      if (selectedSupport && selectedSupport.id === id) {
-        setSelectedSupport(null);
-        setReplyText("");
-      }
-    } catch (error) {
-      console.error("Delete support message error:", error);
-      alert("Failed to delete support message.");
     }
   };
 
@@ -218,24 +298,18 @@ const Notifications = () => {
     if (!selectedSupport) return;
 
     if (!replyText.trim()) {
-      alert("Please write a reply first.");
+      showToast("error", "Reply Required", "Please write a reply first.");
       return;
     }
 
     try {
       setUpdatingId(selectedSupport.id);
 
-      const payload = {
-        admin_reply: replyText.trim(),
-      };
-
       const res = await axios.patch(
         API_URL(`/api/support-messages/${selectedSupport.id}/`),
-        payload,
+        { admin_reply: replyText.trim() },
         { headers: { "Content-Type": "application/json" } }
       );
-
-      alert("Reply sent successfully.");
 
       const updatedSupport = res?.data || {
         ...selectedSupport,
@@ -246,9 +320,11 @@ const Notifications = () => {
       setReplyText(updatedSupport.admin_reply || "");
 
       fetchSupportMessages();
+
+      showToast("success", "Reply Sent", "Reply has been sent successfully.");
     } catch (error) {
       console.error("Send support reply error:", error);
-      alert("Failed to send reply.");
+      showToast("error", "Reply Failed", "Failed to send reply.");
     } finally {
       setUpdatingId(null);
     }
@@ -264,55 +340,53 @@ const Notifications = () => {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      alert("Password reset request updated.");
       fetchPasswordResetRequests();
+
+      showToast(
+        "success",
+        "Request Updated",
+        "Password reset request status has been updated."
+      );
     } catch (error) {
       console.error("Password reset request update error:", error);
-      alert("Failed to update password reset request.");
+      showToast("error", "Update Failed", "Failed to update reset request.");
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const deleteResetRequest = async (id) => {
-    if (!window.confirm("Delete this password reset request?")) return;
-
-    try {
-      await axios.delete(API_URL(`/api/password-reset-requests/${id}/`));
-      alert("Password reset request deleted.");
-      fetchPasswordResetRequests();
-    } catch (error) {
-      console.error("Delete password reset request error:", error);
-      alert("Failed to delete password reset request.");
-    }
+  const getTypeBadgeClass = (type) => {
+    if (type === "success") return "notify-badge notify-badge-success";
+    if (type === "warning") return "notify-badge notify-badge-warning";
+    return "notify-badge notify-badge-info";
   };
 
-  const typeBadge = (type) => {
-    if (type === "success") return "bg-success";
-    if (type === "warning") return "bg-warning text-dark";
-    return "bg-info";
+  const getRecipientBadgeClass = (type) => {
+    return type === "all"
+      ? "notify-badge notify-badge-dark"
+      : "notify-badge notify-badge-info";
   };
 
-  const recipientBadge = (type) => {
-    return type === "all" ? "bg-dark" : "bg-primary";
+  const getSupportStatusBadgeClass = (status) => {
+    return status === "resolved"
+      ? "notify-badge notify-badge-success"
+      : "notify-badge notify-badge-warning";
   };
 
-  const supportStatusBadge = (status) => {
-    return status === "resolved" ? "bg-success" : "bg-warning text-dark";
+  const getResetStatusBadgeClass = (status) => {
+    return status === "resolved"
+      ? "notify-badge notify-badge-success"
+      : "notify-badge notify-badge-danger";
   };
 
-  const resetRequestStatusBadge = (status) => {
-    return status === "resolved" ? "bg-success" : "bg-danger";
-  };
-
-  const readRateBadge = (item) => {
+  const getReadRateBadgeClass = (item) => {
     const total = Number(item.targeted_driver_count || 0);
     const read = Number(item.read_count || 0);
 
-    if (total === 0) return "bg-secondary";
-    if (read === 0) return "bg-danger";
-    if (read === total) return "bg-success";
-    return "bg-warning text-dark";
+    if (total === 0) return "notify-badge notify-badge-muted";
+    if (read === 0) return "notify-badge notify-badge-danger";
+    if (read === total) return "notify-badge notify-badge-success";
+    return "notify-badge notify-badge-warning";
   };
 
   const filteredNotifications = notifications.filter((item) =>
@@ -348,8 +422,6 @@ const Notifications = () => {
     (item) => Number(item.id) > Number(lastSeenSupportId)
   ).length;
 
-  const hasNewSupport = newSupportCount > 0;
-
   const latestResetRequestId =
     passwordResetRequests.length > 0
       ? Math.max(...passwordResetRequests.map((item) => Number(item.id)))
@@ -358,8 +430,6 @@ const Notifications = () => {
   const newResetRequestCount = passwordResetRequests.filter(
     (item) => Number(item.id) > Number(lastSeenResetRequestId)
   ).length;
-
-  const hasNewResetRequests = newResetRequestCount > 0;
 
   const handleSupportTabClick = () => {
     setActiveTab("support");
@@ -374,723 +444,918 @@ const Notifications = () => {
   };
 
   return (
-    <div className="page-content">
-      <div className="container-fluid">
-        <div className="mb-4">
-          <h4 className="mb-1">Notifications & Support</h4>
-          <p className="text-muted mb-0">
-            Manage driver notifications, support messages, and password reset
-            requests in one place.
-          </p>
+    <div className="page-content driveledger-notifications">
+      {toast && (
+        <div className={`notify-toast notify-toast-${toast.type}`}>
+          <div className="notify-toast-icon">
+            {toast.type === "success" ? "✓" : "!"}
+          </div>
+          <div>
+            <strong>{toast.title}</strong>
+            <span>{toast.message}</span>
+          </div>
         </div>
+      )}
 
-        <div className="card mb-4">
-          <div className="card-body">
-            <div className="d-flex gap-2 flex-wrap">
+      {deleteModal.open && (
+        <div className="notify-modal-backdrop">
+          <div className="notify-modal-card">
+            <div className="notify-modal-icon">!</div>
+
+            <h5>{deleteModal.title}</h5>
+            <p>{deleteModal.message}</p>
+
+            <div className="notify-modal-actions">
               <button
-                className={`btn ${
-                  activeTab === "notifications" ? "btn-primary" : "btn-light"
-                }`}
-                onClick={() => setActiveTab("notifications")}
+                type="button"
+                className="notify-modal-cancel"
+                onClick={closeDeleteModal}
+                disabled={deleteModal.deleting}
               >
-                Notifications
+                Cancel
               </button>
 
               <button
-                className={`btn position-relative ${
-                  hasNewSupport
-                    ? "btn-warning"
-                    : activeTab === "support"
-                    ? "btn-primary"
-                    : "btn-light"
-                }`}
-                onClick={handleSupportTabClick}
-                style={
-                  hasNewSupport
-                    ? {
-                        boxShadow: "0 0 0 0.2rem rgba(220, 53, 69, 0.2)",
-                        fontWeight: "600",
-                      }
-                    : {}
-                }
+                type="button"
+                className="notify-modal-delete"
+                onClick={confirmDelete}
+                disabled={deleteModal.deleting}
               >
-                Support Messages
-                {hasNewSupport && (
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {newSupportCount}
-                  </span>
-                )}
-              </button>
-
-              <button
-                className={`btn position-relative ${
-                  hasNewResetRequests
-                    ? "btn-warning"
-                    : activeTab === "reset-requests"
-                    ? "btn-primary"
-                    : "btn-light"
-                }`}
-                onClick={handleResetRequestsTabClick}
-                style={
-                  hasNewResetRequests
-                    ? {
-                        boxShadow: "0 0 0 0.2rem rgba(220, 53, 69, 0.2)",
-                        fontWeight: "600",
-                      }
-                    : {}
-                }
-              >
-                Password Reset Requests
-                {hasNewResetRequests && (
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {newResetRequestCount}
-                  </span>
-                )}
+                {deleteModal.deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      <div className="container-fluid">
+        <div className="notify-hero notify-reveal notify-delay-1">
+          <div className="notify-hero-pill">
+            <span className="dl-status-dot"></span>
+            Driver Communication Center
+          </div>
+
+          <h4>Notifications & Support</h4>
+          <p>
+            Manage driver notifications, support messages and password reset
+            requests in one clean admin center.
+          </p>
+        </div>
+
+        <div className="notify-card notify-reveal notify-delay-2">
+          <div className="notify-tabs">
+            <button
+              type="button"
+              className={`notify-tab-btn ${
+                activeTab === "notifications" ? "notify-tab-active" : ""
+              }`}
+              onClick={() => setActiveTab("notifications")}
+            >
+              Notifications
+            </button>
+
+            <button
+              type="button"
+              className={`notify-tab-btn ${
+                newSupportCount > 0
+                  ? "notify-tab-alert"
+                  : activeTab === "support"
+                  ? "notify-tab-active"
+                  : ""
+              }`}
+              onClick={handleSupportTabClick}
+            >
+              Support Messages
+              {newSupportCount > 0 && (
+                <span className="notify-tab-badge">{newSupportCount}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`notify-tab-btn ${
+                newResetRequestCount > 0
+                  ? "notify-tab-alert"
+                  : activeTab === "reset-requests"
+                  ? "notify-tab-active"
+                  : ""
+              }`}
+              onClick={handleResetRequestsTabClick}
+            >
+              Password Reset Requests
+              {newResetRequestCount > 0 && (
+                <span className="notify-tab-badge">
+                  {newResetRequestCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
 
         {activeTab === "notifications" && (
-          <>
-            <div className="card mb-4">
-              <div className="card-body">
-                <h5 className="mb-3">Create Notification</h5>
-
-                <form onSubmit={handleCreateNotification}>
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Title</label>
-                      <input
-                        type="text"
-                        name="title"
-                        className="form-control"
-                        value={formData.title}
-                        onChange={handleChange}
-                        placeholder="Enter notification title"
-                      />
-                    </div>
-
-                    <div className="col-md-3">
-                      <label className="form-label">Type</label>
-                      <select
-                        name="notification_type"
-                        className="form-select"
-                        value={formData.notification_type}
-                        onChange={handleChange}
-                      >
-                        <option value="info">Info</option>
-                        <option value="warning">Warning</option>
-                        <option value="success">Success</option>
-                      </select>
-                    </div>
-
-                    <div className="col-md-3">
-                      <label className="form-label">Send To</label>
-                      <select
-                        name="recipient_type"
-                        className="form-select"
-                        value={formData.recipient_type}
-                        onChange={handleChange}
-                      >
-                        <option value="all">All Drivers</option>
-                        <option value="driver">Single Driver</option>
-                      </select>
-                    </div>
-
-                    {formData.recipient_type === "driver" && (
-                      <div className="col-md-6">
-                        <label className="form-label">Select Driver</label>
-                        <select
-                          name="driver"
-                          className="form-select"
-                          value={formData.driver}
-                          onChange={handleChange}
-                        >
-                          <option value="">Choose driver</option>
-                          {drivers.length > 0 ? (
-                            drivers.map((driver) => (
-                              <option key={driver.id} value={driver.id}>
-                                {driver.user_name}
-                              </option>
-                            ))
-                          ) : (
-                            <option value="" disabled>
-                              No drivers found
-                            </option>
-                          )}
-                        </select>
-                      </div>
-                    )}
-
-                    <div className="col-12">
-                      <label className="form-label">Message</label>
-                      <textarea
-                        name="message"
-                        className="form-control"
-                        rows="4"
-                        value={formData.message}
-                        onChange={handleChange}
-                        placeholder="Write your notification message"
-                      />
-                    </div>
-
-                    <div className="col-12">
-                      <button
-                        className="btn btn-primary"
-                        type="submit"
-                        disabled={loading}
-                      >
-                        {loading ? "Sending..." : "Send Notification"}
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            <div className="card mb-4">
-              <div className="card-body">
-                <input
-                  className="form-control"
-                  placeholder="Search notifications by title, message, type, recipient, or driver"
-                  value={searchNotifications}
-                  onChange={(e) => setSearchNotifications(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-body">
-                <div className="table-responsive">
-                  <table className="table table-bordered table-hover align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>#</th>
-                        <th>Title</th>
-                        <th>Message</th>
-                        <th>Type</th>
-                        <th>Recipient</th>
-                        <th>Driver</th>
-                        <th>Read Stats</th>
-                        <th>Created At</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {filteredNotifications.length > 0 ? (
-                        filteredNotifications.map((item, index) => (
-                          <tr key={item.id}>
-                            <td>{index + 1}</td>
-                            <td>
-                              <strong>{item.title}</strong>
-                            </td>
-                            <td>{item.message}</td>
-                            <td>
-                              <span
-                                className={`badge ${typeBadge(
-                                  item.notification_type
-                                )}`}
-                              >
-                                {item.notification_type}
-                              </span>
-                            </td>
-                            <td>
-                              <span
-                                className={`badge ${recipientBadge(
-                                  item.recipient_type
-                                )}`}
-                              >
-                                {item.recipient_type === "all"
-                                  ? "All Drivers"
-                                  : "Single Driver"}
-                              </span>
-                            </td>
-                            <td>{item.driver_name || "-"}</td>
-                            <td>
-                              <div className="d-flex flex-column gap-1">
-                                <span className={`badge ${readRateBadge(item)}`}>
-                                  Read {item.read_count || 0} /{" "}
-                                  {item.targeted_driver_count || 0}
-                                </span>
-                                <small className="text-muted">
-                                  Unread: {item.unread_count || 0}
-                                </small>
-                              </div>
-                            </td>
-                            <td>{new Date(item.created_at).toLocaleString()}</td>
-                            <td>
-                              <button
-                                className="btn btn-sm btn-danger"
-                                onClick={() => deleteNotification(item.id)}
-                              >
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="9" className="text-center">
-                            No notifications found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </>
+          <NotificationsTab
+            formData={formData}
+            handleChange={handleChange}
+            drivers={drivers}
+            loading={loading}
+            handleCreateNotification={handleCreateNotification}
+            searchNotifications={searchNotifications}
+            setSearchNotifications={setSearchNotifications}
+            filteredNotifications={filteredNotifications}
+            getTypeBadgeClass={getTypeBadgeClass}
+            getRecipientBadgeClass={getRecipientBadgeClass}
+            getReadRateBadgeClass={getReadRateBadgeClass}
+            formatDate={formatDate}
+            trimText={trimText}
+            openDeleteModal={openDeleteModal}
+          />
         )}
 
         {activeTab === "support" && (
-          <>
-            {selectedSupport && (
-              <div className="card mb-4">
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                      <h5 className="mb-1">Support Message Details</h5>
-                      <p className="text-muted mb-0">
-                        Full view of the selected support message
-                      </p>
-                    </div>
-                    <button
-                      className="btn btn-sm btn-light"
-                      onClick={() => {
-                        setSelectedSupport(null);
-                        setReplyText("");
-                      }}
-                    >
-                      Close
-                    </button>
-                  </div>
-
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <p>
-                        <strong>Driver:</strong>{" "}
-                        {selectedSupport.driver_name || "-"}
-                      </p>
-                    </div>
-
-                    <div className="col-md-6">
-                      <p>
-                        <strong>Status:</strong>{" "}
-                        <span
-                          className={`badge ${supportStatusBadge(
-                            selectedSupport.status
-                          )}`}
-                        >
-                          {selectedSupport.status}
-                        </span>
-                      </p>
-                    </div>
-
-                    <div className="col-12">
-                      <p>
-                        <strong>Subject:</strong> {selectedSupport.subject}
-                      </p>
-                    </div>
-
-                    <div className="col-12">
-                      <p>
-                        <strong>Message:</strong>
-                      </p>
-                      <div
-                        style={{
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "10px",
-                          padding: "14px",
-                          background: "#f8fafc",
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {selectedSupport.message}
-                      </div>
-                    </div>
-
-                    <div className="col-12">
-                      <p>
-                        <strong>Created At:</strong>{" "}
-                        {new Date(selectedSupport.created_at).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <div className="col-12">
-                      <p>
-                        <strong>Issue Attachment:</strong>
-                      </p>
-
-                      {selectedSupport.issue_attachment_url ? (
-                        <a
-                          href={selectedSupport.issue_attachment_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn btn-sm btn-outline-primary"
-                        >
-                          View Attachment
-                        </a>
-                      ) : (
-                        <div
-                          style={{
-                            border: "1px dashed #cbd5e1",
-                            borderRadius: "10px",
-                            padding: "14px",
-                            background: "#f8fafc",
-                            color: "#64748b",
-                          }}
-                        >
-                          No attachment uploaded.
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="col-12">
-                      <p>
-                        <strong>Admin Reply:</strong>
-                      </p>
-                      {selectedSupport.admin_reply ? (
-                        <div
-                          style={{
-                            border: "1px solid #d1fae5",
-                            borderRadius: "10px",
-                            padding: "14px",
-                            background: "#ecfdf5",
-                            whiteSpace: "pre-wrap",
-                            marginBottom: "12px",
-                          }}
-                        >
-                          {selectedSupport.admin_reply}
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            border: "1px dashed #cbd5e1",
-                            borderRadius: "10px",
-                            padding: "14px",
-                            background: "#f8fafc",
-                            color: "#64748b",
-                            marginBottom: "12px",
-                          }}
-                        >
-                          No reply sent yet.
-                        </div>
-                      )}
-                    </div>
-
-                    {selectedSupport.replied_at && (
-                      <div className="col-12">
-                        <p>
-                          <strong>Replied At:</strong>{" "}
-                          {new Date(selectedSupport.replied_at).toLocaleString()}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="col-12">
-                      <label className="form-label">
-                        <strong>Write Reply</strong>
-                      </label>
-                      <textarea
-                        className="form-control"
-                        rows="4"
-                        placeholder="Write reply for the driver..."
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="col-12">
-                      <button
-                        className="btn btn-primary"
-                        disabled={updatingId === selectedSupport.id}
-                        onClick={sendSupportReply}
-                      >
-                        {updatingId === selectedSupport.id
-                          ? "Sending..."
-                          : "Send Reply"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="card mb-4">
-              <div className="card-body">
-                <input
-                  className="form-control"
-                  placeholder="Search support messages by subject, message, driver, status, reply, or attachment"
-                  value={searchSupport}
-                  onChange={(e) => setSearchSupport(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-body">
-                <div className="table-responsive">
-                  <table className="table table-bordered table-hover align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>#</th>
-                        <th>Driver</th>
-                        <th>Subject</th>
-                        <th>Message</th>
-                        <th>Status</th>
-                        <th>Reply</th>
-                        <th>Attachment</th>
-                        <th>Created At</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {filteredSupportMessages.length > 0 ? (
-                        filteredSupportMessages.map((item, index) => (
-                          <tr key={item.id}>
-                            <td>{index + 1}</td>
-                            <td>{item.driver_name || "-"}</td>
-                            <td>
-                              <strong>{item.subject}</strong>
-                            </td>
-                            <td style={{ maxWidth: "320px" }}>
-                              {item.message.length > 60
-                                ? item.message.slice(0, 60) + "..."
-                                : item.message}
-                            </td>
-                            <td>
-                              <span
-                                className={`badge ${supportStatusBadge(
-                                  item.status
-                                )}`}
-                              >
-                                {item.status}
-                              </span>
-                            </td>
-                            <td>
-                              {item.admin_reply ? (
-                                <span className="badge bg-success">Replied</span>
-                              ) : (
-                                <span className="badge bg-secondary">
-                                  No Reply
-                                </span>
-                              )}
-                            </td>
-                            <td>
-                              {item.issue_attachment_url ? (
-                                <a
-                                  href={item.issue_attachment_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="btn btn-sm btn-outline-primary"
-                                >
-                                  View
-                                </a>
-                              ) : (
-                                <span className="badge bg-secondary">None</span>
-                              )}
-                            </td>
-                            <td>{new Date(item.created_at).toLocaleString()}</td>
-                            <td>
-                              <div className="d-flex flex-wrap gap-2">
-                                <button
-                                  className="btn btn-sm btn-info text-white"
-                                  onClick={() => {
-                                    setSelectedSupport(item);
-                                    setReplyText(item.admin_reply || "");
-                                  }}
-                                >
-                                  View
-                                </button>
-
-                                {item.status !== "resolved" ? (
-                                  <button
-                                    className="btn btn-sm btn-success"
-                                    disabled={updatingId === item.id}
-                                    onClick={() =>
-                                      updateSupportStatus(item, "resolved")
-                                    }
-                                  >
-                                    {updatingId === item.id
-                                      ? "Updating..."
-                                      : "Mark Resolved"}
-                                  </button>
-                                ) : (
-                                  <button
-                                    className="btn btn-sm btn-warning"
-                                    disabled={updatingId === item.id}
-                                    onClick={() =>
-                                      updateSupportStatus(item, "open")
-                                    }
-                                  >
-                                    {updatingId === item.id
-                                      ? "Updating..."
-                                      : "Mark Open"}
-                                  </button>
-                                )}
-
-                                <button
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => deleteSupportMessage(item.id)}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="9" className="text-center">
-                            No support messages found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </>
+          <SupportTab
+            selectedSupport={selectedSupport}
+            setSelectedSupport={setSelectedSupport}
+            replyText={replyText}
+            setReplyText={setReplyText}
+            updatingId={updatingId}
+            sendSupportReply={sendSupportReply}
+            searchSupport={searchSupport}
+            setSearchSupport={setSearchSupport}
+            filteredSupportMessages={filteredSupportMessages}
+            getSupportStatusBadgeClass={getSupportStatusBadgeClass}
+            updateSupportStatus={updateSupportStatus}
+            formatDate={formatDate}
+            trimText={trimText}
+            openDeleteModal={openDeleteModal}
+          />
         )}
 
         {activeTab === "reset-requests" && (
-          <>
-            <div className="card mb-4">
-              <div className="card-body">
-                <input
-                  className="form-control"
-                  placeholder="Search reset requests by username, email, message, or status"
-                  value={searchResetRequests}
-                  onChange={(e) => setSearchResetRequests(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-body">
-                <div className="mb-3">
-                  <h5 className="mb-1">Password Reset Requests</h5>
-                  <p className="text-muted mb-0">
-                    Review requests submitted by drivers who cannot log in.
-                    Reset the user password from User Management, share the
-                    temporary password with the driver through an official
-                    channel, then mark the request as resolved.
-                  </p>
-                </div>
-
-                <div className="table-responsive">
-                  <table className="table table-bordered table-hover align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>#</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Message</th>
-                        <th>Status</th>
-                        <th>Created At</th>
-                        <th>Resolved At</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {filteredResetRequests.length > 0 ? (
-                        filteredResetRequests.map((item, index) => (
-                          <tr key={item.id}>
-                            <td>{index + 1}</td>
-                            <td>
-                              <strong>{item.username}</strong>
-                            </td>
-                            <td>{item.email}</td>
-                            <td style={{ maxWidth: "320px" }}>
-                              {item.message
-                                ? item.message.length > 70
-                                  ? item.message.slice(0, 70) + "..."
-                                  : item.message
-                                : "-"}
-                            </td>
-                            <td>
-                              <span
-                                className={`badge ${resetRequestStatusBadge(
-                                  item.status
-                                )}`}
-                              >
-                                {item.status}
-                              </span>
-                            </td>
-                            <td>{new Date(item.created_at).toLocaleString()}</td>
-                            <td>
-                              {item.resolved_at
-                                ? new Date(item.resolved_at).toLocaleString()
-                                : "-"}
-                            </td>
-                            <td>
-                              <div className="d-flex flex-wrap gap-2">
-                                <a
-                                  href="/users"
-                                  className="btn btn-sm btn-info text-white"
-                                >
-                                  Go to Users
-                                </a>
-
-                                {item.status !== "resolved" ? (
-                                  <button
-                                    className="btn btn-sm btn-success"
-                                    disabled={updatingId === item.id}
-                                    onClick={() =>
-                                      updateResetRequestStatus(item, "resolved")
-                                    }
-                                  >
-                                    {updatingId === item.id
-                                      ? "Updating..."
-                                      : "Mark Resolved"}
-                                  </button>
-                                ) : (
-                                  <button
-                                    className="btn btn-sm btn-warning"
-                                    disabled={updatingId === item.id}
-                                    onClick={() =>
-                                      updateResetRequestStatus(item, "pending")
-                                    }
-                                  >
-                                    {updatingId === item.id
-                                      ? "Updating..."
-                                      : "Mark Pending"}
-                                  </button>
-                                )}
-
-                                <button
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => deleteResetRequest(item.id)}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="8" className="text-center">
-                            No password reset requests found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </>
+          <ResetRequestsTab
+            searchResetRequests={searchResetRequests}
+            setSearchResetRequests={setSearchResetRequests}
+            filteredResetRequests={filteredResetRequests}
+            getResetStatusBadgeClass={getResetStatusBadgeClass}
+            updateResetRequestStatus={updateResetRequestStatus}
+            updatingId={updatingId}
+            formatDate={formatDate}
+            trimText={trimText}
+            openDeleteModal={openDeleteModal}
+          />
         )}
       </div>
     </div>
   );
 };
+
+const NotificationsTab = ({
+  formData,
+  handleChange,
+  drivers,
+  loading,
+  handleCreateNotification,
+  searchNotifications,
+  setSearchNotifications,
+  filteredNotifications,
+  getTypeBadgeClass,
+  getRecipientBadgeClass,
+  getReadRateBadgeClass,
+  formatDate,
+  trimText,
+  openDeleteModal,
+}) => (
+  <>
+    <div className="notify-card notify-reveal notify-delay-2">
+      <div className="notify-card-head">
+        <div>
+          <h5>Create Notification</h5>
+          <p>Send a message to all drivers or a single selected driver.</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleCreateNotification}>
+        <div className="row g-3">
+          <div className="col-md-6">
+            <label className="notify-form-label">Title</label>
+            <input
+              type="text"
+              name="title"
+              className="notify-input"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Enter notification title"
+            />
+          </div>
+
+          <div className="col-md-3">
+            <label className="notify-form-label">Type</label>
+            <select
+              name="notification_type"
+              className="notify-select"
+              value={formData.notification_type}
+              onChange={handleChange}
+            >
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="success">Success</option>
+            </select>
+          </div>
+
+          <div className="col-md-3">
+            <label className="notify-form-label">Send To</label>
+            <select
+              name="recipient_type"
+              className="notify-select"
+              value={formData.recipient_type}
+              onChange={handleChange}
+            >
+              <option value="all">All Drivers</option>
+              <option value="driver">Single Driver</option>
+            </select>
+          </div>
+
+          {formData.recipient_type === "driver" && (
+            <div className="col-md-6">
+              <label className="notify-form-label">Select Driver</label>
+              <select
+                name="driver"
+                className="notify-select"
+                value={formData.driver}
+                onChange={handleChange}
+              >
+                <option value="">Choose driver</option>
+                {drivers.map((driver) => (
+                  <option key={driver.id} value={driver.id}>
+                    {driver.user_name || `Driver ${driver.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="col-12">
+            <label className="notify-form-label">Message</label>
+            <textarea
+              name="message"
+              className="notify-textarea"
+              rows="4"
+              value={formData.message}
+              onChange={handleChange}
+              placeholder="Write your notification message"
+            />
+          </div>
+
+          <div className="col-12">
+            <button className="notify-primary-btn" type="submit" disabled={loading}>
+              {loading ? "Sending..." : "Send Notification"}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div className="notify-card">
+      <input
+        className="notify-search-input"
+        placeholder="Search notifications by title, message, type, recipient, or driver"
+        value={searchNotifications}
+        onChange={(e) => setSearchNotifications(e.target.value)}
+      />
+    </div>
+
+    <div className="notify-card">
+      <div className="notify-card-head">
+        <div>
+          <h5>Notification Records</h5>
+          <p>{filteredNotifications.length} notification record(s) found</p>
+        </div>
+      </div>
+
+      <div className="notify-table-wrap">
+        <table className="table table-hover align-middle notify-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Message</th>
+              <th>Type</th>
+              <th>Recipient</th>
+              <th>Driver</th>
+              <th>Read Stats</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredNotifications.length > 0 ? (
+              filteredNotifications.map((item, index) => (
+                <tr key={item.id}>
+                  <td>{index + 1}</td>
+                  <td>
+                    <div className="notify-title">{item.title}</div>
+                  </td>
+                  <td className="notify-message">{trimText(item.message, 90)}</td>
+                  <td>
+                    <span className={getTypeBadgeClass(item.notification_type)}>
+                      {item.notification_type}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={getRecipientBadgeClass(item.recipient_type)}>
+                      {item.recipient_type === "all"
+                        ? "All Drivers"
+                        : "Single Driver"}
+                    </span>
+                  </td>
+                  <td>{item.driver_name || "-"}</td>
+                  <td>
+                    <span className={getReadRateBadgeClass(item)}>
+                      Read {item.read_count || 0} /{" "}
+                      {item.targeted_driver_count || 0}
+                    </span>
+                    <div className="notify-sub">
+                      Unread: {item.unread_count || 0}
+                    </div>
+                  </td>
+                  <td>{formatDate(item.created_at)}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="notify-danger-btn"
+                      onClick={() =>
+                        openDeleteModal(
+                          "notification",
+                          item.id,
+                          "Delete Notification?",
+                          "Are you sure you want to delete this notification?"
+                        )
+                      }
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="9" className="notify-empty">
+                  No notifications found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="notify-mobile-list">
+        {filteredNotifications.length > 0 ? (
+          filteredNotifications.map((item, index) => (
+            <div className="notify-mobile-card" key={item.id}>
+              <div className="notify-mobile-top">
+                <div>
+                  <div className="notify-title">
+                    {index + 1}. {item.title}
+                  </div>
+                  <div className="notify-sub">{formatDate(item.created_at)}</div>
+                </div>
+
+                <span className={getTypeBadgeClass(item.notification_type)}>
+                  {item.notification_type}
+                </span>
+              </div>
+
+              <div className="notify-mobile-row">
+                <span>Message</span>
+                <strong>{trimText(item.message, 80)}</strong>
+              </div>
+
+              <div className="notify-mobile-row">
+                <span>Recipient</span>
+                <strong>
+                  {item.recipient_type === "all"
+                    ? "All Drivers"
+                    : item.driver_name || "Single Driver"}
+                </strong>
+              </div>
+
+              <div className="notify-mobile-row">
+                <span>Read</span>
+                <strong>
+                  {item.read_count || 0} / {item.targeted_driver_count || 0}
+                </strong>
+              </div>
+
+              <div className="notify-actions">
+                <button
+                  type="button"
+                  className="notify-danger-btn"
+                  onClick={() =>
+                    openDeleteModal(
+                      "notification",
+                      item.id,
+                      "Delete Notification?",
+                      "Are you sure you want to delete this notification?"
+                    )
+                  }
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="notify-empty">No notifications found</div>
+        )}
+      </div>
+    </div>
+  </>
+);
+
+const SupportTab = ({
+  selectedSupport,
+  setSelectedSupport,
+  replyText,
+  setReplyText,
+  updatingId,
+  sendSupportReply,
+  searchSupport,
+  setSearchSupport,
+  filteredSupportMessages,
+  getSupportStatusBadgeClass,
+  updateSupportStatus,
+  formatDate,
+  trimText,
+  openDeleteModal,
+}) => {
+  const openCount = filteredSupportMessages.filter(
+    (item) => item.status !== "resolved"
+  ).length;
+
+  const resolvedCount = filteredSupportMessages.filter(
+    (item) => item.status === "resolved"
+  ).length;
+
+  const repliedCount = filteredSupportMessages.filter(
+    (item) => item.admin_reply
+  ).length;
+
+  const attachmentCount = filteredSupportMessages.filter(
+    (item) => item.issue_attachment_url
+  ).length;
+
+  return (
+    <>
+      <div className="notify-premium-summary-grid notify-reveal notify-delay-2">
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon">💬</div>
+          <span>Total Messages</span>
+          <strong>{filteredSupportMessages.length}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon warning">⏳</div>
+          <span>Open</span>
+          <strong>{openCount}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon success">✓</div>
+          <span>Resolved</span>
+          <strong>{resolvedCount}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon info">📎</div>
+          <span>Attachments</span>
+          <strong>{attachmentCount}</strong>
+        </div>
+      </div>
+
+      <div className="notify-card notify-premium-toolbar">
+        <div>
+          <h5>Support Messages</h5>
+          <p>
+            Review driver issues, open attachments, send replies and mark cases
+            as resolved.
+          </p>
+        </div>
+
+        <input
+          className="notify-search-input notify-premium-search"
+          placeholder="Search by subject, message, driver, status, reply, or attachment"
+          value={searchSupport}
+          onChange={(e) => setSearchSupport(e.target.value)}
+        />
+      </div>
+
+      {selectedSupport && (
+        <div className="notify-card notify-support-detail-premium notify-reveal notify-delay-2">
+          <div className="notify-detail-header">
+            <div>
+              <span className="notify-detail-eyebrow">Selected Support Case</span>
+              <h5>{selectedSupport.subject}</h5>
+              <p>
+                Driver: <strong>{selectedSupport.driver_name || "-"}</strong> ·
+                Created: {formatDate(selectedSupport.created_at)}
+              </p>
+            </div>
+
+            <div className="notify-detail-header-actions">
+              <span className={getSupportStatusBadgeClass(selectedSupport.status)}>
+                {selectedSupport.status}
+              </span>
+
+              <button
+                type="button"
+                className="notify-light-btn"
+                onClick={() => {
+                  setSelectedSupport(null);
+                  setReplyText("");
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+
+          <div className="notify-detail-grid">
+            <div className="notify-detail-panel">
+              <h6>Driver Message</h6>
+              <div className="support-detail-box">
+                {selectedSupport.message || "-"}
+              </div>
+
+              <div className="notify-detail-mini-row">
+                <span>Attachment</span>
+                {selectedSupport.issue_attachment_url ? (
+                  <a
+                    href={selectedSupport.issue_attachment_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="notify-info-btn"
+                  >
+                    View Attachment
+                  </a>
+                ) : (
+                  <strong>No attachment</strong>
+                )}
+              </div>
+            </div>
+
+            <div className="notify-detail-panel">
+              <h6>Admin Reply</h6>
+
+              {selectedSupport.admin_reply ? (
+                <div className="support-reply-box">
+                  {selectedSupport.admin_reply}
+                </div>
+              ) : (
+                <div className="support-empty-box">No reply sent yet.</div>
+              )}
+
+              {selectedSupport.replied_at && (
+                <div className="notify-detail-mini-row">
+                  <span>Replied At</span>
+                  <strong>{formatDate(selectedSupport.replied_at)}</strong>
+                </div>
+              )}
+
+              <label className="notify-form-label mt-3">Write / Update Reply</label>
+              <textarea
+                className="notify-textarea"
+                rows="4"
+                placeholder="Write reply for the driver..."
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+              />
+
+              <button
+                type="button"
+                className="notify-primary-btn mt-3"
+                disabled={updatingId === selectedSupport.id}
+                onClick={sendSupportReply}
+              >
+                {updatingId === selectedSupport.id ? "Sending..." : "Send Reply"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="notify-support-grid">
+        {filteredSupportMessages.length > 0 ? (
+          filteredSupportMessages.map((item, index) => (
+            <div className="notify-support-card" key={item.id}>
+              <div className="notify-support-card-top">
+                <div>
+                  <span className="notify-support-number">Case #{index + 1}</span>
+                  <h5>{item.subject || "Support Message"}</h5>
+                  <p>{item.driver_name || "Unknown Driver"}</p>
+                </div>
+
+                <span className={getSupportStatusBadgeClass(item.status)}>
+                  {item.status}
+                </span>
+              </div>
+
+              <div className="notify-support-message">
+                {trimText(item.message, 130)}
+              </div>
+
+              <div className="notify-support-meta-grid">
+                <div>
+                  <span>Created</span>
+                  <strong>{formatDate(item.created_at)}</strong>
+                </div>
+
+                <div>
+                  <span>Reply</span>
+                  <strong>{item.admin_reply ? "Replied" : "No Reply"}</strong>
+                </div>
+
+                <div>
+                  <span>Attachment</span>
+                  <strong>
+                    {item.issue_attachment_url ? "Uploaded" : "None"}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="notify-actions notify-card-actions">
+                <SupportActions
+                  item={item}
+                  updatingId={updatingId}
+                  setSelectedSupport={setSelectedSupport}
+                  setReplyText={setReplyText}
+                  updateSupportStatus={updateSupportStatus}
+                  openDeleteModal={openDeleteModal}
+                />
+
+                {item.issue_attachment_url && (
+                  <a
+                    href={item.issue_attachment_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="notify-info-btn"
+                  >
+                    Attachment
+                  </a>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="notify-card notify-premium-empty">
+            <div className="notify-premium-empty-icon">💬</div>
+            <h5>No support messages found</h5>
+            <p>New driver support messages will appear here.</p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+const SupportActions = ({
+  item,
+  updatingId,
+  setSelectedSupport,
+  setReplyText,
+  updateSupportStatus,
+  openDeleteModal,
+}) => (
+  <div className="notify-actions">
+    <button
+      type="button"
+      className="notify-info-btn"
+      onClick={() => {
+        setSelectedSupport(item);
+        setReplyText(item.admin_reply || "");
+      }}
+    >
+      View
+    </button>
+
+    {item.status !== "resolved" ? (
+      <button
+        type="button"
+        className="notify-success-btn"
+        disabled={updatingId === item.id}
+        onClick={() => updateSupportStatus(item, "resolved")}
+      >
+        {updatingId === item.id ? "Updating..." : "Resolved"}
+      </button>
+    ) : (
+      <button
+        type="button"
+        className="notify-warning-btn"
+        disabled={updatingId === item.id}
+        onClick={() => updateSupportStatus(item, "open")}
+      >
+        {updatingId === item.id ? "Updating..." : "Open"}
+      </button>
+    )}
+
+    <button
+      type="button"
+      className="notify-danger-btn"
+      onClick={() =>
+        openDeleteModal(
+          "support",
+          item.id,
+          "Delete Support Message?",
+          "Are you sure you want to delete this support message?"
+        )
+      }
+    >
+      Delete
+    </button>
+  </div>
+);
+
+const ResetRequestsTab = ({
+  searchResetRequests,
+  setSearchResetRequests,
+  filteredResetRequests,
+  getResetStatusBadgeClass,
+  updateResetRequestStatus,
+  updatingId,
+  formatDate,
+  trimText,
+  openDeleteModal,
+}) => {
+  const pendingCount = filteredResetRequests.filter(
+    (item) => item.status !== "resolved"
+  ).length;
+
+  const resolvedCount = filteredResetRequests.filter(
+    (item) => item.status === "resolved"
+  ).length;
+
+  return (
+    <>
+      <div className="notify-premium-summary-grid notify-reveal notify-delay-2">
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon danger">🔐</div>
+          <span>Total Requests</span>
+          <strong>{filteredResetRequests.length}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon warning">⏳</div>
+          <span>Pending</span>
+          <strong>{pendingCount}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon success">✓</div>
+          <span>Resolved</span>
+          <strong>{resolvedCount}</strong>
+        </div>
+
+        <div className="notify-premium-stat">
+          <div className="notify-premium-stat-icon info">👥</div>
+          <span>User Management</span>
+          <strong>Ready</strong>
+        </div>
+      </div>
+
+      <div className="notify-card notify-reset-guide-card">
+        <div className="notify-reset-guide-icon">🔑</div>
+
+        <div>
+          <h5>Password Reset Workflow</h5>
+          <p>
+            Open User Management, reset the driver password, then return here and
+            mark the request as resolved.
+          </p>
+        </div>
+
+        <Link to="/users" className="notify-primary-btn">
+          Go to Users
+        </Link>
+      </div>
+
+      <div className="notify-card notify-premium-toolbar">
+        <div>
+          <h5>Password Reset Requests</h5>
+          <p>
+            Review login issues and track which password reset requests still
+            need action.
+          </p>
+        </div>
+
+        <input
+          className="notify-search-input notify-premium-search"
+          placeholder="Search by username, email, message, or status"
+          value={searchResetRequests}
+          onChange={(e) => setSearchResetRequests(e.target.value)}
+        />
+      </div>
+
+      <div className="notify-reset-grid">
+        {filteredResetRequests.length > 0 ? (
+          filteredResetRequests.map((item, index) => (
+            <div className="notify-reset-card" key={item.id}>
+              <div className="notify-reset-card-top">
+                <div>
+                  <span className="notify-support-number">
+                    Request #{index + 1}
+                  </span>
+                  <h5>{item.username || "Unknown User"}</h5>
+                  <p>{item.email || "-"}</p>
+                </div>
+
+                <span className={getResetStatusBadgeClass(item.status)}>
+                  {item.status}
+                </span>
+              </div>
+
+              <div className="notify-support-message">
+                {trimText(item.message, 140)}
+              </div>
+
+              <div className="notify-support-meta-grid">
+                <div>
+                  <span>Created</span>
+                  <strong>{formatDate(item.created_at)}</strong>
+                </div>
+
+                <div>
+                  <span>Resolved</span>
+                  <strong>{formatDate(item.resolved_at)}</strong>
+                </div>
+              </div>
+
+              <div className="notify-actions notify-card-actions">
+                <ResetActions
+                  item={item}
+                  updatingId={updatingId}
+                  updateResetRequestStatus={updateResetRequestStatus}
+                  openDeleteModal={openDeleteModal}
+                />
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="notify-card notify-premium-empty">
+            <div className="notify-premium-empty-icon">🔐</div>
+            <h5>No password reset requests found</h5>
+            <p>New reset requests from drivers will appear here.</p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+const ResetActions = ({
+  item,
+  updatingId,
+  updateResetRequestStatus,
+  openDeleteModal,
+}) => (
+  <div className="notify-actions">
+    <Link to="/users" className="notify-info-btn">
+      Users
+    </Link>
+
+    {item.status !== "resolved" ? (
+      <button
+        type="button"
+        className="notify-success-btn"
+        disabled={updatingId === item.id}
+        onClick={() => updateResetRequestStatus(item, "resolved")}
+      >
+        {updatingId === item.id ? "Updating..." : "Resolved"}
+      </button>
+    ) : (
+      <button
+        type="button"
+        className="notify-warning-btn"
+        disabled={updatingId === item.id}
+        onClick={() => updateResetRequestStatus(item, "pending")}
+      >
+        {updatingId === item.id ? "Updating..." : "Pending"}
+      </button>
+    )}
+
+    <button
+      type="button"
+      className="notify-danger-btn"
+      onClick={() =>
+        openDeleteModal(
+          "reset",
+          item.id,
+          "Delete Reset Request?",
+          "Are you sure you want to delete this password reset request?"
+        )
+      }
+    >
+      Delete
+    </button>
+  </div>
+);
 
 export default Notifications;

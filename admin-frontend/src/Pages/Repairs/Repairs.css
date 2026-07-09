@@ -1,0 +1,822 @@
+/* =========================================================
+   REPAIRS MODULE
+========================================================= */
+
+.driveledger-repairs,
+.driveledger-repairs * {
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+  box-sizing: border-box;
+}
+
+.driveledger-repairs {
+  background:
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
+  min-height: 100vh;
+  padding-bottom: 28px;
+}
+
+/* HERO */
+.repairs-hero {
+  background:
+    radial-gradient(circle at 92% 12%, rgba(45, 212, 191, 0.28), transparent 25%),
+    linear-gradient(135deg, #020617 0%, #0f172a 55%, #0f766e 100%);
+  border-radius: 26px;
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  color: #ffffff;
+  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.repairs-hero h4 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.repairs-hero p {
+  margin: 8px 0 0 0;
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.repairs-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ccfbf1;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.repairs-add-btn {
+  text-decoration: none;
+  background: #14b8a6;
+  color: #ffffff !important;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 18px;
+  font-weight: 800;
+  box-shadow: 0 12px 26px rgba(20, 184, 166, 0.28);
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.repairs-add-btn:hover {
+  transform: translateY(-2px);
+  background: #0f766e;
+}
+
+/* SEARCH + TABLE */
+.repairs-search-card,
+.repairs-table-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.065);
+}
+
+.repairs-search-card {
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.repairs-search-input {
+  width: 100%;
+  height: 52px;
+  border-radius: 15px;
+  border: 1px solid #cbd5e1;
+  padding: 0 16px;
+  font-size: 15px;
+  color: #0f172a;
+  outline: none;
+  background: #f8fafc;
+}
+
+.repairs-search-input:focus {
+  border-color: #14b8a6;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+}
+
+.repairs-table-card {
+  padding: 18px;
+}
+
+.repairs-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.repairs-table-header h5 {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.repairs-count {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.repairs-table-wrap {
+  overflow-x: auto;
+  border-radius: 17px;
+  border: 1px solid #e5e7eb;
+}
+
+.repairs-table {
+  min-width: 1180px;
+  margin: 0;
+}
+
+.repairs-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 13px;
+  padding: 13px;
+  white-space: nowrap;
+}
+
+.repairs-table td {
+  padding: 13px;
+  vertical-align: middle;
+  color: #334155;
+  border-color: #eef2f7;
+}
+
+.repair-car {
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.repair-issue {
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.repair-sub {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+.repair-date {
+  display: inline-block;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  border-radius: 12px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.repair-cost {
+  color: #0f766e;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.repair-actual-cost {
+  color: #2563eb;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.repair-badge {
+  display: inline-block;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.repair-badge-high {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.repair-badge-medium {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.repair-badge-low {
+  background: #ecfeff;
+  color: #0e7490;
+  border: 1px solid #a5f3fc;
+}
+
+.repair-badge-completed {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.repair-badge-progress {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.repair-badge-pending {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.repair-muted-badge {
+  display: inline-block;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.repair-bill-link {
+  display: inline-block;
+  text-decoration: none;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 850;
+  background: #dbeafe;
+  color: #1d4ed8 !important;
+  transition: 0.2s ease;
+}
+
+.repair-bill-link:hover {
+  transform: translateY(-1px);
+}
+
+.repairs-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.repairs-edit-btn,
+.repairs-delete-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.repairs-edit-btn {
+  background: #fef3c7;
+  color: #92400e !important;
+}
+
+.repairs-delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.repairs-edit-btn:hover,
+.repairs-delete-btn:hover {
+  transform: translateY(-1px);
+}
+
+.repairs-empty {
+  text-align: center;
+  padding: 28px !important;
+  color: #94a3b8 !important;
+  font-weight: 700;
+}
+
+/* MOBILE CARD VIEW */
+.repairs-mobile-list {
+  display: none;
+}
+
+.repairs-mobile-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 15px;
+}
+
+.repairs-mobile-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.repairs-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.repairs-mobile-row span {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.repairs-mobile-row strong {
+  color: #0f172a;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* TOAST */
+.repair-toast {
+  position: fixed;
+  top: 92px;
+  right: 28px;
+  z-index: 9999;
+  min-width: 280px;
+  max-width: 390px;
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+  animation: repairToastIn 0.35s ease forwards;
+}
+
+.repair-toast-success {
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.repair-toast-error {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #991b1b;
+}
+
+.repair-toast-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.repair-toast-success .repair-toast-icon {
+  background: #dcfce7;
+}
+
+.repair-toast-error .repair-toast-icon {
+  background: #ffe4e6;
+}
+
+.repair-toast strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 900;
+  margin-bottom: 3px;
+}
+
+.repair-toast span {
+  display: block;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@keyframes repairToastIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px) translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* DELETE MODAL */
+.repair-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  animation: repairModalFade 0.25s ease forwards;
+}
+
+.repair-modal-card {
+  width: 100%;
+  max-width: 430px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+  animation: repairModalPop 0.25s ease forwards;
+}
+
+.repair-modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 17px;
+  background: #fee2e2;
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+
+.repair-modal-card h5 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.repair-modal-card p {
+  margin: 8px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.repair-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.repair-modal-cancel,
+.repair-modal-delete {
+  border: none;
+  border-radius: 14px;
+  padding: 11px 16px;
+  font-weight: 850;
+  transition: 0.2s ease;
+}
+
+.repair-modal-cancel {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.repair-modal-delete {
+  background: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.24);
+}
+
+.repair-modal-cancel:hover,
+.repair-modal-delete:hover {
+  transform: translateY(-1px);
+}
+
+@keyframes repairModalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes repairModalPop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* REVEAL */
+.repairs-reveal {
+  opacity: 0;
+  transform: translateY(34px);
+  animation: repairsReveal 0.7s ease forwards;
+}
+
+.repairs-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.repairs-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.repairs-delay-3 {
+  animation-delay: 0.24s;
+}
+
+@keyframes repairsReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .repairs-hero {
+    align-items: flex-start;
+    padding: 22px;
+    border-radius: 24px;
+  }
+
+  .repairs-hero h4 {
+    font-size: 26px;
+  }
+
+  .repairs-add-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .driveledger-repairs .container-fluid {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .repairs-hero {
+    padding: 20px;
+    border-radius: 22px;
+  }
+
+  .repairs-hero h4 {
+    font-size: 23px;
+  }
+
+  .repairs-hero p {
+    font-size: 13px;
+  }
+
+  .repairs-search-card,
+  .repairs-table-card {
+    border-radius: 20px;
+    padding: 16px;
+  }
+
+  .repairs-table-wrap {
+    display: none;
+  }
+
+  .repairs-mobile-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .repairs-actions {
+    margin-top: 12px;
+  }
+
+  .repairs-edit-btn,
+  .repairs-delete-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .repair-toast {
+    top: 78px;
+    left: 14px;
+    right: 14px;
+    min-width: auto;
+    max-width: none;
+  }
+
+  .repair-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .repair-modal-cancel,
+  .repair-modal-delete {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   ADD REPAIR / EDIT REPAIR FORM PAGE
+========================================================= */
+
+.repair-form-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.065);
+}
+
+.repair-form-section-title {
+  margin-bottom: 20px;
+}
+
+.repair-form-section-title h5 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.repair-form-section-title p {
+  margin: 6px 0 0 0;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.repair-form-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.repair-form-input,
+.repair-form-select,
+.repair-form-textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 15px;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.repair-form-input,
+.repair-form-select {
+  height: 50px;
+  padding: 0 14px;
+}
+
+.repair-form-textarea {
+  padding: 14px;
+  resize: vertical;
+  min-height: 105px;
+}
+
+.repair-form-input:focus,
+.repair-form-select:focus,
+.repair-form-textarea:focus {
+  border-color: #14b8a6;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+}
+
+.repair-form-file {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 14px;
+  padding: 12px;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.repair-form-file:focus {
+  border-color: #14b8a6;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+}
+
+.repair-form-help {
+  display: block;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.repair-existing-preview {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.repair-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.repair-form-save-btn,
+.repair-form-cancel-btn,
+.repair-form-back-btn {
+  border: none;
+  border-radius: 15px;
+  padding: 12px 18px;
+  font-weight: 850;
+  transition: 0.2s ease;
+  text-decoration: none;
+}
+
+.repair-form-save-btn {
+  background: #14b8a6;
+  color: #ffffff;
+  box-shadow: 0 12px 26px rgba(20, 184, 166, 0.28);
+}
+
+.repair-form-save-btn:hover {
+  transform: translateY(-2px);
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.repair-form-save-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.repair-form-cancel-btn {
+  background: #f1f5f9;
+  color: #334155 !important;
+}
+
+.repair-form-cancel-btn:hover {
+  transform: translateY(-2px);
+  background: #e2e8f0;
+}
+
+.repair-form-back-btn {
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  white-space: nowrap;
+}
+
+.repair-form-back-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 576px) {
+  .repair-form-card {
+    border-radius: 20px;
+    padding: 16px;
+  }
+
+  .repair-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .repair-form-save-btn,
+  .repair-form-cancel-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

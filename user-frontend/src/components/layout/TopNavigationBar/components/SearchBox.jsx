@@ -1,30 +1,37 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import IconifyIcon from '@/components/wrappers/IconifyIcon';
+import { useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
 
 const pages = [
-  { name: 'Dashboard', path: '/dashboard' },
-  { name: 'My Profile', path: '/profile' },
-  { name: 'Assigned Car', path: '/assigned-car' },
-  { name: 'Payment History', path: '/payment-history' },
-  { name: 'Pending Dues', path: '/pending-dues' },
-  { name: 'Alerts', path: '/alerts' },
-  { name: 'Repair Status', path: '/repair-status' },
-  { name: 'Support', path: '/support' },
+  { name: "Dashboard", path: "/dashboard", icon: "mdi:view-dashboard-outline" },
+  { name: "My Profile", path: "/profile", icon: "mdi:account-circle-outline" },
+  { name: "Assigned Car", path: "/assigned-car", icon: "mdi:car-outline" },
+  { name: "Share Location", path: "/share-location", icon: "mdi:map-marker-radius-outline" },
+  { name: "Payment History", path: "/payment-history", icon: "mdi:credit-card-check-outline" },
+  { name: "Pending Dues", path: "/pending-dues", icon: "mdi:file-document-alert-outline" },
+  { name: "Alerts", path: "/alerts", icon: "mdi:bell-badge-outline" },
+  { name: "Repair Status", path: "/repair-status", icon: "mdi:car-wrench" },
+  { name: "Support", path: "/support", icon: "mdi:message-question-outline" },
 ];
 
 const SearchBox = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
+  const searchWrapRef = useRef(null);
+
+  const [search, setSearch] = useState("");
   const [showResults, setShowResults] = useState(false);
 
-  const filteredPages = pages.filter((page) =>
-    page.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredPages = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) return [];
+
+    return pages.filter((page) => page.name.toLowerCase().includes(query));
+  }, [search]);
 
   const handleSelect = (path) => {
     navigate(path);
-    setSearch('');
+    setSearch("");
     setShowResults(false);
   };
 
@@ -36,17 +43,26 @@ const SearchBox = () => {
     }
   };
 
+  const handleBlur = (e) => {
+    if (!searchWrapRef.current?.contains(e.relatedTarget)) {
+      setTimeout(() => setShowResults(false), 120);
+    }
+  };
+
   return (
     <form
-      className="app-search d-none d-md-block me-auto"
+      className="app-search d-none d-md-block me-auto driver-search-form"
       onSubmit={handleSubmit}
-      style={{ position: 'relative' }}
+      ref={searchWrapRef}
+      onBlur={handleBlur}
     >
-      <div className="position-relative">
+      <div className="driver-search-input-wrap">
+        <IconifyIcon icon="mdi:magnify" className="driver-search-icon" />
+
         <input
           type="search"
-          className="form-control"
-          placeholder="Search pages..."
+          className="form-control driver-search-input"
+          placeholder="Search driver pages..."
           autoComplete="off"
           value={search}
           onChange={(e) => {
@@ -56,62 +72,49 @@ const SearchBox = () => {
           onFocus={() => setShowResults(true)}
         />
 
-        <IconifyIcon
-          icon="iconamoon:search-duotone"
-          className="search-widget-icon"
-        />
+        {search.trim() && (
+          <button
+            type="button"
+            className="driver-search-clear"
+            onClick={() => {
+              setSearch("");
+              setShowResults(false);
+            }}
+            aria-label="Clear search"
+          >
+            <IconifyIcon icon="mdi:close" />
+          </button>
+        )}
       </div>
 
       {showResults && search.trim() && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '45px',
-            left: 0,
-            right: 0,
-            background: '#ffffff',
-            border: '1px solid #e5e7eb',
-            borderRadius: '12px',
-            boxShadow: '0 12px 30px rgba(15, 23, 42, 0.12)',
-            zIndex: 2000,
-            overflow: 'hidden',
-          }}
-        >
+        <div className="driver-search-results">
           {filteredPages.length > 0 ? (
             filteredPages.map((page) => (
               <button
                 key={page.path}
                 type="button"
                 onClick={() => handleSelect(page.path)}
-                style={{
-                  width: '100%',
-                  border: 'none',
-                  background: '#ffffff',
-                  padding: '12px 14px',
-                  textAlign: 'left',
-                  color: '#0f172a',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f8fafc';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#ffffff';
-                }}
+                className="driver-search-result-item"
               >
-                {page.name}
+                <span className="driver-search-result-icon">
+                  <IconifyIcon icon={page.icon} />
+                </span>
+
+                <span>
+                  <strong>{page.name}</strong>
+                  <small>{page.path}</small>
+                </span>
               </button>
             ))
           ) : (
-            <div
-              style={{
-                padding: '12px 14px',
-                color: '#64748b',
-                fontSize: '14px',
-              }}
-            >
-              No page found
+            <div className="driver-search-empty">
+              <div>
+                <IconifyIcon icon="mdi:file-search-outline" />
+              </div>
+
+              <strong>No page found</strong>
+              <p>Try searching dashboard, profile, alerts, or support.</p>
             </div>
           )}
         </div>

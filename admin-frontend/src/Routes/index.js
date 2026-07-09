@@ -11,7 +11,7 @@ import { layoutTypes } from "../constants/layout";
 import NonAuthLayout from "../Layout/NonAuthLayout";
 import VerticalLayout from "../Layout/VerticalLayout/index";
 import HorizontalLayout from "../Layout/HorizontalLayout/index";
-import { AuthProtected } from "./AuthProtected";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 import { authProtectedRoutes, publicRoutes } from "./routes";
 
@@ -67,9 +67,9 @@ const { layoutType } = useSelector(routepage);
             <Route
               path={route.path}
               element={
-                <AuthProtected>
+                <ProtectedRoute>
                     <Layout>{route.component}</Layout>
-                </AuthProtected>}
+                </ProtectedRoute>}
               key={idx}
               exact={true}
             />

@@ -1,19 +1,21 @@
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 
+
 // Driver Panel Pages
-const Dashboard = lazy(() => import('@/app/(admin)/dashboard/analytics/page'));
-const Profile = lazy(() => import('@/app/(admin)/profile/page'));
-const AssignedCar = lazy(() => import('@/app/(admin)/assigned-car/page'));
-const PaymentHistory = lazy(() => import('@/app/(admin)/payment-history/page'));
-const PendingDues = lazy(() => import('@/app/(admin)/pending-dues/page'));
-const Alerts = lazy(() => import('@/app/(admin)/alerts/page'));
-const Support = lazy(() => import('@/app/(admin)/support/page'));
-const RepairStatus = lazy(() => import('@/app/(admin)/repair-status/page'));
-const ShareLocation = lazy(() => import('@/app/(admin)/share-location/page'));
+const Dashboard = lazy(() => import('@/app/(driver)/dashboard/analytics/page'));
+const Profile = lazy(() => import('@/app/(driver)/profile/page'));
+const AssignedCar = lazy(() => import('@/app/(driver)/assigned-car/page'));
+const PaymentHistory = lazy(() => import('@/app/(driver)/payment-history/page'));
+const PendingDues = lazy(() => import('@/app/(driver)/pending-dues/page'));
+const Alerts = lazy(() => import('@/app/(driver)/alerts/page'));
+const Support = lazy(() => import('@/app/(driver)/support/page'));
+const RepairStatus = lazy(() => import('@/app/(driver)/repair-status/page'));
+const ShareLocation = lazy(() => import('@/app/(driver)/share-location/page'));
 
 // Auth / Error Pages
 const AuthSignIn = lazy(() => import('@/app/(other)/auth/sign-in/page'));
+const ResetPassword = lazy(() => import('@/app/(other)/auth/reset-pass/page'));
 const NotFound = lazy(() => import('@/app/(other)/(error-pages)/error-404/page'));
 
 const initialRoutes = [
@@ -88,6 +90,11 @@ export const authRoutes = [
     path: '/error-404',
     element: <NotFound />,
   },
+  {
+  name: 'Reset Password',
+  path: '/auth/reset-pass',
+  element: <ResetPassword />,
+},
 ];
 
 export const appRoutes = [...initialRoutes, ...driverRoutes];

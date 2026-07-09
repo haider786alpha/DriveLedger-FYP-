@@ -1,124 +1,111 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Button, Col, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row } from 'react-bootstrap';
-import IconifyIcon from '@/components/wrappers/IconifyIcon';
-import SimplebarReactClient from '@/components/wrappers/SimplebarReactClient';
-import { getLoggedInDriver } from '@/helpers/getLoggedInDriver';
-import { API_URL } from '@/helpers/apiConfig';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Button,
+  Col,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownToggle,
+  Row,
+} from "react-bootstrap";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import SimplebarReactClient from "@/components/wrappers/SimplebarReactClient";
+import { getLoggedInDriver } from "@/helpers/getLoggedInDriver";
+import { API_URL } from "@/helpers/apiConfig";
+
+const safeArray = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
+
+const getNotificationMeta = (type) => {
+  const value = String(type || "").toLowerCase();
+
+  if (value === "warning") {
+    return {
+      icon: "mdi:alert-outline",
+      className: "driver-notification-warning",
+      label: "Warning",
+    };
+  }
+
+  if (value === "success") {
+    return {
+      icon: "mdi:check-decagram-outline",
+      className: "driver-notification-success",
+      label: "Success",
+    };
+  }
+
+  return {
+    icon: "mdi:information-outline",
+    className: "driver-notification-info",
+    label: "Info",
+  };
+};
+
+const formatDateTime = (dateValue) => {
+  if (!dateValue) return "-";
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString();
+};
 
 const NotificationItem = ({ item, onMarkRead, markingId }) => {
   const isUnread = !item.is_read;
+  const meta = getNotificationMeta(item.notification_type);
 
   return (
     <DropdownItem
-      className="py-3 border-bottom text-wrap"
+      className={`driver-notification-item ${isUnread ? "driver-notification-unread" : ""}`}
       as="div"
-      style={{
-        background: isUnread ? '#f8fbff' : '#ffffff',
-        cursor: 'default',
-      }}
     >
-      <div className="d-flex gap-3">
-        <div className="flex-shrink-0">
-          <div
-            className="avatar-sm"
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              background:
-                item.notification_type === 'warning'
-                  ? '#fff7ed'
-                  : item.notification_type === 'success'
-                  ? '#f0fdf4'
-                  : '#eff6ff',
-              color:
-                item.notification_type === 'warning'
-                  ? '#c2410c'
-                  : item.notification_type === 'success'
-                  ? '#166534'
-                  : '#1d4ed8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '18px',
-              fontWeight: '700',
-            }}
-          >
-            {item.notification_type === 'warning'
-              ? '!'
-              : item.notification_type === 'success'
-              ? '✓'
-              : 'i'}
-          </div>
+      <div className="driver-notification-row">
+        <div className={`driver-notification-icon ${meta.className}`}>
+          <IconifyIcon icon={meta.icon} />
         </div>
 
-        <div className="flex-grow-1" style={{ minWidth: 0 }}>
-          <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-            <p
-              className="mb-0 fw-semibold"
-              style={{
-                color: '#0f172a',
-                wordBreak: 'break-word',
-              }}
-            >
-              {item.title}
-            </p>
+        <div className="driver-notification-content">
+          <div className="driver-notification-top">
+            <div>
+              <p className="driver-notification-title">
+                {item.title || "Notification"}
+              </p>
+
+              <span className={`driver-notification-type ${meta.className}`}>
+                {meta.label}
+              </span>
+            </div>
 
             {isUnread && (
-              <span
-                style={{
-                  display: 'inline-block',
-                  padding: '4px 8px',
-                  borderRadius: '999px',
-                  background: '#fee2e2',
-                  color: '#991b1b',
-                  fontSize: '10px',
-                  fontWeight: '700',
-                }}
-              >
-                Unread
-              </span>
+              <span className="driver-notification-unread-badge">Unread</span>
             )}
           </div>
 
-          <p
-            className="mb-2 mt-1"
-            style={{
-              color: '#475569',
-              whiteSpace: 'normal',
-              wordBreak: 'break-word',
-            }}
-          >
-            {item.message}
+          <p className="driver-notification-message">
+            {item.message || "No message available."}
           </p>
 
-          <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-            <small style={{ color: '#64748b' }}>
-              {new Date(item.created_at).toLocaleString()}
-            </small>
+          <div className="driver-notification-footer">
+            <small>{formatDateTime(item.created_at)}</small>
 
             {isUnread ? (
               <button
                 type="button"
                 onClick={() => onMarkRead(item.id)}
                 disabled={markingId === item.id}
-                style={{
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#334155',
-                  borderRadius: '8px',
-                  padding: '6px 10px',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                }}
+                className="driver-notification-mark-btn"
               >
-                {markingId === item.id ? 'Marking...' : 'Mark Read'}
+                {markingId === item.id ? "Marking..." : "Mark Read"}
               </button>
             ) : (
-              <small style={{ color: '#2563eb' }}>
-                {item.read_at ? `Read: ${new Date(item.read_at).toLocaleString()}` : 'Read'}
+              <small className="driver-notification-read-time">
+                {item.read_at ? `Read: ${formatDateTime(item.read_at)}` : "Read"}
               </small>
             )}
           </div>
@@ -132,50 +119,101 @@ const Notifications = () => {
   const [driver, setDriver] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [markingId, setMarkingId] = useState(null);
+  const [markingAll, setMarkingAll] = useState(false);
+
+  const notificationControllerRef = useRef(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
+      if (document.hidden) return;
+
+      if (notificationControllerRef.current) {
+        notificationControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      notificationControllerRef.current = controller;
+
       const loggedInDriver = await getLoggedInDriver();
+
+      if (controller.signal.aborted) return;
+
       setDriver(loggedInDriver);
 
-      if (!loggedInDriver) {
+      if (!loggedInDriver?.id) {
         setNotifications([]);
         return;
       }
 
-      const res = await fetch(API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`));
+      const res = await fetch(
+        API_URL(`/api/notifications/?driver_id=${loggedInDriver.id}`),
+        {
+          signal: controller.signal,
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`Notifications request failed with status ${res.status}`);
+      }
+
       const data = await res.json();
 
-      const filteredAlerts = (Array.isArray(data) ? data : []).filter(
+      if (controller.signal.aborted) return;
+
+      const allNotifications = safeArray(data);
+
+      const filteredAlerts = allNotifications.filter(
         (item) =>
-          item.recipient_type === 'all' ||
-          (item.recipient_type === 'driver' &&
+          item.recipient_type === "all" ||
+          (item.recipient_type === "driver" &&
             Number(item.driver) === Number(loggedInDriver.id))
       );
 
       setNotifications(filteredAlerts);
     } catch (error) {
-      console.error('Topbar notifications error:', error);
-      setNotifications([]);
+      if (error?.name === "AbortError") return;
+
+      console.error("Topbar notifications error:", error);
     }
   }, []);
 
   useEffect(() => {
     fetchNotifications();
 
-    const interval = setInterval(fetchNotifications, 5000);
+    const interval = setInterval(fetchNotifications, 30000);
+
     const handleFocus = () => fetchNotifications();
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchNotifications();
+      }
+    };
+
     const handleNotificationsUpdated = () => fetchNotifications();
 
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('notifications-updated', handleNotificationsUpdated);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("notifications-updated", handleNotificationsUpdated);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('notifications-updated', handleNotificationsUpdated);
+
+      if (notificationControllerRef.current) {
+        notificationControllerRef.current.abort();
+      }
+
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("notifications-updated", handleNotificationsUpdated);
     };
   }, [fetchNotifications]);
+
+  const sortedNotifications = useMemo(() => {
+    return [...notifications].sort(
+      (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    );
+  }, [notifications]);
 
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.is_read).length,
@@ -183,20 +221,24 @@ const Notifications = () => {
   );
 
   const markNotificationRead = async (notificationId) => {
-    if (!driver) return;
+    if (!driver?.id || !notificationId) return;
 
     try {
       setMarkingId(notificationId);
 
-      await fetch(API_URL(`/api/notifications/${notificationId}/mark-read/`), {
-        method: 'POST',
+      const res = await fetch(API_URL(`/api/notifications/${notificationId}/mark-read/`), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           driver: driver.id,
         }),
       });
+
+      if (!res.ok) {
+        throw new Error(`Mark read failed with status ${res.status}`);
+      }
 
       setNotifications((prev) =>
         prev.map((item) =>
@@ -204,96 +246,120 @@ const Notifications = () => {
             ? {
                 ...item,
                 is_read: true,
-                read_at: new Date().toISOString(),
+                read_at: item.read_at || new Date().toISOString(),
               }
             : item
         )
       );
 
-      window.dispatchEvent(new Event('notifications-updated'));
+      window.dispatchEvent(new Event("notifications-updated"));
     } catch (error) {
-      console.error('Topbar mark read error:', error);
+      console.error("Topbar mark read error:", error);
     } finally {
       setMarkingId(null);
     }
   };
 
   const markAllRead = async () => {
-    if (!driver) return;
+    if (!driver?.id || markingAll) return;
 
     const unreadItems = notifications.filter((item) => !item.is_read);
+
     if (unreadItems.length === 0) return;
 
     try {
-      for (const item of unreadItems) {
-        await fetch(API_URL(`/api/notifications/${item.id}/mark-read/`), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            driver: driver.id,
-          }),
-        });
-      }
+      setMarkingAll(true);
 
-      setNotifications((prev) =>
-        prev.map((item) => ({
-          ...item,
-          is_read: true,
-          read_at: item.read_at || new Date().toISOString(),
-        }))
+      const results = await Promise.allSettled(
+        unreadItems.map((item) =>
+          fetch(API_URL(`/api/notifications/${item.id}/mark-read/`), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              driver: driver.id,
+            }),
+          }).then((res) => {
+            if (!res.ok) {
+              throw new Error(`Failed to mark notification ${item.id}`);
+            }
+
+            return item.id;
+          })
+        )
       );
 
-      window.dispatchEvent(new Event('notifications-updated'));
+      const successfulIds = results
+        .filter((result) => result.status === "fulfilled")
+        .map((result) => result.value);
+
+      if (successfulIds.length === 0) return;
+
+      const now = new Date().toISOString();
+
+      setNotifications((prev) =>
+        prev.map((item) =>
+          successfulIds.includes(item.id)
+            ? {
+                ...item,
+                is_read: true,
+                read_at: item.read_at || now,
+              }
+            : item
+        )
+      );
+
+      window.dispatchEvent(new Event("notifications-updated"));
     } catch (error) {
-      console.error('Mark all read error:', error);
+      console.error("Mark all read error:", error);
+    } finally {
+      setMarkingAll(false);
     }
   };
 
   return (
-    <Dropdown className="topbar-item" align={'end'}>
+    <Dropdown className="topbar-item driver-notifications-dropdown" align="end">
       <DropdownToggle
         as="button"
-        className="content-none topbar-button position-relative"
+        className="content-none topbar-button position-relative driver-notifications-toggle"
         aria-haspopup="true"
+        aria-label="Open notifications"
       >
-        <IconifyIcon icon="iconamoon:notification-duotone" className="fs-24 align-middle" />
+        <IconifyIcon icon="mdi:bell-outline" />
+
         {unreadCount > 0 && (
-          <span className="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span className="driver-notifications-badge">
+            {unreadCount > 99 ? "99+" : unreadCount}
             <span className="visually-hidden">unread notifications</span>
           </span>
         )}
       </DropdownToggle>
 
-      <DropdownMenu className="py-0 dropdown-lg">
-        <div className="p-3 border-top-0 border-start-0 border-end-0 border-dashed border">
+      <DropdownMenu className="driver-notifications-menu">
+        <div className="driver-notifications-header">
           <Row className="align-items-center">
             <Col>
-              <h6 className="m-0 fs-16 fw-semibold">Notifications</h6>
+              <h6>Notifications</h6>
+              <p>{unreadCount > 0 ? `${unreadCount} unread alert(s)` : "All caught up"}</p>
             </Col>
+
             <Col xs="auto">
               <button
                 type="button"
                 onClick={markAllRead}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  color: '#0f172a',
-                  textDecoration: 'underline',
-                  fontSize: '12px',
-                }}
+                disabled={markingAll || unreadCount === 0}
+                className="driver-notifications-mark-all"
               >
-                Mark All Read
+                {markingAll ? "Marking..." : "Mark All Read"}
               </button>
             </Col>
           </Row>
         </div>
 
-        <SimplebarReactClient style={{ maxHeight: 320 }}>
-          {notifications.length > 0 ? (
-            notifications.slice(0, 6).map((notification) => (
+        <SimplebarReactClient style={{ maxHeight: 360 }}>
+          {sortedNotifications.length > 0 ? (
+            sortedNotifications.slice(0, 6).map((notification) => (
               <NotificationItem
                 key={notification.id}
                 item={notification}
@@ -302,22 +368,26 @@ const Notifications = () => {
               />
             ))
           ) : (
-            <div
-              style={{
-                padding: '16px',
-                textAlign: 'center',
-                color: '#64748b',
-              }}
-            >
-              No notifications found.
+            <div className="driver-notifications-empty">
+              <div>
+                <IconifyIcon icon="mdi:bell-off-outline" />
+              </div>
+
+              <h6>No notifications</h6>
+              <p>You currently have no alerts.</p>
             </div>
           )}
         </SimplebarReactClient>
 
-        <div className="text-center py-3">
-          <Button as={Link} to="/alerts" size="sm" variant="primary" className="icons-center">
+        <div className="driver-notifications-footer">
+          <Button
+            as={Link}
+            to="/alerts"
+            size="sm"
+            className="driver-notifications-view-all"
+          >
             View All Alerts
-            <IconifyIcon icon="bx:right-arrow-alt" className="ms-2" />
+            <IconifyIcon icon="mdi:arrow-right" />
           </Button>
         </div>
       </DropdownMenu>

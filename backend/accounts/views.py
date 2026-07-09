@@ -1,4 +1,6 @@
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import serializers, viewsets, status
 from rest_framework.decorators import action
@@ -6,23 +8,119 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+def get_password_errors(password, user=None, username="", email=""):
+    errors = []
+
+    if not password:
+        errors.append("Password is required.")
+        return errors
+
+    if len(password) < 8:
+        errors.append("Password must be at least 8 characters long.")
+
+    password_lower = password.lower()
+    username = (username or "").strip().lower()
+    email = (email or "").strip().lower()
+    email_name = email.split("@")[0] if "@" in email else email
+
+    if username and username in password_lower:
+        errors.append("Password must not contain the username.")
+
+    if email_name and email_name in password_lower:
+        errors.append("Password must not contain the email name.")
+
+    try:
+        validate_password(password, user=user)
+    except DjangoValidationError as exc:
+        errors.extend(exc.messages)
+
+    return list(dict.fromkeys(errors))
+
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
+    confirm_password = serializers.CharField(write_only=True, required=False)
     is_staff = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'is_staff']
+        fields = ['id', 'username', 'email', 'password', 'confirm_password', 'is_staff']
+
+    def validate_username(self, value):
+        username = (value or "").strip()
+
+        if not username:
+            raise serializers.ValidationError("Username is required.")
+
+        if len(username) < 3:
+            raise serializers.ValidationError("Username must be at least 3 characters long.")
+
+        qs = User.objects.filter(username__iexact=username)
+
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise serializers.ValidationError("This username is already taken.")
+
+        return username
+
+    def validate_email(self, value):
+        email = (value or "").strip().lower()
+
+        if not email:
+            return email
+
+        qs = User.objects.filter(email__iexact=email)
+
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise serializers.ValidationError("This email is already registered.")
+
+        return email
+
+    def validate(self, attrs):
+        password = attrs.get("password")
+        confirm_password = attrs.get("confirm_password")
+
+        username = attrs.get("username") or getattr(self.instance, "username", "")
+        email = attrs.get("email") or getattr(self.instance, "email", "")
+
+        if self.instance is None:
+            if not password:
+                raise serializers.ValidationError({
+                    "password": "Password is required."
+                })
+
+            if not confirm_password:
+                raise serializers.ValidationError({
+                    "confirm_password": "Confirm password is required."
+                })
+
+            if password != confirm_password:
+                raise serializers.ValidationError({
+                    "confirm_password": "Password and confirm password do not match."
+                })
+
+            password_errors = get_password_errors(
+                password=password,
+                username=username,
+                email=email
+            )
+
+            if password_errors:
+                raise serializers.ValidationError({
+                    "password": password_errors
+                })
+
+        return attrs
 
     def create(self, validated_data):
         is_staff = validated_data.pop('is_staff', False)
-
         password = validated_data.pop('password', None)
-        if not password:
-            raise serializers.ValidationError({
-                'password': 'Password is required.'
-            })
+        validated_data.pop('confirm_password', None)
 
         user = User.objects.create_user(
             username=validated_data['username'],
@@ -37,6 +135,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
+        validated_data.pop('confirm_password', None)
 
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
@@ -45,11 +144,22 @@ class UserSerializer(serializers.ModelSerializer):
             instance.is_staff = validated_data.get('is_staff')
 
         if password:
+            password_errors = get_password_errors(
+                password=password,
+                user=instance,
+                username=instance.username,
+                email=instance.email
+            )
+
+            if password_errors:
+                raise serializers.ValidationError({
+                    "password": password_errors
+                })
+
             instance.set_password(password)
 
         instance.save()
         return instance
-
 
 @extend_schema_view(
     list=extend_schema(
@@ -111,11 +221,24 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if len(new_password) < 6:
-            return Response(
-                {'error': 'Password must be at least 6 characters long.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if user.check_password(new_password):
+         return Response(
+        {'error': 'New password cannot be the same as the old password.'},
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+        password_errors = get_password_errors(
+          password=new_password,
+          user=user,
+          username=user.username,
+          email=user.email
+)
+
+        if password_errors:
+         return Response(
+        {'error': " ".join(password_errors)},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
         user.set_password(new_password)
         user.save()
@@ -138,12 +261,13 @@ class ChangePasswordView(APIView):
         user = request.user
         old_password = request.data.get('old_password')
         new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
 
-        if not old_password or not new_password:
-            return Response(
-                {'error': 'Old password and new password are required.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if not old_password or not new_password or not confirm_password:
+         return Response(
+        {'error': 'Old password, new password and confirm password are required.'},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
         if not user.check_password(old_password):
             return Response(
@@ -151,11 +275,30 @@ class ChangePasswordView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if len(new_password) < 6:
-            return Response(
-                {'error': 'New password must be at least 6 characters long.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if new_password != confirm_password:
+         return Response(
+        {'error': 'New password and confirm password do not match.'},
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+        if user.check_password(new_password):
+         return Response(
+        {'error': 'New password cannot be the same as the old password.'},
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+        password_errors = get_password_errors(
+        password=new_password,
+        user=user,
+        username=user.username,
+        email=user.email
+)
+
+        if password_errors:
+         return Response(
+        {'error': " ".join(password_errors)},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
         user.set_password(new_password)
         user.save()

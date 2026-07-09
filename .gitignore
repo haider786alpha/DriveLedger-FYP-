@@ -1,9 +1,30 @@
+# node_modules/
+# dist/
+# build/
+# .env
+
+# venv/
+# __pycache__/
+# *.pyc
+# db.sqlite3
+
+# backend/db.sqlite3
+# backend/data_backup.json
+# backend/data_backup_utf8.json
+# backend/media/
+
+
+# .DS_Store
+# Thumbs.db
+# *.log
+
 node_modules/
 dist/
 build/
 .env
 
 venv/
+fypenv/
 __pycache__/
 *.pyc
 db.sqlite3
@@ -11,8 +32,9 @@ db.sqlite3
 backend/db.sqlite3
 backend/data_backup.json
 backend/data_backup_utf8.json
-backend/media/
 
+backend/media/*
+!backend/media/.gitkeep
 
 .DS_Store
 Thumbs.db

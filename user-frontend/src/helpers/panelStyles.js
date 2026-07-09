@@ -1,22 +1,23 @@
 export const pageHeroStyle = {
-  background: "linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%)",
-  border: "1px solid #dbeafe",
+  background: "var(--driver-hero-bg)",
+  border: "1px solid var(--driver-border)",
   borderRadius: "18px",
   padding: "24px",
   marginBottom: "24px",
-  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.04)",
+  boxShadow: "var(--driver-shadow)",
+  color: "var(--driver-text)",
 };
 
 export const pageTitleStyle = {
   margin: 0,
   fontSize: "34px",
   fontWeight: "700",
-  color: "#0f172a",
+  color: "var(--driver-title)",
 };
 
 export const pageSubtitleStyle = {
   margin: "10px 0 0 0",
-  color: "#475569",
+  color: "var(--driver-muted)",
   fontSize: "15px",
   lineHeight: "1.6",
 };
@@ -26,74 +27,77 @@ export const loggedInPillStyle = {
   display: "inline-flex",
   alignItems: "center",
   gap: "8px",
-  background: "#ffffff",
-  border: "1px solid #e2e8f0",
+  background: "var(--driver-pill-bg)",
+  border: "1px solid var(--driver-soft-border)",
   borderRadius: "999px",
   padding: "8px 14px",
   fontWeight: "600",
-  color: "#1e293b",
+  color: "var(--driver-title)",
   maxWidth: "100%",
   flexWrap: "wrap",
 };
 
 export const statCardStyle = {
-  background: "#ffffff",
-  border: "1px solid #e5e7eb",
+  background: "var(--driver-card-bg)",
+  border: "1px solid var(--driver-border)",
   borderRadius: "18px",
   padding: "22px",
-  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
+  boxShadow: "var(--driver-shadow)",
+  color: "var(--driver-text)",
   minWidth: 0,
 };
 
 export const contentCardStyle = {
-  background: "#ffffff",
-  border: "1px solid #e5e7eb",
+  background: "var(--driver-card-bg)",
+  border: "1px solid var(--driver-border)",
   borderRadius: "18px",
   padding: "24px",
-  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
+  boxShadow: "var(--driver-shadow)",
+  color: "var(--driver-text)",
   minWidth: 0,
 };
 
 export const innerInfoCardStyle = {
-  background: "#f8fafc",
-  border: "1px solid #e2e8f0",
+  background: "var(--driver-inner-bg)",
+  border: "1px solid var(--driver-soft-border)",
   borderRadius: "14px",
   padding: "16px",
+  color: "var(--driver-text)",
   minWidth: 0,
 };
 
 export const emptyStateStyle = {
-  background: "#ffffff",
-  border: "1px dashed #cbd5e1",
+  background: "var(--driver-card-bg)",
+  border: "1px dashed var(--driver-soft-border)",
   borderRadius: "18px",
   padding: "28px",
   textAlign: "center",
-  color: "#64748b",
-  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.03)",
+  color: "var(--driver-muted)",
+  boxShadow: "var(--driver-shadow)",
 };
 
 export const sectionTitleStyle = {
   margin: 0,
   fontSize: "22px",
-  color: "#0f172a",
+  color: "var(--driver-title)",
 };
 
 export const sectionSubtitleStyle = {
   margin: "6px 0 0 0",
-  color: "#64748b",
+  color: "var(--driver-muted)",
   fontSize: "14px",
 };
 
 export const statLabelStyle = {
   margin: 0,
-  color: "#64748b",
+  color: "var(--driver-muted)",
   fontSize: "14px",
   fontWeight: "600",
 };
 
 export const infoLabelStyle = {
   margin: 0,
-  color: "#64748b",
+  color: "var(--driver-muted)",
   fontSize: "13px",
 };
 
@@ -102,7 +106,7 @@ export const primaryButtonStyle = {
   border: "none",
   borderRadius: "12px",
   background: "#2563eb",
-  color: "#fff",
+  color: "#ffffff",
   cursor: "pointer",
   fontWeight: "600",
   boxShadow: "0 8px 20px rgba(37, 99, 235, 0.22)",

@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import NotificationDropdown from "../../components/Common/TopbarDropdown/NotificationDropdown";
 
 // i18n
-import { withTranslation } from "react-i18next";
+// import { withTranslation } from "react-i18next";
 
 // import images
 import logoSm from "../../assets/images/logo-sm.png";
@@ -61,42 +61,26 @@ const Header = (props) => {
       <header id="page-topbar">
         <div className="navbar-header">
           <div className="d-flex">
-            <div className="navbar-brand-box text-center">
-              <Link to="/" className="logo logo-dark" style={{ textDecoration: "none" }}>
+            <div className="navbar-brand-box driveledger-brand-box">
+              <Link to="/" className="logo logo-dark driveledger-brand-link">
                 <span className="logo-sm">
                   <img src={logoSm} alt="DriveLedger" height="22" />
                 </span>
-                <span
-                  className="logo-lg"
-                  style={{
-                    display: "inline-block",
-                    fontSize: "24px",
-                    fontWeight: "700",
-                    color: "#1f2937",
-                    lineHeight: "70px",
-                    letterSpacing: "0.3px",
-                  }}
-                >
-                  DriveLedger
+
+                <span className="logo-lg driveledger-brand-logo">
+                  <span className="driveledger-brand-mark"></span>
+                  <span className="driveledger-brand-text">DriveLedger</span>
                 </span>
               </Link>
 
-              <Link to="/" className="logo logo-light" style={{ textDecoration: "none" }}>
+              <Link to="/" className="logo logo-light driveledger-brand-link">
                 <span className="logo-sm">
                   <img src={logoSm} alt="DriveLedger" height="22" />
                 </span>
-                <span
-                  className="logo-lg"
-                  style={{
-                    display: "inline-block",
-                    fontSize: "24px",
-                    fontWeight: "700",
-                    color: "#ffffff",
-                    lineHeight: "70px",
-                    letterSpacing: "0.3px",
-                  }}
-                >
-                  DriveLedger
+
+                <span className="logo-lg driveledger-brand-logo">
+                  <span className="driveledger-brand-mark"></span>
+                  <span className="driveledger-brand-text">DriveLedger</span>
                 </span>
               </Link>
             </div>
@@ -190,4 +174,4 @@ const mapStatetoProps = (state) => {
 export default connect(mapStatetoProps, {
   toggleLeftmenu,
   changeSidebarType,
-})(withTranslation()(Header));
+})(Header);
