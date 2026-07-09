@@ -405,7 +405,6 @@ const getDriverErrorMessage = (error) => {
                   required
                 />
               </div>
-
               <div className="col-md-12">
                 <div className="driver-form-actions">
                   <Link to="/drivers" className="driver-form-cancel-btn">
